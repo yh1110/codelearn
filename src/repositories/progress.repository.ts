@@ -11,4 +11,23 @@ export class ProgressRepository extends BaseRepository {
       create: { userId, lessonId },
     });
   }
+
+  async findCompletedLessonIdsByUser(userId: string, lessonIds?: string[]): Promise<string[]> {
+    const rows = await this.client.progress.findMany({
+      where: {
+        userId,
+        ...(lessonIds ? { lessonId: { in: lessonIds } } : {}),
+      },
+      select: { lessonId: true },
+    });
+    return rows.map((r) => r.lessonId);
+  }
+
+  async isLessonCompleted(userId: string, lessonId: string): Promise<boolean> {
+    const row = await this.client.progress.findUnique({
+      where: { userId_lessonId: { userId, lessonId } },
+      select: { id: true },
+    });
+    return row !== null;
+  }
 }

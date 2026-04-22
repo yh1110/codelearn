@@ -1,21 +1,25 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
+import { NotFoundError } from "@/lib/errors";
+import { getCourseBySlug } from "@/services/courseService";
+import { isLessonCompleted } from "@/services/progressService";
 import LessonClient from "./_components/LessonClient";
 
 export const dynamic = "force-dynamic";
 
-const LOCAL_USER_ID = "local-user";
-
 export default async function LessonPage({
   params,
 }: PageProps<"/courses/[slug]/lessons/[lessonSlug]">) {
+  const session = await requireAuth();
   const { slug, lessonSlug } = await params;
 
-  const course = await prisma.course.findUnique({
-    where: { slug },
-    include: { lessons: { orderBy: { order: "asc" } } },
-  });
-  if (!course) notFound();
+  let course: Awaited<ReturnType<typeof getCourseBySlug>>;
+  try {
+    course = await getCourseBySlug(slug);
+  } catch (error) {
+    if (error instanceof NotFoundError) notFound();
+    throw error;
+  }
 
   const idx = course.lessons.findIndex((l) => l.slug === lessonSlug);
   if (idx === -1) notFound();
@@ -24,12 +28,7 @@ export default async function LessonPage({
   const prev = idx > 0 ? course.lessons[idx - 1] : null;
   const next = idx < course.lessons.length - 1 ? course.lessons[idx + 1] : null;
 
-  const completed = await prisma.progress.findUnique({
-    where: {
-      userId_lessonId: { userId: LOCAL_USER_ID, lessonId: lesson.id },
-    },
-    select: { id: true },
-  });
+  const completed = await isLessonCompleted(session.userId, lesson.id);
 
   return (
     <LessonClient
@@ -45,7 +44,7 @@ export default async function LessonPage({
       }}
       prevSlug={prev?.slug ?? null}
       nextSlug={next?.slug ?? null}
-      initiallyCompleted={completed !== null}
+      initiallyCompleted={completed}
     />
   );
 }

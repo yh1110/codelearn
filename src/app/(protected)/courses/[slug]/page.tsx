@@ -2,30 +2,30 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
+import { NotFoundError } from "@/lib/errors";
+import { getCourseBySlug } from "@/services/courseService";
+import { getCompletedLessonIdsByUser } from "@/services/progressService";
 
 export const dynamic = "force-dynamic";
 
-const LOCAL_USER_ID = "local-user";
-
 export default async function CoursePage({ params }: PageProps<"/courses/[slug]">) {
+  const session = await requireAuth();
   const { slug } = await params;
 
-  const course = await prisma.course.findUnique({
-    where: { slug },
-    include: { lessons: { orderBy: { order: "asc" } } },
-  });
+  let course: Awaited<ReturnType<typeof getCourseBySlug>>;
+  try {
+    course = await getCourseBySlug(slug);
+  } catch (error) {
+    if (error instanceof NotFoundError) notFound();
+    throw error;
+  }
 
-  if (!course) notFound();
-
-  const progress = await prisma.progress.findMany({
-    where: {
-      userId: LOCAL_USER_ID,
-      lessonId: { in: course.lessons.map((l) => l.id) },
-    },
-    select: { lessonId: true },
-  });
-  const completedIds = new Set(progress.map((p) => p.lessonId));
+  const completed = await getCompletedLessonIdsByUser(
+    session.userId,
+    course.lessons.map((l) => l.id),
+  );
+  const completedIds = new Set(completed);
 
   return (
     <div className="mx-auto max-w-3xl flex-1 px-6 py-16">

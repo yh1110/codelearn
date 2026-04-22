@@ -34,10 +34,24 @@ model Lesson {
 
 model Progress {
   id          String   @id @default(cuid())
-  userId      String
+  userId      String   @db.Uuid @map("user_id")
   lessonId    String
+  user        Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   completedAt DateTime @default(now())
 
   @@unique([userId, lessonId])
+  @@map("progress")
+}
+
+model Profile {
+  id        String     @id @db.Uuid
+  email     String?
+  name      String?
+  avatarUrl String?    @map("avatar_url")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt      @map("updated_at")
+  progress  Progress[]
+
+  @@map("profiles")
 }

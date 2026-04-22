@@ -1,14 +1,19 @@
-import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
+import { UnauthorizedError } from "@/lib/errors";
+import { getCompletedLessonIdsByUser } from "@/services/progressService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const LOCAL_USER_ID = "local-user";
-
 export async function GET() {
-  const rows = await prisma.progress.findMany({
-    where: { userId: LOCAL_USER_ID },
-    select: { lessonId: true },
-  });
-  return Response.json({ lessonIds: rows.map((r) => r.lessonId) });
+  try {
+    const session = await requireAuth();
+    const lessonIds = await getCompletedLessonIdsByUser(session.userId);
+    return Response.json({ lessonIds });
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return Response.json({ error: "unauthorized" }, { status: 401 });
+    }
+    throw error;
+  }
 }

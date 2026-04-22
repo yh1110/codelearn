@@ -1,26 +1,19 @@
 import Link from "next/link";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
+import { getCoursesWithLessons } from "@/services/courseService";
+import { getCompletedLessonIdsByUser } from "@/services/progressService";
 
 export const dynamic = "force-dynamic";
 
-const LOCAL_USER_ID = "local-user";
-
 export default async function Home() {
-  const [courses, progress] = await Promise.all([
-    prisma.course.findMany({
-      orderBy: { order: "asc" },
-      include: {
-        lessons: { select: { id: true }, orderBy: { order: "asc" } },
-      },
-    }),
-    prisma.progress.findMany({
-      where: { userId: LOCAL_USER_ID },
-      select: { lessonId: true },
-    }),
+  const session = await requireAuth();
+  const [courses, completed] = await Promise.all([
+    getCoursesWithLessons(),
+    getCompletedLessonIdsByUser(session.userId),
   ]);
 
-  const completedIds = new Set(progress.map((p) => p.lessonId));
+  const completedIds = new Set(completed);
 
   return (
     <div className="mx-auto max-w-3xl flex-1 px-6 py-16">
