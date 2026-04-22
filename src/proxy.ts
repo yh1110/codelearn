@@ -35,16 +35,22 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     },
   });
 
-  // Touch the session so `@supabase/ssr` performs a refresh if needed and
-  // writes the rotated cookies via `setAll`.
-  await supabase.auth.getUser();
+  try {
+    // Touch the session so `@supabase/ssr` performs a refresh if needed and
+    // writes the rotated cookies via `setAll`. Session refresh is best-effort:
+    // transient Supabase outages or malformed cookies must not break rendering.
+    await supabase.auth.getUser();
+  } catch {
+    // Swallow; callers fall back to an unauthenticated state.
+  }
 
   return response;
 }
 
 export const config = {
   matcher: [
-    // Run on all paths except Next.js internals and static assets.
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Skip Next.js internals, API routes, and static assets.
+    // API routes that need auth perform their own requireAuth check (#5).
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
