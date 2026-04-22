@@ -5,9 +5,9 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useLessonRunner } from "@/app/courses/[slug]/lessons/[lessonSlug]/_hooks/useLessonRunner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useLessonRunner } from "../_hooks/useLessonRunner";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
