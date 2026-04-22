@@ -8,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { type RunResult, runCodeInBrowser } from "@/lib/run-code";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -18,13 +19,6 @@ type Lesson = {
   contentMd: string;
   starterCode: string;
   expectedOutput: string | null;
-};
-
-type RunResult = {
-  stdout: string;
-  stderr: string;
-  timedOut: boolean;
-  exitCode: number | null;
 };
 
 type Props = {
@@ -53,12 +47,7 @@ export default function LessonClient({
     setRunning(true);
     setOutput(null);
     try {
-      const res = await fetch("/api/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
-      });
-      const data = (await res.json()) as RunResult;
+      const data: RunResult = await runCodeInBrowser(code);
       setOutput(data);
 
       const passed =

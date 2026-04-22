@@ -2,6 +2,9 @@
   "name": "codelearn",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.12.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -27,7 +30,9 @@
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.104.0",
     "class-variance-authority": "^0.7.1",
+    "client-only": "^0.0.1",
     "clsx": "^2.1.1",
+    "esbuild-wasm": "^0.28.0",
     "lucide-react": "^1.8.0",
     "next": "16.2.4",
     "pg": "^8.20.0",
