@@ -20,8 +20,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ja" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+    <html
+      lang="ja"
+      className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      style={{ colorScheme: "dark" }}
+      suppressHydrationWarning
+    >
+      <body className="bg-background text-foreground flex min-h-full flex-col">
         <SwrProvider>{children}</SwrProvider>
       </body>
     </html>
