@@ -68,7 +68,21 @@ export default function LessonClient({
 
       if (passed && !completed) {
         setCompleted(true);
-        completeLessonAction({ lessonId: lesson.id }).catch(() => {});
+        completeLessonAction({ lessonId: lesson.id })
+          .then((result) => {
+            if (result?.serverError) {
+              console.error("[LessonClient] completeLessonAction serverError:", result.serverError);
+            }
+            if (result?.validationErrors) {
+              console.error(
+                "[LessonClient] completeLessonAction validationErrors:",
+                result.validationErrors,
+              );
+            }
+          })
+          .catch((err) => {
+            console.error("[LessonClient] completeLessonAction threw:", err);
+          });
       }
     } finally {
       setRunning(false);
