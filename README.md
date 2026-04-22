@@ -14,7 +14,7 @@ Prisma 7 では datasource URL を `schema.prisma` から外し、`prisma.config
 
 ## 前提条件
 
-- **Node.js 20.12.0 以上** (`.nvmrc` は 24 を指定)。`prisma.config.ts` が `process.loadEnvFile()` で `.env` を読み込むため
+- Node.js (Next.js 16 が要求するバージョン)
 - Docker (Postgres を起動するため)
 
 ## セットアップ
