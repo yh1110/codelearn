@@ -336,10 +336,16 @@ export function handleUnknownError(error: unknown): Error {
 ```
 
 ```typescript
-// src/lib/auth.ts (想定)
+// src/lib/auth.ts
 import 'server-only';
+import type { Profile } from '@prisma/client';
 
-export type Session = { userId: string; email: string; role: 'ADMIN' | 'USER' };
+export type Session = {
+  userId: string;
+  email: string | null;
+  role: 'ADMIN' | 'USER';
+  profile: Profile;
+};
 
 /** 未認証時は UnauthorizedError を throw。認証済みなら Session を返す。 */
 export async function requireAuth(): Promise<Session>;
@@ -350,3 +356,5 @@ export async function requireRole(role: Session['role']): Promise<Session>;
 
 - いずれも **throw する side-effectful API**。戻り値をチェックして分岐しない（`try-catch` も通常は不要で、Next.js の `error.tsx` に伝播させる）。
 - Middleware 側の認証（`architecture.md § 3`）と **二重チェック** する前提。
+- 実装は Supabase Auth (`createSupabaseServerClient().auth.getUser()`) + `profileRepository.upsert()` で `Session.profile` を保険同期する。`auth.users` → `public.profiles` の一次同期は `prisma/sql/001_profiles_trigger.sql` の trigger で行う。
+- `role` は現状全ユーザー `"USER"` 相当として扱う（`requireRole` は `requireAuth` に委譲）。専用ロール列が入ったら見直す。

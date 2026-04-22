@@ -14,7 +14,7 @@ Progate 風の TypeScript 学習プラットフォーム。ブラウザ上のエ
 | TS 実行 | **ブラウザ内** (`esbuild-wasm` で transpile → iframe `sandbox` で実行 → `postMessage` で stdout/stderr 回収) |
 | Mutation | Server Actions + `next-safe-action` |
 | Client Read | SWR |
-| 認証 / BaaS | Supabase Auth (GitHub / Google OAuth、#5 で実装予定) |
+| 認証 / BaaS | Supabase Auth (GitHub / Google OAuth) + Prisma Edge proxy、`(protected)` ルートグループ |
 | Linter / Formatter | biome (ESLint / Prettier は使わない) |
 | CI | GitHub Actions (biome check + tsc) |
 | Code Review Bot | [Claude Code GitHub Action](https://github.com/anthropics/claude-code-action) (`@claude` mention + PR opened 時の自動レビュー) |
@@ -38,7 +38,7 @@ zustand / playwright / vitest / nuqs / server-only / react-hook-form + `@hookfor
 - Node.js **>= 20.12.0** (`process.loadEnvFile` 依存)
 - npm
 - Supabase アカウント (無料プランで OK)
-- GitHub / Google OAuth アプリ (認証を使う場合。#5 で必要)
+- GitHub / Google OAuth アプリ (Supabase Dashboard → Authentication → Providers で有効化)
 
 > **Docker は不要になりました**。以前はローカル開発で Postgres コンテナを使っていましたが、DB は Supabase Postgres に統一しています。`docker-compose.yml` と `npm run db:up/db:down` スクリプトは過渡期の残骸なので将来削除予定。
 
@@ -77,7 +77,23 @@ npm run db:seed   # サンプルコース / レッスンを投入
 
 > **pgbouncer hang について**: Prisma schema engine が pooler (`?pgbouncer=true`, port 6543) 経由の接続で stuck することがあるため、`prisma.config.ts` は **`DIRECT_URL` (port 5432)** を schema engine に使わせている。runtime クエリは引き続き `DATABASE_URL` (pooler) を driver adapter 経由で使う。
 
-### 4. RLS を有効化 (推奨)
+### 4. 認証 trigger SQL の適用 (必須)
+
+`auth.users` (Supabase Auth 管理) → `public.profiles` (Prisma 管理) を同期させる trigger を一度だけ適用する:
+
+```bash
+# psql がローカルにあれば
+psql "$DIRECT_URL" -f prisma/sql/001_profiles_trigger.sql
+```
+
+psql が無ければ **Supabase Dashboard → SQL Editor** に `prisma/sql/001_profiles_trigger.sql` の内容を貼って Run。既存ユーザーが居ても `ON CONFLICT DO NOTHING` で安全。
+
+Supabase Dashboard で **Authentication → URL Configuration** を以下に設定:
+
+- Site URL: `http://localhost:3000`
+- Redirect URLs: `http://localhost:3000/**`
+
+### 5. RLS を有効化 (推奨)
 
 Supabase Dashboard の SQL Editor で以下を実行:
 
@@ -89,13 +105,13 @@ ALTER TABLE "Progress" ENABLE ROW LEVEL SECURITY;
 
 policy は追加しない = ブラウザから publishable key で Supabase API を叩いても空配列しか返らなくなる。Prisma (postgres ロール) は RLS bypass なので従来通り動く。Defense in depth。
 
-### 5. 開発サーバー起動
+### 6. 開発サーバー起動
 
 ```bash
 npm run dev
 ```
 
-`http://localhost:3000` を開く。
+`http://localhost:3000` を開く。未ログインなら `/login` にリダイレクトされる。GitHub / Google でサインインすると `/auth/callback` を経由してコース一覧 (`/`) に戻る。
 
 ## スクリプト
 
@@ -170,7 +186,8 @@ prisma.config.ts                # Prisma 7: schema engine 用 DIRECT_URL fallbac
 
 - **Course**: `slug`, `title`, `description`, `order`
 - **Lesson**: `slug`, `title`, `contentMd` (Markdown), `starterCode` (TS), `expectedOutput`, `order`, `courseId`
-- **Progress**: `userId` (MVP では `"local-user"` 固定、#5 で Supabase auth user id に置換予定), `lessonId`, `completedAt`
+- **Progress**: `userId` (`Profile.id` への UUID FK、`onDelete: Cascade`), `lessonId`, `completedAt`
+- **Profile**: `id` (Supabase `auth.users.id` と同じ UUID), `email`, `name`, `avatarUrl`。`auth.users` への INSERT/UPDATE を trigger で sync (`prisma/sql/001_profiles_trigger.sql`)。保険として `requireAuth()` 内でも `upsert` する
 
 ## レッスン判定
 
