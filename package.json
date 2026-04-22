@@ -13,9 +13,9 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "db:reset": "prisma db push --force-reset && npm run db:seed",
+    "db:reset": "prisma db push --force-reset && prisma db seed",
     "postinstall": "prisma generate"
   },
   "dependencies": {
