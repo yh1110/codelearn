@@ -14,3 +14,27 @@ export async function completeLesson(
     throw handleUnknownError(error);
   }
 }
+
+export async function getCompletedLessonIdsByUser(
+  userId: string,
+  lessonIds?: string[],
+  repository: ProgressRepository = progressRepository,
+): Promise<string[]> {
+  try {
+    return await repository.findCompletedLessonIdsByUser(userId, lessonIds);
+  } catch (error) {
+    throw handleUnknownError(error);
+  }
+}
+
+export async function isLessonCompleted(
+  userId: string,
+  lessonId: string,
+  repository: ProgressRepository = progressRepository,
+): Promise<boolean> {
+  try {
+    return await repository.isLessonCompleted(userId, lessonId);
+  } catch (error) {
+    throw handleUnknownError(error);
+  }
+}
