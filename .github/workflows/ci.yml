@@ -23,8 +23,12 @@ jobs:
           node-version: "24"
           cache: "npm"
       - run: npm ci
+      # Explicit prisma generate step for CI log visibility
+      # (postinstall also runs it, but a separate step is easier to debug).
+      - run: npx prisma generate
       # Generate Next.js 16 route types (PageProps<"/courses/[slug]"> etc.)
       # so that tsc --noEmit can resolve them without a full build.
       - run: npx next typegen
-      - run: npm run check
+      - name: Biome check (GitHub annotations)
+        run: npx biome check --reporter=github .
       - run: npx tsc --noEmit
