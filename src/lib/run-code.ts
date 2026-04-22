@@ -25,7 +25,17 @@ function ensureInit(): Promise<void> {
 }
 
 export async function runCodeInBrowser(code: string): Promise<RunResult> {
-  await ensureInit();
+  try {
+    await ensureInit();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      stdout: "",
+      stderr: `ランタイム初期化に失敗しました: ${message}`,
+      timedOut: false,
+      exitCode: 1,
+    };
+  }
   let js: string;
   try {
     const transformed = await esbuild.transform(code, {
@@ -92,7 +102,9 @@ function runInIframe(js: string): Promise<RunResult> {
 }
 
 function buildIframeHtml(js: string): string {
-  const payload = JSON.stringify(js);
+  // Escape "</script" so user code containing it cannot break out of the
+  // outer <script> tag in srcdoc and abort iframe initialization.
+  const payload = JSON.stringify(js).replace(/<\/(script)/gi, "<\\/$1");
   return `<!doctype html><html><body><script>
 (function(){
   var stdout = []; var stderr = [];
