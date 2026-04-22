@@ -6,9 +6,16 @@ Progate 風の TypeScript 学習プラットフォーム。ブラウザ上のエ
 
 - **Next.js 16** (App Router) + React 19 + TypeScript
 - **Tailwind CSS v4**
-- **Prisma 7** + **PostgreSQL 16** (Docker)
+- **Prisma 7** (driver adapter: `@prisma/adapter-pg`) + **PostgreSQL 16** (Docker)
 - **Monaco Editor** でコード編集
 - **tsx** でサーバー側 TypeScript 実行
+
+Prisma 7 では datasource URL を `schema.prisma` から外し、`prisma.config.ts` で指定する仕様に変わっています。接続は `@prisma/adapter-pg` 経由で `pg` が担います。
+
+## 前提条件
+
+- Node.js (Next.js 16 が要求するバージョン)
+- Docker (Postgres を起動するため)
 
 ## セットアップ
 
@@ -59,6 +66,7 @@ src/
 prisma/
   schema.prisma                                      # Course / Lesson / Progress
   seed.ts                                            # 初期データ
+prisma.config.ts                                     # Prisma 7: datasource URL / seed コマンド定義
 docker-compose.yml                                   # Postgres 16 Alpine
 ```
 

@@ -22,7 +22,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - ブラウザ上の Monaco Editor で TS を書き、サーバー側 `tsx` で実行、期待出力と突き合わせて自動判定する。
 - フェーズは **PoC / MVP**。
 - 認証は未導入（Supabase 導入予定）。現状 `userId` は `"local-user"` 固定。
-- 現スタック: Next.js 16.2.4 (App Router, Turbopack) / React 19 / Tailwind v4 / Prisma 6 / PostgreSQL 16 (Docker, port 5434) / Monaco Editor / zod。
+- 現スタック: Next.js 16.2.4 (App Router, Turbopack) / React 19 / Tailwind v4 / Prisma 7 (driver adapter: `@prisma/adapter-pg`) / PostgreSQL 16 (Docker, port 5434) / Monaco Editor / zod。
 
 ---
 
