@@ -32,7 +32,11 @@ export default async function Home() {
 
       {courses.length === 0 ? (
         <p className="text-zinc-500">
-          まだコースがありません。<code className="rounded bg-zinc-100 px-2 py-0.5 text-sm dark:bg-zinc-800">npm run db:seed</code> を実行してください。
+          まだコースがありません。
+          <code className="rounded bg-zinc-100 px-2 py-0.5 text-sm dark:bg-zinc-800">
+            npm run db:seed
+          </code>{" "}
+          を実行してください。
         </p>
       ) : (
         <ul className="space-y-4">
@@ -51,9 +55,7 @@ export default async function Home() {
                       {done} / {total} クリア
                     </span>
                   </div>
-                  <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-                    {c.description}
-                  </p>
+                  <p className="mt-1 text-zinc-600 dark:text-zinc-400">{c.description}</p>
                 </Link>
               </li>
             );
