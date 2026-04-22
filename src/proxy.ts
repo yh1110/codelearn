@@ -11,6 +11,18 @@ function isAuthPath(path: string): boolean {
 }
 
 /**
+ * Copy cookies written by `@supabase/ssr`'s session refresh (which targets
+ * the base `response`) onto a follow-up redirect response, so rotated auth
+ * cookies are not dropped when we short-circuit the request.
+ */
+function carryRefreshedCookies(base: NextResponse, next: NextResponse): NextResponse {
+  for (const cookie of base.cookies.getAll()) {
+    next.cookies.set(cookie);
+  }
+  return next;
+}
+
+/**
  * Next.js 16 proxy (formerly middleware). Responsibilities:
  * 1. Refresh the Supabase auth session cookie so Server Components see an
  *    up-to-date token.
@@ -63,14 +75,14 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     loginUrl.pathname = "/login";
     loginUrl.search = "";
     if (path !== "/") loginUrl.searchParams.set("from", path);
-    return NextResponse.redirect(loginUrl);
+    return carryRefreshedCookies(response, NextResponse.redirect(loginUrl));
   }
 
   if (user && path === "/login") {
     const home = request.nextUrl.clone();
     home.pathname = "/";
     home.search = "";
-    return NextResponse.redirect(home);
+    return carryRefreshedCookies(response, NextResponse.redirect(home));
   }
 
   return response;
