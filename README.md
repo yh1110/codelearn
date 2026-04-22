@@ -46,10 +46,10 @@ npm run dev
 ### 手順
 
 1. [Supabase Dashboard](https://supabase.com/dashboard) で新規プロジェクトを作成する。
-2. **Project Settings → API** から以下を控える:
+2. **Project Settings → API Keys** から以下を控える (新形式 `sb_publishable_...` / `sb_secret_...` を使う。Legacy JWT は使わない):
    - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
-   - `anon` public key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `service_role` key → `SUPABASE_SERVICE_ROLE_KEY` (server-only。漏らさない)
+   - **Publishable key** (`sb_publishable_...`) → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+   - **Secret key** (`sb_secret_...`) → `SUPABASE_SECRET_KEY` (server-only。漏らさない)
 3. **Project Settings → Database → Connection string** から以下を控える:
    - **Transaction pooler** (port 6543) → `DATABASE_URL` (Prisma runtime 用)
    - **Session pooler / Direct connection** (port 5432) → `DIRECT_URL` (`prisma migrate` / `db push` 用)

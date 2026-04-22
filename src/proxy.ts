@@ -15,13 +15,13 @@ import { type NextRequest, NextResponse } from "next/server";
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   let response = NextResponse.next({ request });
 
-  if (!url || !anonKey) return response;
+  if (!url || !publishableKey) return response;
 
-  const supabase = createServerClient(url, anonKey, {
+  const supabase = createServerClient(url, publishableKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();

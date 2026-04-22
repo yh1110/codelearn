@@ -4,11 +4,11 @@ import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
-function readEnv(): { url: string; anonKey: string } | null {
+function readEnv(): { url: string; publishableKey: string } | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anonKey) return null;
-  return { url, anonKey };
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !publishableKey) return null;
+  return { url, publishableKey };
 }
 
 /**
@@ -22,7 +22,7 @@ export async function createSupabaseServerClient(): Promise<SupabaseClient | nul
 
   const cookieStore = await cookies();
 
-  return createServerClient(env.url, env.anonKey, {
+  return createServerClient(env.url, env.publishableKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
