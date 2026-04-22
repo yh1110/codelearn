@@ -24,6 +24,7 @@
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "next": "16.2.4",
+    "next-safe-action": "^8.5.2",
     "pg": "^8.20.0",
     "prisma": "^7.7.0",
     "react": "19.2.4",
