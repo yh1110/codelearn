@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -45,17 +46,18 @@ export default async function Home() {
             const done = c.lessons.filter((l) => completedIds.has(l.id)).length;
             return (
               <li key={c.id}>
-                <Link
-                  href={`/courses/${c.slug}`}
-                  className="block rounded-lg border border-zinc-200 p-5 transition hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="text-xl font-semibold">{c.title}</h2>
-                    <span className="shrink-0 text-sm text-zinc-500">
-                      {done} / {total} クリア
-                    </span>
-                  </div>
-                  <p className="mt-1 text-zinc-600 dark:text-zinc-400">{c.description}</p>
+                <Link className="block transition hover:opacity-80" href={`/courses/${c.slug}`}>
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between gap-3">
+                        <CardTitle className="text-xl">{c.title}</CardTitle>
+                        <span className="shrink-0 text-sm text-muted-foreground">
+                          {done} / {total} クリア
+                        </span>
+                      </div>
+                      <CardDescription>{c.description}</CardDescription>
+                    </CardHeader>
+                  </Card>
                 </Link>
               </li>
             );

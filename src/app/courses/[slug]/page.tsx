@@ -1,5 +1,7 @@
+import { Check } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -39,14 +41,23 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
           return (
             <li key={l.id}>
               <Link
+                className="block transition hover:opacity-80"
                 href={`/courses/${course.slug}/lessons/${l.slug}`}
-                className="flex items-center gap-4 rounded-md border border-zinc-200 p-4 transition hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
               >
-                <span className="w-8 shrink-0 font-mono text-sm text-zinc-500">#{i + 1}</span>
-                <span className="flex-1 font-medium">{l.title}</span>
-                {done && (
-                  <span className="shrink-0 text-sm text-emerald-600 dark:text-emerald-400">✓</span>
-                )}
+                <Card size="sm">
+                  <CardContent className="flex items-center gap-4">
+                    <span className="w-8 shrink-0 font-mono text-sm text-muted-foreground">
+                      #{i + 1}
+                    </span>
+                    <span className="flex-1 font-medium">{l.title}</span>
+                    {done && (
+                      <Check
+                        aria-label="クリア済み"
+                        className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400"
+                      />
+                    )}
+                  </CardContent>
+                </Card>
               </Link>
             </li>
           );
