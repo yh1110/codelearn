@@ -219,6 +219,11 @@ export async function getLessonBySlug(
 
 next-safe-actions 導入までの暫定パターン。導入後は `actionClient.schema(...).action(...)` 形式に置換する。
 
+**ポイント**:
+
+- **認証チェック (`requireRole` / `requireAuth`) は `try` の外に出す**。`UnauthorizedError` は通常のエラー画面（Next.js の `error.tsx`）に伝播させ、クライアントの mutation 成功/失敗ハンドリングと混ぜない。
+- レスポンスは `code` フィールドで **検証エラー / 内部エラー** を区別する。クライアント側はこれで UI 分岐する。
+
 ```typescript
 // src/actions/users.ts
 'use server';
@@ -226,21 +231,114 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { inviteUser } from '@/services/userService';
 import { requireRole } from '@/lib/auth';
+import { ValidationError } from '@/lib/errors';
 
 const InviteUserSchema = z.object({
   email: z.string().email(),
   role: z.enum(['ADMIN', 'USER']),
 });
 
-export async function inviteUserAction(input: unknown) {
+type InviteUserResult =
+  | { success: true; user: { id: string; email: string } }
+  | { success: false; code: 'VALIDATION' | 'INTERNAL'; error: string };
+
+export async function inviteUserAction(input: unknown): Promise<InviteUserResult> {
+  // 認証は try の外。UnauthorizedError は error.tsx で扱う
+  await requireRole('ADMIN');
+
   try {
-    await requireRole('ADMIN');
     const parsed = InviteUserSchema.parse(input);
     const user = await inviteUser(parsed);
     revalidatePath('/accounts');
-    return { success: true as const, user };
+    return { success: true, user };
   } catch (error) {
-    return { success: false as const, error: (error as Error).message };
+    if (error instanceof z.ZodError || error instanceof ValidationError) {
+      return { success: false, code: 'VALIDATION', error: (error as Error).message };
+    }
+    return { success: false, code: 'INTERNAL', error: (error as Error).message };
   }
 }
 ```
+
+### 6.4 BaseRepository（想定シグネチャ）
+
+`src/repositories/base.repository.ts` に配置される想定（未作成）。各 repository はこれを extend し、transaction が必要な操作は `withTransaction()` 経由で実装する。
+
+```typescript
+// src/repositories/base.repository.ts (想定)
+import 'server-only';
+import { Prisma, PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+
+export abstract class BaseRepository {
+  constructor(protected readonly client: PrismaClient | Prisma.TransactionClient = prisma) {}
+
+  /**
+   * 複数 repository / 複数クエリを跨いだアトミック処理。
+   * fn 内で受け取る `tx` を子 repository に渡して使う。
+   */
+  async withTransaction<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+    // prisma / tx どちらを client に持っていても $transaction は呼べる
+    return (this.client as PrismaClient).$transaction(fn);
+  }
+}
+```
+
+- `this.client` は通常は singleton の `prisma`。transaction 中は `Prisma.TransactionClient` が入る。
+- 単一 repository で完結する transaction は、内部で `withTransaction()` を呼んで閉じる。
+- 複数 repository を跨ぐ transaction は **Service 層** で `prisma.$transaction(...)` を直接使う（`tech-stack.md § 2.4` の例外規定）。
+
+### 6.5 補助ユーティリティの期待シグネチャ
+
+Service / Server Action から参照する以下のユーティリティは **契約を固定** する。AI エージェントは独自シグネチャで再実装しない。実装自体は未作成なので、新規に作るときはこの契約を守る。
+
+```typescript
+// src/lib/errors.ts (想定)
+import 'server-only';
+
+export class ValidationError extends Error {
+  readonly name = 'ValidationError';
+}
+export class NotFoundError extends Error {
+  readonly name = 'NotFoundError';
+}
+export class UnauthorizedError extends Error {
+  readonly name = 'UnauthorizedError';
+}
+export class ForbiddenError extends Error {
+  readonly name = 'ForbiddenError';
+}
+
+/**
+ * 想定外の error を既知の Error サブクラスに正規化して返す。
+ * 既知のカスタム error はそのまま通す。Service / Server Action の catch で使う:
+ *
+ *   } catch (error) {
+ *     throw handleUnknownError(error);
+ *   }
+ */
+export function handleUnknownError(error: unknown): Error {
+  if (error instanceof ValidationError) return error;
+  if (error instanceof NotFoundError) return error;
+  if (error instanceof UnauthorizedError) return error;
+  if (error instanceof ForbiddenError) return error;
+  if (error instanceof Error) return error;
+  return new Error(typeof error === 'string' ? error : 'Unknown error');
+}
+```
+
+```typescript
+// src/lib/auth.ts (想定)
+import 'server-only';
+
+export type Session = { userId: string; email: string; role: 'ADMIN' | 'USER' };
+
+/** 未認証時は UnauthorizedError を throw。認証済みなら Session を返す。 */
+export async function requireAuth(): Promise<Session>;
+
+/** 権限不足時は ForbiddenError、未認証時は UnauthorizedError を throw。 */
+export async function requireRole(role: Session['role']): Promise<Session>;
+```
+
+- いずれも **throw する side-effectful API**。戻り値をチェックして分岐しない（`try-catch` も通常は不要で、Next.js の `error.tsx` に伝播させる）。
+- Middleware 側の認証（`architecture.md § 3`）と **二重チェック** する前提。

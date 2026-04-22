@@ -250,6 +250,9 @@ function Component({ roomId }: { roomId: string }) {
 ```typescript
 // src/stores/lessonsStore.ts
 import { create } from 'zustand';
+// LessonFilters 型と defaultFilters は src/types/lesson.ts に定義される想定
+import type { LessonFilters } from '@/types/lesson';
+import { defaultFilters } from '@/types/lesson';
 
 interface LessonsState {
   filters: LessonFilters;
@@ -300,6 +303,25 @@ export function useLessons() {
 
 - Component 側は `const { data, isLoading, ... } = useLessons();` だけ。zustand / SWR の結線は hook に閉じる。
 - URL クエリに state を乗せたい場合は nuqs と併用する（`tech-stack.md § 2.9`）。
+
+### 5.3 fetcher の基本実装
+
+SWR に渡す `fetcher` は `src/lib/fetcher.ts` に共通で置く。すべての Client fetch はこれを経由する。
+
+```typescript
+// src/lib/fetcher.ts
+export const fetcher = <T = unknown>(url: string): Promise<T> =>
+  fetch(url, { credentials: 'same-origin' }).then((res) => {
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} ${res.statusText} (${url})`);
+    }
+    return res.json() as Promise<T>;
+  });
+```
+
+- HTTP エラーは Error を throw する（SWR 側で `error` として観測される）。
+- 認証は Cookie ベース前提なので `credentials: 'same-origin'`。cross-origin に投げる場合は別 fetcher を作る。
+- POST / PUT / DELETE 用の fetcher は作らない。mutation は Server Action に寄せる（`architecture.md § 1 Layer 2`）。
 
 ---
 
