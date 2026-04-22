@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { completeLessonAction } from "@/actions/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type RunResult, runCodeInBrowser } from "@/lib/run-code";
@@ -59,11 +60,21 @@ export default function LessonClient({
 
       if (passed && !completed) {
         setCompleted(true);
-        fetch("/api/progress", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lessonId: lesson.id }),
-        }).catch(() => {});
+        completeLessonAction({ lessonId: lesson.id })
+          .then((result) => {
+            if (result?.serverError) {
+              console.error("[LessonClient] completeLessonAction serverError:", result.serverError);
+            }
+            if (result?.validationErrors) {
+              console.error(
+                "[LessonClient] completeLessonAction validationErrors:",
+                result.validationErrors,
+              );
+            }
+          })
+          .catch((err) => {
+            console.error("[LessonClient] completeLessonAction threw:", err);
+          });
       }
     } finally {
       setRunning(false);
