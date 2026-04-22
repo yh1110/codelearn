@@ -41,4 +41,8 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT OR UPDATE ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+-- Enable RLS without policies: the Supabase publishable key / authenticated
+-- roles are unable to read or write profiles. All access goes through Prisma
+-- (postgres role, which bypasses RLS). Defense in depth against accidental
+-- exposure of the table via the Supabase REST API.
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
