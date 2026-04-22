@@ -2,16 +2,16 @@ import "server-only";
 
 import { createSafeActionClient, DEFAULT_SERVER_ERROR_MESSAGE } from "next-safe-action";
 import { requireAuth } from "@/lib/auth";
-import { NotFoundError, UnauthorizedError, ValidationError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError, UnauthorizedError, ValidationError } from "@/lib/errors";
 
 export const actionClient = createSafeActionClient({
   handleServerError(error) {
     console.error("[safe-action] server error:", error);
-    if (
-      error instanceof ValidationError ||
-      error instanceof NotFoundError ||
-      error instanceof UnauthorizedError
-    ) {
+    // Let auth-class errors propagate so Next.js routes them to error.tsx /
+    // the middleware redirect flow — they are not normal action failures.
+    if (error instanceof UnauthorizedError) throw error;
+    if (error instanceof ForbiddenError) throw error;
+    if (error instanceof ValidationError || error instanceof NotFoundError) {
       return error.message;
     }
     return DEFAULT_SERVER_ERROR_MESSAGE;
