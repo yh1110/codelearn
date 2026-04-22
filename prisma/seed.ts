@@ -193,7 +193,8 @@ console.log(\`\${user.name} is \${user.age} years old\`);
 ];
 
 async function main() {
-  await prisma.progress.deleteMany();
+  // Progress rows are owned by Supabase Auth users (see prisma Profile model).
+  // They are out of scope for content seeding — do not touch them here.
   await prisma.lesson.deleteMany();
   await prisma.course.deleteMany();
 
