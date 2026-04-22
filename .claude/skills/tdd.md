@@ -75,6 +75,7 @@ test('公開されたレッスンが /courses/[slug]/lessons/[lessonSlug] で表
 
 - 先にこの E2E が失敗することを確認
 - その後 Server Component / Repository / Service をレイヤー順に実装して通す
+- Monaco Editor は `<textarea>` を内包するが aria-label はデフォルトで付かない。`getByRole('textbox', { name: 'answer code' })` 前提で書く場合、実装側で `options.ariaLabel: 'answer code'` を明示的に設定すること
 
 ### 5.2 Server Action を追加する
 
@@ -84,6 +85,8 @@ test('公開されたレッスンが /courses/[slug]/lessons/[lessonSlug] で表
 import { describe, it, expect, vi } from 'vitest';
 import { submitAnswerAction } from './lesson';
 
+// requireAuth は architecture.md § 6.3 の規約により try の外で呼ばれる (UnauthorizedError を error.tsx に伝播させる設計)。
+// そのためテストでは vi.mock で必ず差し替え、認証成功の Session を注入してから action の責務検証に入る。
 vi.mock('@/lib/auth', () => ({
   requireAuth: vi.fn().mockResolvedValue({ userId: 'test-user', email: 't@example.com', role: 'USER' }),
 }));
@@ -114,7 +117,7 @@ import { prisma } from '@/lib/prisma';
 import { LessonRepository } from './lesson.repository';
 
 beforeEach(async () => {
-  await prisma.$executeRaw`TRUNCATE TABLE lessons RESTART IDENTITY CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE lessons CASCADE`;
 });
 
 describe('LessonRepository', () => {
