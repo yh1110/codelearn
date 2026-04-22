@@ -40,27 +40,16 @@ export function useLessonRunner({
         // Optimistic update: flip the badge immediately, roll back if the
         // server action fails so the UI stays consistent with the DB.
         setCompleted(true);
-        completeLessonAction({ lessonId })
-          .then((result) => {
-            if (result?.serverError) {
-              setCompleted(false);
-              console.error(
-                "[useLessonRunner] completeLessonAction serverError:",
-                result.serverError,
-              );
-            }
-            if (result?.validationErrors) {
-              setCompleted(false);
-              console.error(
-                "[useLessonRunner] completeLessonAction validationErrors:",
-                result.validationErrors,
-              );
-            }
-          })
-          .catch((err) => {
+        try {
+          const result = await completeLessonAction({ lessonId });
+          if (result?.serverError || result?.validationErrors) {
             setCompleted(false);
-            console.error("[useLessonRunner] completeLessonAction threw:", err);
-          });
+            console.error("[useLessonRunner] completeLessonAction failed:", result);
+          }
+        } catch (err) {
+          setCompleted(false);
+          console.error("[useLessonRunner] completeLessonAction threw:", err);
+        }
       }
     } finally {
       setRunning(false);

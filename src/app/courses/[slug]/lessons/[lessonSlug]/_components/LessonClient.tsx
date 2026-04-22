@@ -45,7 +45,7 @@ export default function LessonClient({
   });
 
   return (
-    <div className="flex h-[calc(100vh-0px)] flex-1 flex-col">
+    <div className="flex h-screen flex-1 flex-col">
       <header className="flex items-center gap-4 border-b border-zinc-200 px-6 py-3 dark:border-zinc-800">
         <Link href={`/courses/${courseSlug}`} className="text-sm text-zinc-500 hover:underline">
           ← {courseTitle}

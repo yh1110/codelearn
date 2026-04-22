@@ -74,6 +74,9 @@ function runInWorker(js: string): Promise<RunResult> {
   return new Promise<RunResult>((resolve) => {
     let settled = false;
     let timer: ReturnType<typeof setTimeout>;
+    // Buffer intermediate stdout/stderr so timeouts can still surface partial output.
+    let partialStdout = "";
+    let partialStderr = "";
     const finish = (result: RunResult) => {
       if (settled) return;
       settled = true;
@@ -91,7 +94,7 @@ function runInWorker(js: string): Promise<RunResult> {
 
     timer = setTimeout(() => {
       // Worker.terminate() reliably kills infinite loops (unlike iframe.remove()).
-      finish({ stdout: "", stderr: "", timedOut: true, exitCode: null });
+      finish({ stdout: partialStdout, stderr: partialStderr, timedOut: true, exitCode: null });
     }, TIMEOUT_MS);
 
     worker.onmessage = (event: MessageEvent) => {
@@ -101,7 +104,13 @@ function runInWorker(js: string): Promise<RunResult> {
         stderr?: unknown;
         exitCode?: unknown;
       } | null;
-      if (!data || data.type !== "done") return;
+      if (!data) return;
+      if (data.type === "chunk") {
+        if (typeof data.stdout === "string") partialStdout = data.stdout;
+        if (typeof data.stderr === "string") partialStderr = data.stderr;
+        return;
+      }
+      if (data.type !== "done") return;
       finish({
         stdout: typeof data.stdout === "string" ? data.stdout : "",
         stderr: typeof data.stderr === "string" ? data.stderr : "",
@@ -134,14 +143,18 @@ function buildWorkerSource(js: string): string {
       return String(a);
     }).join(" ");
   }
-  self.console = {
-    log: function(){ stdout.push(fmt(arguments)); },
-    info: function(){ stdout.push(fmt(arguments)); },
-    debug: function(){ stdout.push(fmt(arguments)); },
-    warn: function(){ stderr.push(fmt(arguments)); },
-    error: function(){ stderr.push(fmt(arguments)); },
-  };
   function joined(arr){ return arr.join("\\n") + (arr.length ? "\\n" : ""); }
+  function flush(){
+    // Stream partial output so the main thread can show it on timeout.
+    self.postMessage({ type: "chunk", stdout: joined(stdout), stderr: joined(stderr) });
+  }
+  self.console = {
+    log: function(){ stdout.push(fmt(arguments)); flush(); },
+    info: function(){ stdout.push(fmt(arguments)); flush(); },
+    debug: function(){ stdout.push(fmt(arguments)); flush(); },
+    warn: function(){ stdout.push(fmt(arguments)); flush(); },
+    error: function(){ stderr.push(fmt(arguments)); flush(); },
+  };
   function done(exitCode, errText){
     self.postMessage({
       type: "done",
