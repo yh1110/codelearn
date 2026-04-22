@@ -29,7 +29,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!supabase) return redirectWithError(request, "Supabase が構成されていません。");
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) return redirectWithError(request, error.message);
+  if (error) {
+    // Keep the raw Supabase error in logs for debugging, but never leak it to
+    // the client URL — the message can disclose provider- / token-level
+    // details that are not useful to end users.
+    console.error("[auth/callback] exchangeCodeForSession failed:", error);
+    return redirectWithError(request, "認証に失敗しました。もう一度お試しください。");
+  }
 
   const dest = request.nextUrl.clone();
   dest.pathname = from;
