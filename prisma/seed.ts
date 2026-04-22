@@ -1,3 +1,13 @@
+// Load .env when invoked directly via tsx (outside Prisma CLI, e.g. npm run db:seed).
+// Prisma 7's CLI loads env via prisma.config.ts, but tsx-direct execution does not.
+if (!process.env.DATABASE_URL) {
+  try {
+    process.loadEnvFile?.();
+  } catch {
+    // Node <20.12 or missing .env — fall back to externally provided DATABASE_URL.
+  }
+}
+
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 

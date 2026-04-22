@@ -10,6 +10,11 @@ Progate 風の TypeScript 学習プラットフォーム。ブラウザ上のエ
 - **Monaco Editor** でコード編集
 - **tsx** でサーバー側 TypeScript 実行
 
+## 前提条件
+
+- **Node.js 20.12.0 以上** (`.nvmrc` は 24 を指定。`process.loadEnvFile` に依存)
+- Docker (Postgres を起動するため)
+
 ## セットアップ
 
 ```bash
@@ -28,6 +33,8 @@ npm run dev
 ```
 
 `http://localhost:3000` を開く。
+
+> Node 20.12 未満の環境で `db:seed` / `db:reset` を実行する場合は、`.env` の自動ロードが効かないので `DATABASE_URL=... npm run db:seed` のように環境変数を外から渡してください。
 
 ## スクリプト
 
