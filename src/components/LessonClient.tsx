@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -86,10 +86,7 @@ export default function LessonClient({
   return (
     <div className="flex h-[calc(100vh-0px)] flex-1 flex-col">
       <header className="flex items-center gap-4 border-b border-zinc-200 px-6 py-3 dark:border-zinc-800">
-        <Link
-          href={`/courses/${courseSlug}`}
-          className="text-sm text-zinc-500 hover:underline"
-        >
+        <Link href={`/courses/${courseSlug}`} className="text-sm text-zinc-500 hover:underline">
           ← {courseTitle}
         </Link>
         <h1 className="text-lg font-semibold">{lesson.title}</h1>
@@ -106,9 +103,7 @@ export default function LessonClient({
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                h1: ({ children }) => (
-                  <h1 className="mb-5 mt-2 text-3xl font-bold">{children}</h1>
-                ),
+                h1: ({ children }) => <h1 className="mb-5 mt-2 text-3xl font-bold">{children}</h1>,
                 h2: ({ children }) => (
                   <h2 className="mb-3 mt-8 text-xl font-semibold">{children}</h2>
                 ),
@@ -116,9 +111,7 @@ export default function LessonClient({
                   <h3 className="mb-2 mt-6 text-base font-semibold">{children}</h3>
                 ),
                 p: ({ children }) => (
-                  <p className="mb-4 leading-7 text-zinc-700 dark:text-zinc-300">
-                    {children}
-                  </p>
+                  <p className="mb-4 leading-7 text-zinc-700 dark:text-zinc-300">{children}</p>
                 ),
                 code: ({ className, children }) => {
                   const isInline = !className;
@@ -150,9 +143,7 @@ export default function LessonClient({
                     {children}
                   </a>
                 ),
-                strong: ({ children }) => (
-                  <strong className="font-semibold">{children}</strong>
-                ),
+                strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
               }}
             >
               {lesson.contentMd}
@@ -163,6 +154,7 @@ export default function LessonClient({
         <main className="flex w-1/2 flex-col">
           <div className="flex items-center gap-2 border-b border-zinc-200 px-4 py-2 dark:border-zinc-800">
             <button
+              type="button"
               onClick={run}
               disabled={running}
               className="rounded-md bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
@@ -170,15 +162,14 @@ export default function LessonClient({
               {running ? "実行中..." : "▶ 実行"}
             </button>
             <button
+              type="button"
               onClick={reset}
               className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
             >
               リセット
             </button>
             {lesson.expectedOutput && (
-              <span className="ml-2 text-xs text-zinc-500">
-                期待出力と一致すればクリア
-              </span>
+              <span className="ml-2 text-xs text-zinc-500">期待出力と一致すればクリア</span>
             )}
           </div>
 
@@ -194,8 +185,7 @@ export default function LessonClient({
                 fontSize: 14,
                 scrollBeyondLastLine: false,
                 tabSize: 2,
-                fontFamily:
-                  "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
               }}
             />
           </div>
@@ -213,9 +203,7 @@ export default function LessonClient({
                     {output.stderr}
                   </pre>
                 )}
-                {output.timedOut && (
-                  <p className="text-amber-600">⏱ タイムアウト (5s)</p>
-                )}
+                {output.timedOut && <p className="text-amber-600">⏱ タイムアウト (5s)</p>}
                 {!output.stdout && !output.stderr && !output.timedOut && (
                   <p className="text-zinc-500">(出力なし)</p>
                 )}
