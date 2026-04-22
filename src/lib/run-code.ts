@@ -1,3 +1,4 @@
+import "client-only";
 import * as esbuild from "esbuild-wasm";
 
 export type RunResult = {
@@ -120,24 +121,34 @@ function buildIframeHtml(js: string): string {
   }
   console.log = function(){ stdout.push(fmt(arguments)); };
   console.info = function(){ stdout.push(fmt(arguments)); };
+  console.debug = function(){ stdout.push(fmt(arguments)); };
   console.error = function(){ stderr.push(fmt(arguments)); };
   console.warn = function(){ stderr.push(fmt(arguments)); };
-  function send(payload){ parent.postMessage(payload, "*"); }
+  var sent = false;
+  function send(payload){
+    if (sent) return;
+    sent = true;
+    parent.postMessage(payload, "*");
+  }
+  function joined(arr){ return arr.join("\\n") + (arr.length ? "\\n" : ""); }
+  function done(exitCode, errText){
+    send({
+      type: "done",
+      stdout: joined(stdout),
+      stderr: errText ? (joined(stderr) + errText) : joined(stderr),
+      exitCode: exitCode
+    });
+  }
   try {
-    (new Function(${payload}))();
-    send({
-      type: "done",
-      stdout: stdout.join("\\n") + (stdout.length ? "\\n" : ""),
-      stderr: stderr.join("\\n") + (stderr.length ? "\\n" : ""),
-      exitCode: 0
-    });
+    // AsyncFunction lets user code use top-level await.
+    var AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+    Promise.resolve()
+      .then(function(){ return (new AsyncFunction(${payload}))(); })
+      .then(function(){ done(0, ""); })
+      .catch(function(e){ done(1, (e && e.stack) ? String(e.stack) : String(e)); });
   } catch (e) {
-    send({
-      type: "done",
-      stdout: stdout.join("\\n") + (stdout.length ? "\\n" : ""),
-      stderr: (e && e.stack) ? String(e.stack) : String(e),
-      exitCode: 1
-    });
+    // Synchronous failure (e.g. SyntaxError from AsyncFunction construction).
+    done(1, (e && e.stack) ? String(e.stack) : String(e));
   }
 })();
 </script></body></html>`;
