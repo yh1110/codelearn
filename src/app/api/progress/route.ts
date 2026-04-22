@@ -1,5 +1,5 @@
-import { z } from "zod";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";

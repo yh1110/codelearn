@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "format": "biome format .",
+    "format:fix": "biome format --write .",
+    "lint": "biome lint .",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:push": "prisma db push",
@@ -31,12 +35,11 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.12",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
