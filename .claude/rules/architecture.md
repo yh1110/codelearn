@@ -79,6 +79,13 @@ src/
 
 **新規ディレクトリを上記以外に作らない**。分類に迷ったらユーザーに確認する。
 
+ただし App Router の **private folder 規約** (`_` プレフィックス) に基づく以下のコロケーションのみ許可する:
+
+- `src/app/<route>/_components/` — **そのページ固有** のコンポーネント
+- `src/app/<route>/_hooks/` — **そのページ固有** のカスタムフック
+
+複数ページで共有するようになった時点で、`src/components/` / `src/hooks/` へ昇格させる。グローバル hooks / UI プリミティブを `_hooks` / `_components` に置かない。
+
 ### 2.2 現状（2026-04 時点）
 
 ```
@@ -88,12 +95,13 @@ src/
 │   ├── layout.tsx
 │   ├── globals.css
 │   ├── courses/[slug]/page.tsx
-│   ├── courses/[slug]/lessons/[lessonSlug]/page.tsx
+│   ├── courses/[slug]/lessons/[lessonSlug]/
+│   │   ├── page.tsx
+│   │   ├── _components/LessonClient.tsx           # ページ固有 (private folder)
+│   │   └── _hooks/useLessonRunner.ts              # ページ固有 (private folder)
 │   └── api/
 │       ├── run/route.ts                          # POST、Server Action 移行予定
 │       └── progress/route.ts                     # POST、Server Action 移行予定
-├── components/
-│   └── LessonClient.tsx                          # 将来は機能別に分割
 └── lib/
     └── prisma.ts
 prisma/

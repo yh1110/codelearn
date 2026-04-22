@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import LessonClient from "@/components/LessonClient";
 import { prisma } from "@/lib/prisma";
+import LessonClient from "./_components/LessonClient";
 
 export const dynamic = "force-dynamic";
 

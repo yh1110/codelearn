@@ -48,22 +48,41 @@ export async function runCodeInBrowser(code: string): Promise<RunResult> {
     const message = error instanceof Error ? error.message : String(error);
     return { stdout: "", stderr: message, timedOut: false, exitCode: 1 };
   }
-  return runInIframe(js);
+  return runInWorker(js);
 }
 
-function runInIframe(js: string): Promise<RunResult> {
-  return new Promise((resolve) => {
-    const iframe = document.createElement("iframe");
-    iframe.sandbox.add("allow-scripts");
-    iframe.style.display = "none";
+function runInWorker(js: string): Promise<RunResult> {
+  const workerSrc = buildWorkerSource(js);
+  const blob = new Blob([workerSrc], { type: "application/javascript" });
+  const url = URL.createObjectURL(blob);
 
+  // TODO(#3): restrict worker-src / connect-src via CSP to block fetch / WS inside the worker.
+  let worker: Worker;
+  try {
+    worker = new Worker(url, { type: "classic" });
+  } catch (error) {
+    URL.revokeObjectURL(url);
+    const message = error instanceof Error ? error.message : String(error);
+    return Promise.resolve({
+      stdout: "",
+      stderr: `Worker の起動に失敗しました: ${message}`,
+      timedOut: false,
+      exitCode: 1,
+    });
+  }
+
+  return new Promise<RunResult>((resolve) => {
     let settled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    // Buffer intermediate stdout/stderr so timeouts can still surface partial output.
+    let partialStdout = "";
+    let partialStderr = "";
     const finish = (result: RunResult) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      window.removeEventListener("message", handler);
-      iframe.remove();
+      worker.terminate();
+      URL.revokeObjectURL(url);
       const truncate = (s: string) => (s.length > MAX_OUTPUT ? s.slice(0, MAX_OUTPUT) : s);
       resolve({
         stdout: truncate(result.stdout),
@@ -73,15 +92,25 @@ function runInIframe(js: string): Promise<RunResult> {
       });
     };
 
-    const handler = (event: MessageEvent) => {
-      if (!iframe.contentWindow || event.source !== iframe.contentWindow) return;
+    timer = setTimeout(() => {
+      // Worker.terminate() reliably kills infinite loops (unlike iframe.remove()).
+      finish({ stdout: partialStdout, stderr: partialStderr, timedOut: true, exitCode: null });
+    }, TIMEOUT_MS);
+
+    worker.onmessage = (event: MessageEvent) => {
       const data = event.data as {
         type?: string;
         stdout?: unknown;
         stderr?: unknown;
         exitCode?: unknown;
       } | null;
-      if (!data || data.type !== "done") return;
+      if (!data) return;
+      if (data.type === "chunk") {
+        if (typeof data.stdout === "string") partialStdout = data.stdout;
+        if (typeof data.stderr === "string") partialStderr = data.stderr;
+        return;
+      }
+      if (data.type !== "done") return;
       finish({
         stdout: typeof data.stdout === "string" ? data.stdout : "",
         stderr: typeof data.stderr === "string" ? data.stderr : "",
@@ -89,25 +118,20 @@ function runInIframe(js: string): Promise<RunResult> {
         exitCode: typeof data.exitCode === "number" ? data.exitCode : 0,
       });
     };
-
-    const timer = setTimeout(() => {
-      finish({ stdout: "", stderr: "", timedOut: true, exitCode: null });
-    }, TIMEOUT_MS);
-
-    window.addEventListener("message", handler);
-
-    const html = buildIframeHtml(js);
-    iframe.srcdoc = html;
-    document.body.appendChild(iframe);
+    worker.onerror = (event: ErrorEvent) => {
+      finish({
+        stdout: "",
+        stderr: event.message || "Worker error",
+        timedOut: false,
+        exitCode: 1,
+      });
+    };
   });
 }
 
-function buildIframeHtml(js: string): string {
-  // Escape "</script" so user code containing it cannot break out of the
-  // outer <script> tag in srcdoc and abort iframe initialization.
-  const payload = JSON.stringify(js).replace(/<\/(script)/gi, "<\\/$1");
-  return `<!doctype html><html><body><script>
-(function(){
+function buildWorkerSource(js: string): string {
+  const payload = JSON.stringify(js);
+  return `(function(){
   var stdout = []; var stderr = [];
   function fmt(args){
     return Array.prototype.map.call(args, function(a){
@@ -119,20 +143,20 @@ function buildIframeHtml(js: string): string {
       return String(a);
     }).join(" ");
   }
-  console.log = function(){ stdout.push(fmt(arguments)); };
-  console.info = function(){ stdout.push(fmt(arguments)); };
-  console.debug = function(){ stdout.push(fmt(arguments)); };
-  console.error = function(){ stderr.push(fmt(arguments)); };
-  console.warn = function(){ stderr.push(fmt(arguments)); };
-  var sent = false;
-  function send(payload){
-    if (sent) return;
-    sent = true;
-    parent.postMessage(payload, "*");
-  }
   function joined(arr){ return arr.join("\\n") + (arr.length ? "\\n" : ""); }
+  function flush(){
+    // Stream partial output so the main thread can show it on timeout.
+    self.postMessage({ type: "chunk", stdout: joined(stdout), stderr: joined(stderr) });
+  }
+  self.console = {
+    log: function(){ stdout.push(fmt(arguments)); flush(); },
+    info: function(){ stdout.push(fmt(arguments)); flush(); },
+    debug: function(){ stdout.push(fmt(arguments)); flush(); },
+    warn: function(){ stdout.push(fmt(arguments)); flush(); },
+    error: function(){ stderr.push(fmt(arguments)); flush(); },
+  };
   function done(exitCode, errText){
-    send({
+    self.postMessage({
       type: "done",
       stdout: joined(stdout),
       stderr: errText ? (joined(stderr) + errText) : joined(stderr),
@@ -147,9 +171,7 @@ function buildIframeHtml(js: string): string {
       .then(function(){ done(0, ""); })
       .catch(function(e){ done(1, (e && e.stack) ? String(e.stack) : String(e)); });
   } catch (e) {
-    // Synchronous failure (e.g. SyntaxError from AsyncFunction construction).
     done(1, (e && e.stack) ? String(e.stack) : String(e));
   }
-})();
-</script></body></html>`;
+})();`;
 }
