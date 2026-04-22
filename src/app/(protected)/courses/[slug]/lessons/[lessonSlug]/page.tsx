@@ -1,14 +1,14 @@
 import { notFound } from "next/navigation";
+import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import LessonClient from "./_components/LessonClient";
 
 export const dynamic = "force-dynamic";
 
-const LOCAL_USER_ID = "local-user";
-
 export default async function LessonPage({
   params,
 }: PageProps<"/courses/[slug]/lessons/[lessonSlug]">) {
+  const session = await requireAuth();
   const { slug, lessonSlug } = await params;
 
   const course = await prisma.course.findUnique({
@@ -26,7 +26,7 @@ export default async function LessonPage({
 
   const completed = await prisma.progress.findUnique({
     where: {
-      userId_lessonId: { userId: LOCAL_USER_ID, lessonId: lesson.id },
+      userId_lessonId: { userId: session.userId, lessonId: lesson.id },
     },
     select: { id: true },
   });

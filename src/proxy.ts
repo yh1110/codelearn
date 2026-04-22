@@ -4,11 +4,18 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+const AUTH_PATHS = ["/login", "/auth/"] as const;
+
+function isAuthPath(path: string): boolean {
+  return AUTH_PATHS.some((p) => (p.endsWith("/") ? path.startsWith(p) : path === p));
+}
+
 /**
- * Next.js 16 proxy (formerly middleware) — refreshes the Supabase auth session
- * so Server Components see an up-to-date token. Auth gating (redirects, role
- * checks) is intentionally deferred to issue #5; this file only keeps the
- * session cookie fresh.
+ * Next.js 16 proxy (formerly middleware). Responsibilities:
+ * 1. Refresh the Supabase auth session cookie so Server Components see an
+ *    up-to-date token.
+ * 2. Redirect unauthenticated users to `/login` for protected routes, and
+ *    bounce signed-in users away from `/login` back to home.
  *
  * When Supabase env vars are missing (pre-setup), the proxy falls through so
  * the dev server keeps working without credentials.
@@ -38,13 +45,32 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     },
   });
 
+  let user: { id: string } | null = null;
   try {
     // Touch the session so `@supabase/ssr` performs a refresh if needed and
-    // writes the rotated cookies via `setAll`. Session refresh is best-effort:
-    // transient Supabase outages or malformed cookies must not break rendering.
-    await supabase.auth.getUser();
+    // writes the rotated cookies via `setAll`.
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
   } catch {
-    // Swallow; callers fall back to an unauthenticated state.
+    // Swallow; transient Supabase outages fall through as unauthenticated.
+  }
+
+  const path = request.nextUrl.pathname;
+  const authPath = isAuthPath(path);
+
+  if (!user && !authPath) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.search = "";
+    if (path !== "/") loginUrl.searchParams.set("from", path);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (user && path === "/login") {
+    const home = request.nextUrl.clone();
+    home.pathname = "/";
+    home.search = "";
+    return NextResponse.redirect(home);
   }
 
   return response;
@@ -53,7 +79,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 export const config = {
   matcher: [
     // Skip Next.js internals, API routes, and static assets.
-    // API routes that need auth perform their own requireAuth check (#5).
+    // API routes that need auth perform their own requireAuth check.
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

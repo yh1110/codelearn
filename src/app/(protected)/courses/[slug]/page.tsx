@@ -2,13 +2,13 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
+import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-const LOCAL_USER_ID = "local-user";
-
 export default async function CoursePage({ params }: PageProps<"/courses/[slug]">) {
+  const session = await requireAuth();
   const { slug } = await params;
 
   const course = await prisma.course.findUnique({
@@ -20,7 +20,7 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
 
   const progress = await prisma.progress.findMany({
     where: {
-      userId: LOCAL_USER_ID,
+      userId: session.userId,
       lessonId: { in: course.lessons.map((l) => l.id) },
     },
     select: { lessonId: true },

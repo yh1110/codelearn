@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-const LOCAL_USER_ID = "local-user";
-
 export default async function Home() {
+  const session = await requireAuth();
   const [courses, progress] = await Promise.all([
     prisma.course.findMany({
       orderBy: { order: "asc" },
@@ -15,7 +15,7 @@ export default async function Home() {
       },
     }),
     prisma.progress.findMany({
-      where: { userId: LOCAL_USER_ID },
+      where: { userId: session.userId },
       select: { lessonId: true },
     }),
   ]);
