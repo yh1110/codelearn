@@ -6,7 +6,7 @@ import { actionClient } from "@/lib/safe-action";
 import { completeLesson } from "@/services/progressService";
 
 const CompleteLessonSchema = z.object({
-  lessonId: z.string().min(1),
+  lessonId: z.cuid(),
 });
 
 export const completeLessonAction = actionClient

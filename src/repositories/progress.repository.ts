@@ -11,12 +11,4 @@ export class ProgressRepository extends BaseRepository {
       create: { userId, lessonId },
     });
   }
-
-  async findLessonIdsByUser(userId: string): Promise<string[]> {
-    const rows = await this.client.progress.findMany({
-      where: { userId },
-      select: { lessonId: true },
-    });
-    return rows.map((r) => r.lessonId);
-  }
 }
