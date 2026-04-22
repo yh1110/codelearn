@@ -1,10 +1,13 @@
 "use client";
 
+import { Check } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -91,9 +94,13 @@ export default function LessonClient({
         </Link>
         <h1 className="text-lg font-semibold">{lesson.title}</h1>
         {completed && (
-          <span className="ml-auto rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-            ✓ クリア済み
-          </span>
+          <Badge
+            className="ml-auto bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+            variant="secondary"
+          >
+            <Check aria-hidden="true" />
+            クリア済み
+          </Badge>
         )}
       </header>
 
@@ -153,21 +160,18 @@ export default function LessonClient({
 
         <main className="flex w-1/2 flex-col">
           <div className="flex items-center gap-2 border-b border-zinc-200 px-4 py-2 dark:border-zinc-800">
-            <button
-              type="button"
-              onClick={run}
+            <Button
+              className="bg-emerald-600 text-white hover:bg-emerald-700"
               disabled={running}
-              className="rounded-md bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
+              onClick={run}
+              size="sm"
+              type="button"
             >
               {running ? "実行中..." : "▶ 実行"}
-            </button>
-            <button
-              type="button"
-              onClick={reset}
-              className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
-            >
+            </Button>
+            <Button onClick={reset} size="sm" type="button" variant="outline">
               リセット
-            </button>
+            </Button>
             {lesson.expectedOutput && (
               <span className="ml-2 text-xs text-zinc-500">期待出力と一致すればクリア</span>
             )}
