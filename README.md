@@ -1,66 +1,101 @@
 # codelearn
 
-Progate 風の TypeScript 学習プラットフォーム。ブラウザ上のエディタで TypeScript を書き、サーバー側で実行して結果を確認できる。
+Progate 風の TypeScript 学習プラットフォーム。ブラウザ上のエディタで TypeScript を書き、**そのままブラウザ内で transpile / 実行**して結果を期待出力と突き合わせる。
 
 ## 技術スタック
 
-- **Next.js 16** (App Router) + React 19 + TypeScript
-- **Tailwind CSS v4**
-- **Prisma 7** (driver adapter: `@prisma/adapter-pg`) + **PostgreSQL 16** (Docker)
-- **Monaco Editor** でコード編集
-- **tsx** でサーバー側 TypeScript 実行
-- **SWR** で Client Component からの read fetch を統一
+| 役割 | 採用 |
+|-----|------|
+| フレームワーク | Next.js 16 (App Router, Turbopack) + React 19 + TypeScript |
+| スタイル | Tailwind CSS v4 + shadcn/ui (base-nova preset) + lucide-react |
+| ダークモード | 基本ダーク固定 (`<html className="dark">` / `colorScheme: "dark"`) |
+| DB / ORM | **Supabase Postgres** + Prisma 7 (driver adapter: `@prisma/adapter-pg`) |
+| エディタ | Monaco Editor |
+| TS 実行 | **ブラウザ内** (`esbuild-wasm` で transpile → iframe `sandbox` で実行 → `postMessage` で stdout/stderr 回収) |
+| Mutation | Server Actions + `next-safe-action` |
+| Client Read | SWR |
+| 認証 / BaaS | Supabase Auth (GitHub / Google OAuth、#5 で実装予定) |
+| Linter / Formatter | biome (ESLint / Prettier は使わない) |
+| CI | GitHub Actions (biome check + tsc) |
+| Code Review Bot | [Claude Code GitHub Action](https://github.com/anthropics/claude-code-action) (`@claude` mention + PR opened 時の自動レビュー) |
 
-Prisma 7 では datasource URL を `schema.prisma` から外し、`prisma.config.ts` で指定する仕様に変わっています。接続は `@prisma/adapter-pg` 経由で `pg` が担います。
+### 未導入 (`.claude/rules/tech-stack.md` に方針記載)
+
+zustand / playwright / vitest / nuqs / server-only / react-hook-form + `@hookform/resolvers`
+
+### AI エージェント向けルール
+
+本リポジトリは AI エージェント (Claude Code / Cursor 等) 前提の設計で、ルールを `.claude/rules/` 以下に分離している:
+
+- [`.claude/rules/architecture.md`](./.claude/rules/architecture.md) — 5 層アーキテクチャ / `src/` 11 ディレクトリ固定 / 認証方針 / DB 規約 / Import 順
+- [`.claude/rules/tech-stack.md`](./.claude/rules/tech-stack.md) — 各ライブラリの使い分け / 未導入の扱い
+- [`.claude/rules/react-nextjs.md`](./.claude/rules/react-nextjs.md) — Server/Client Component の切り分け / `useEffect` ポリシー / Form は RHF + Zod + Server Action / SWR パターン
+
+`CLAUDE.md` が `@.claude/rules/*` で全部 include する構成。
 
 ## 前提条件
 
-- Node.js (Next.js 16 が要求するバージョン)
-- Docker (Postgres を起動するため)
+- Node.js **>= 20.12.0** (`process.loadEnvFile` 依存)
+- npm
+- Supabase アカウント (無料プランで OK)
+- GitHub / Google OAuth アプリ (認証を使う場合。#5 で必要)
+
+> **Docker は不要になりました**。以前はローカル開発で Postgres コンテナを使っていましたが、DB は Supabase Postgres に統一しています。`docker-compose.yml` と `npm run db:up/db:down` スクリプトは過渡期の残骸なので将来削除予定。
 
 ## セットアップ
 
+### 1. Supabase プロジェクト作成
+
+1. [Supabase Dashboard](https://supabase.com/dashboard) で **New project** を作成する。Region は **`Northeast Asia (Tokyo)`** 推奨。DB パスワードを控える。
+2. **Project Settings → API Keys** から新形式のキーを控える (Legacy JWT `anon` / `service_role` ではなく、`sb_publishable_...` / `sb_secret_...` を使う):
+   - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
+   - **Publishable key** (`sb_publishable_...`) → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+   - **Secret key** (`sb_secret_...`) → `SUPABASE_SECRET_KEY` (server-only、漏らさない)
+3. **Project Settings → Database → Connection string** から以下を控える:
+   - **Transaction pooler** (port 6543、`pgbouncer=true`) → `DATABASE_URL` (runtime クエリ用)
+   - **Direct connection** (port 5432) → `DIRECT_URL` (`prisma db push` / migrate / seed 用)
+
+#### DB password に特殊文字が入る場合
+
+`,` / `@` / `/` などが入っていると URL パースで壊れることがあるので [URL-encode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) する (`,` → `%2C` など)。
+
+### 2. `.env` を作る
+
 ```bash
-# 1. 依存インストール
+cp .env.example .env
+```
+
+Supabase Dashboard で控えた値を `.env` に貼る。
+
+### 3. DB スキーマ反映 + seed
+
+```bash
 npm install
+npm run db:push   # 内部で DIRECT_URL (port 5432) を使う
+npm run db:seed   # サンプルコース / レッスンを投入
+```
 
-# 2. Postgres 起動 (Docker)
-npm run db:up
+> **pgbouncer hang について**: Prisma schema engine が pooler (`?pgbouncer=true`, port 6543) 経由の接続で stuck することがあるため、`prisma.config.ts` は **`DIRECT_URL` (port 5432)** を schema engine に使わせている。runtime クエリは引き続き `DATABASE_URL` (pooler) を driver adapter 経由で使う。
 
-# 3. スキーマ反映 & 初期データ投入
-npm run db:push
-npm run db:seed
+### 4. RLS を有効化 (推奨)
 
-# 4. 開発サーバー起動
+Supabase Dashboard の SQL Editor で以下を実行:
+
+```sql
+ALTER TABLE "Course"   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Lesson"   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Progress" ENABLE ROW LEVEL SECURITY;
+```
+
+policy は追加しない = ブラウザから publishable key で Supabase API を叩いても空配列しか返らなくなる。Prisma (postgres ロール) は RLS bypass なので従来通り動く。Defense in depth。
+
+### 5. 開発サーバー起動
+
+```bash
 npm run dev
 ```
 
 `http://localhost:3000` を開く。
-
-## Supabase セットアップ (認証 / BaaS)
-
-認証 (Supabase Auth) と BaaS (Storage / Realtime) に Supabase を利用する。**DB アクセスは Prisma 経由** で Supabase Postgres に接続する方針のため、`@supabase/supabase-js` の `.from().select()` のような直接クエリは書かない (`.claude/rules/tech-stack.md § 2.5`)。
-
-本リポジトリのコードには Supabase クライアントの雛形と `proxy.ts` (セッション更新) が含まれるが、**プロジェクト作成と env 設定はユーザーが手動で行う必要がある**。
-
-### 手順
-
-1. [Supabase Dashboard](https://supabase.com/dashboard) で新規プロジェクトを作成する。
-2. **Project Settings → API Keys** から以下を控える (新形式 `sb_publishable_...` / `sb_secret_...` を使う。Legacy JWT は使わない):
-   - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
-   - **Publishable key** (`sb_publishable_...`) → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - **Secret key** (`sb_secret_...`) → `SUPABASE_SECRET_KEY` (server-only。漏らさない)
-3. **Project Settings → Database → Connection string** から以下を控える:
-   - **Transaction pooler** (port 6543) → `DATABASE_URL` (Prisma runtime 用)
-   - **Session pooler / Direct connection** (port 5432) → `DIRECT_URL` (`prisma migrate` / `db push` 用)
-4. `cp .env.example .env.local` で雛形をコピーし、上記値を埋める。
-5. `npm run db:push` を実行し、Prisma schema が Supabase Postgres に反映されることを確認する。
-
-### 方針メモ
-
-- DB read/write は Prisma 経由。`@supabase/supabase-js` のクエリ API は使わない。
-- RLS ポリシーには依存しない。認可は `src/proxy.ts` (Next.js 16 proxy = 旧 middleware) + `src/lib/auth.ts` の `requireAuth` / `requireRole` で行う (defense in depth)。
-- ログイン UI / `(protected)` ルートグループ / `requireAuth` の本実装は **issue #5** で対応する。本 issue はクライアント分離・env 雛形・セッション更新スケルトンまで。
 
 ## スクリプト
 
@@ -69,79 +104,154 @@ npm run dev
 | `npm run dev` | Next.js 開発サーバー |
 | `npm run build` | プロダクションビルド |
 | `npm run start` | プロダクション起動 |
-| `npm run db:up` / `db:down` | Postgres コンテナ起動 / 停止 |
-| `npm run db:push` | Prisma schema を DB に反映 |
-| `npm run db:seed` | サンプルレッスンを投入 |
-| `npm run db:studio` | Prisma Studio を起動 |
-| `npm run db:reset` | DB を消して seed からやり直す |
+| `npm run db:push` | Prisma schema を DB に反映 (`DIRECT_URL` 使用) |
+| `npm run db:seed` | サンプルコース / レッスン投入 |
+| `npm run db:studio` | Prisma Studio |
+| `npm run db:reset` | DB をリセット → seed |
+| `npm run check` / `check:fix` | biome (lint + format) |
+| `npm run format` / `format:fix` | biome format |
+| `npm run lint` | biome lint |
 
-## ディレクトリ構成
+> `db:up` / `db:down` は Docker Postgres 用の旧スクリプト。Supabase 移行後は使わない (そのうち削除)。
+
+## ディレクトリ構成 (`src/` 11 ディレクトリ固定)
 
 ```
 src/
-  app/
-    page.tsx                                         # コース一覧
-    courses/[slug]/page.tsx                          # レッスン一覧
-    courses/[slug]/lessons/[lessonSlug]/page.tsx     # レッスン画面
-    api/run/route.ts                                 # TS コード実行 API
-    api/progress/route.ts                            # 進捗保存 API
-  components/
-    LessonClient.tsx                                 # Monaco + 実行結果 UI
-  lib/
-    prisma.ts                                        # Prisma シングルトン
-    auth.ts                                          # requireAuth / requireRole (stub、#5 で実装)
-    supabase/
-      server.ts                                      # Server Component / Action / proxy 用 client
-      client.ts                                      # Browser 用 client
-  proxy.ts                                           # Next.js 16 proxy: Supabase セッション更新
+├── actions/                    # Server Actions (mutation)
+│   └── progress.ts             #   completeLessonAction
+├── app/                        # Next.js App Router
+│   ├── layout.tsx              #   ダーク固定 + SwrProvider
+│   ├── page.tsx                #   コース一覧
+│   ├── globals.css             #   tailwind + shadcn tokens
+│   ├── courses/[slug]/page.tsx
+│   ├── courses/[slug]/lessons/[lessonSlug]/page.tsx
+│   └── api/
+│       └── progress/route.ts   #   GET のみ (SWR 用)。POST は Server Action に移行済み
+├── components/
+│   ├── LessonClient.tsx        # Monaco + iframe 実行 + 進捗送信
+│   ├── providers/SwrProvider.tsx
+│   └── ui/                     # shadcn/ui 生成物 (Button / Card / Badge / Skeleton)
+├── config/                     # (今のところ空枠、将来の定数用)
+├── hooks/
+│   └── useProgress.ts          # SWR + fetcher 合成サンプル
+├── lib/
+│   ├── prisma.ts               # Prisma singleton (adapter 経由)
+│   ├── run-code.ts             # esbuild-wasm + iframe sandbox 実行
+│   ├── fetcher.ts              # SWR 用 fetch ラッパ
+│   ├── safe-action.ts          # next-safe-action client
+│   ├── auth.ts                 # requireAuth / requireRole (stub、#5 で実装)
+│   ├── errors.ts               # Custom Error + handleUnknownError
+│   ├── utils.ts                # shadcn cn() ヘルパ
+│   └── supabase/
+│       ├── server.ts           # Server Component / Action / proxy 用
+│       └── client.ts           # Browser 用
+├── repositories/               # Data Access 層 (BaseRepository 継承)
+│   ├── index.ts                # singleton export
+│   ├── base.repository.ts
+│   └── progress.repository.ts
+├── services/                   # Business Logic (純関数)
+│   └── progressService.ts
+├── stores/                     # (Zustand 未導入)
+├── types/                      # (各 feature の型は将来ここへ)
+├── utils/                      # 純粋ユーティリティ (将来用)
+└── proxy.ts                    # Next.js 16 proxy (旧 middleware): Supabase セッション refresh
 prisma/
-  schema.prisma                                      # Course / Lesson / Progress
-  seed.ts                                            # 初期データ
-prisma.config.ts                                     # Prisma 7: datasource URL / seed コマンド定義
-docker-compose.yml                                   # Postgres 16 Alpine
+├── schema.prisma               # Course / Lesson / Progress
+└── seed.ts
+prisma.config.ts                # Prisma 7: schema engine 用 DIRECT_URL fallback 含む
+.github/workflows/
+├── ci.yml                      # biome check + tsc
+├── claude.yml                  # @claude mention → Claude が作業
+└── claude-code-review.yml      # PR opened で自動レビュー (日本語固定)
 ```
 
 ## データモデル
 
-- **Course**: コース (slug, title, description, order)
-- **Lesson**: レッスン (contentMd: Markdown, starterCode: TS, expectedOutput)
-- **Progress**: クリア記録 (userId は MVP では `"local-user"` 固定)
+- **Course**: `slug`, `title`, `description`, `order`
+- **Lesson**: `slug`, `title`, `contentMd` (Markdown), `starterCode` (TS), `expectedOutput`, `order`, `courseId`
+- **Progress**: `userId` (MVP では `"local-user"` 固定、#5 で Supabase auth user id に置換予定), `lessonId`, `completedAt`
 
 ## レッスン判定
 
-レッスンクリアは以下をすべて満たした場合:
+レッスンクリア条件 (すべて満たす):
 
 1. `stderr` が空
-2. タイムアウトしていない (`TIMEOUT_MS = 5000`)
-3. プロセスの `exitCode` が 0
+2. タイムアウトしていない (`5000ms`)
+3. `exitCode === 0`
 4. `stdout.trim() === expectedOutput.trim()`
 
-## セキュリティ注意
+成功時 `completeLessonAction` (Server Action) を呼び、`Progress` テーブルに upsert。
 
-`/api/run` はユーザー提供の TypeScript コードをサーバー側の `tsx` でそのまま実行する。**ローカル開発・学習用途のみを想定**。本番運用する場合は:
+## TS コード実行方式 (ブラウザ内)
 
-- コンテナ隔離 (Firecracker / gVisor / Docker-in-Docker)
-- CPU / メモリ / ネットワーク制限
-- 静的解析で危険な API 呼び出しを弾く
+以前はサーバー側で `child_process.spawn("npx tsx")` していたが、`Vercel Serverless Functions で動かない` / `サンドボックス無しで Node API が自由に叩ける` / `ネットワーク往復のレイテンシ` などの理由で **ブラウザ完結に移行** (#13)。
 
-など別途対策が必要。
+```
+[Monaco] → code
+   ↓
+esbuild-wasm.transform({ loader: "ts" })    ← 型注釈を落として JS へ
+   ↓
+iframe (sandbox="allow-scripts")            ← 親から隔離された別 origin
+   ↓ new Function(js) を async IIFE でラップ実行
+console.log / console.error を override
+   ↓ postMessage
+親 (LessonClient) が { stdout, stderr, timedOut, exitCode } を受け取る
+```
 
-## データ取得 (SWR)
+**副作用**:
 
-Client Component からの read は [SWR](https://swr.vercel.app/) を経由する。
+- Node API (`fs`, `child_process`, `process`) は使えない (学習用途としてはむしろ適切)
+- iframe sandbox なので親の `localStorage` / `cookie` に触れない
+- 無限ループは 5 秒タイムアウトで `iframe.remove()` → 親は停止しない
+- top-level `await` は async IIFE で wrap 済みのため動く
 
-- `src/lib/fetcher.ts` — `fetch` ラッパ。HTTP エラー時に `Error` を throw する
-- `src/components/providers/SwrProvider.tsx` — `SWRConfig` で `fetcher` と共通オプションを供給。`src/app/layout.tsx` で root に配線済み
-- `src/hooks/use<Domain>.ts` — ドメインごとに `useSWR` をラップするカスタムフック（例: `useProgress`）
+将来 `npm install` や `npm run dev` を必要とするフルスタックレッスン (Next.js / Express) を提供する予定がある場合は [#14](https://github.com/yh1110/codelearn/issues/14) で **WebContainer** 導入を検討中。
 
-使い分け:
+## CI / Code Review 自動化
 
-- **Server Component** からの取得は SWR を使わず、直接 service 層を呼ぶ（`.claude/rules/tech-stack.md § 2.2`）。ブラウザに fetch のオーバーヘッドを持ち込まないため
-- **mutation** は SWR ではなく Server Action に寄せる。SWR は `mutate()` で再検証するだけ
-- `fetcher` の挙動（認証ヘッダ・base URL 等）をカスタマイズしたい場合は `src/lib/fetcher.ts` を編集する
+### CI (`.github/workflows/ci.yml`)
+
+- push to main / pull_request に対して実行
+- Node 24 + `npm ci` + `npx prisma generate` + `npm run check` (biome) + `npx tsc --noEmit`
+
+### Claude Code GitHub Action
+
+- `.github/workflows/claude.yml`: issue / PR で **`@claude` メンション** すると Claude が作業 or 返答する
+- `.github/workflows/claude-code-review.yml`: **PR opened 時に 1 回だけ** `/code-review:code-review` 自動レビュー
+- 両ワークフローで `--append-system-prompt` で **日本語応答固定**
+- 認証は `secrets.CLAUDE_CODE_OAUTH_TOKEN` (Max プラン OAuth) or `secrets.ANTHROPIC_API_KEY`
+
+## アーキテクチャの原則 (抜粋)
+
+詳細は `.claude/rules/architecture.md`。
+
+- **Presentation → API (Action) → Service (純関数) → Repository (`BaseRepository` 継承) → Data (Prisma)** の 5 層
+- Prisma Client に触れてよいのは `src/repositories/**` と `src/lib/prisma.ts` のみ。`app/` / `components/` / `services/` / `actions/` から Prisma を import しない
+- Server Action は try-catch → `requireAuth` / `requireRole` → `zod.parse` → service → `revalidatePath` → 型付きレスポンスの順で書く
+- Client から `fetch('/api/...')` で write しない。mutation は Server Action、read は SWR 経由
 
 ## レッスンの追加
 
-`prisma/seed.ts` の `courses` 配列にエントリを追加して `npm run db:reset` を実行する。
+`prisma/seed.ts` の `courses` 配列にエントリを追加して:
 
-将来的には管理画面 or MDX ファイルシステムベースに置き換える想定。
+```bash
+npm run db:reset
+```
+
+将来的には管理画面 or MDX ファイルシステムベースに置き換える予定 (未定)。
+
+## セキュリティ上の注意
+
+- `sb_publishable_*` (旧 anon key) は **ブラウザに露出する**。そのままだと publishable key を持つ誰でも Supabase REST API 経由で DB を叩けるので、**RLS を必ず有効化** すること (上記セットアップ 4)
+- `SUPABASE_SECRET_KEY` (旧 service_role) は **サーバー側でしか使わない**。Public ビルドには含めない
+- ブラウザ内 TS 実行は iframe sandbox で隔離済みだが、ユーザーコードに巨大な計算や無限ループを書かれた時の **5 秒タイムアウト** 以外の保護はしていない
+- 本番運用 (公開 URL) する際は COOP / COEP ヘッダー、および Vercel / Supabase の access logs を確認すること
+
+## 関連リンク
+
+- リポジトリ: https://github.com/yh1110/codelearn
+- Next.js 16 docs: `node_modules/next/dist/docs/` を参照 (training data の古い知識で書かない)
+- Prisma 7 docs: https://www.prisma.io/docs
+- Supabase docs: https://supabase.com/docs
+- shadcn/ui: https://ui.shadcn.com
