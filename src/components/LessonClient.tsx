@@ -3,13 +3,11 @@
 import { Check } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { completeLessonAction } from "@/actions/progress";
+import { useLessonRunner } from "@/app/courses/[slug]/lessons/[lessonSlug]/_hooks/useLessonRunner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { type RunResult, runCodeInBrowser } from "@/lib/run-code";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -39,52 +37,12 @@ export default function LessonClient({
   nextSlug,
   initiallyCompleted,
 }: Props) {
-  const [code, setCode] = useState(lesson.starterCode);
-  const [output, setOutput] = useState<RunResult | null>(null);
-  const [running, setRunning] = useState(false);
-  const [completed, setCompleted] = useState(initiallyCompleted);
-
-  async function run() {
-    setRunning(true);
-    setOutput(null);
-    try {
-      const data: RunResult = await runCodeInBrowser(code);
-      setOutput(data);
-
-      const passed =
-        !data.stderr &&
-        !data.timedOut &&
-        data.exitCode === 0 &&
-        lesson.expectedOutput !== null &&
-        data.stdout.trim() === lesson.expectedOutput.trim();
-
-      if (passed && !completed) {
-        setCompleted(true);
-        completeLessonAction({ lessonId: lesson.id })
-          .then((result) => {
-            if (result?.serverError) {
-              console.error("[LessonClient] completeLessonAction serverError:", result.serverError);
-            }
-            if (result?.validationErrors) {
-              console.error(
-                "[LessonClient] completeLessonAction validationErrors:",
-                result.validationErrors,
-              );
-            }
-          })
-          .catch((err) => {
-            console.error("[LessonClient] completeLessonAction threw:", err);
-          });
-      }
-    } finally {
-      setRunning(false);
-    }
-  }
-
-  function reset() {
-    setCode(lesson.starterCode);
-    setOutput(null);
-  }
+  const { code, setCode, output, running, completed, run, reset } = useLessonRunner({
+    lessonId: lesson.id,
+    starterCode: lesson.starterCode,
+    expectedOutput: lesson.expectedOutput,
+    initiallyCompleted,
+  });
 
   return (
     <div className="flex h-[calc(100vh-0px)] flex-1 flex-col">
