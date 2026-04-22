@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { Profile } from "@prisma/client";
-import { handleUnknownError, UnauthorizedError } from "@/lib/errors";
+import { ForbiddenError, handleUnknownError, UnauthorizedError } from "@/lib/errors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { profileRepository } from "@/repositories";
 
@@ -53,8 +53,13 @@ export async function requireAuth(): Promise<Session> {
   }
 }
 
-export async function requireRole(_role: Role): Promise<Session> {
-  // Role model is not introduced yet; every authenticated user is treated as
-  // "USER". Revisit once an explicit role column lands on Profile.
-  return requireAuth();
+export async function requireRole(role: Role): Promise<Session> {
+  const session = await requireAuth();
+  // TODO: Drop this branch once Profile gains an explicit role column. Until
+  // then, refuse ADMIN requests loudly instead of silently granting them via
+  // requireAuth — that would be a trivial privilege-escalation foot-gun.
+  if (role === "ADMIN") {
+    throw new ForbiddenError("ADMIN role enforcement is not yet implemented");
+  }
+  return session;
 }
