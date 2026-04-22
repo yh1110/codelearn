@@ -37,16 +37,20 @@ export function useLessonRunner({
         data.stdout.trim() === expectedOutput.trim();
 
       if (passed && !completed) {
+        // Optimistic update: flip the badge immediately, roll back if the
+        // server action fails so the UI stays consistent with the DB.
         setCompleted(true);
         completeLessonAction({ lessonId })
           .then((result) => {
             if (result?.serverError) {
+              setCompleted(false);
               console.error(
                 "[useLessonRunner] completeLessonAction serverError:",
                 result.serverError,
               );
             }
             if (result?.validationErrors) {
+              setCompleted(false);
               console.error(
                 "[useLessonRunner] completeLessonAction validationErrors:",
                 result.validationErrors,
@@ -54,6 +58,7 @@ export function useLessonRunner({
             }
           })
           .catch((err) => {
+            setCompleted(false);
             console.error("[useLessonRunner] completeLessonAction threw:", err);
           });
       }

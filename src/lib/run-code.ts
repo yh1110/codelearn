@@ -55,10 +55,25 @@ function runInWorker(js: string): Promise<RunResult> {
   const workerSrc = buildWorkerSource(js);
   const blob = new Blob([workerSrc], { type: "application/javascript" });
   const url = URL.createObjectURL(blob);
-  const worker = new Worker(url, { type: "classic" });
+
+  // TODO(#3): restrict worker-src / connect-src via CSP to block fetch / WS inside the worker.
+  let worker: Worker;
+  try {
+    worker = new Worker(url, { type: "classic" });
+  } catch (error) {
+    URL.revokeObjectURL(url);
+    const message = error instanceof Error ? error.message : String(error);
+    return Promise.resolve({
+      stdout: "",
+      stderr: `Worker の起動に失敗しました: ${message}`,
+      timedOut: false,
+      exitCode: 1,
+    });
+  }
 
   return new Promise<RunResult>((resolve) => {
     let settled = false;
+    let timer: ReturnType<typeof setTimeout>;
     const finish = (result: RunResult) => {
       if (settled) return;
       settled = true;
@@ -74,7 +89,7 @@ function runInWorker(js: string): Promise<RunResult> {
       });
     };
 
-    const timer = setTimeout(() => {
+    timer = setTimeout(() => {
       // Worker.terminate() reliably kills infinite loops (unlike iframe.remove()).
       finish({ stdout: "", stderr: "", timedOut: true, exitCode: null });
     }, TIMEOUT_MS);
