@@ -37,6 +37,31 @@ npm run dev
 
 `http://localhost:3000` を開く。
 
+## Supabase セットアップ (認証 / BaaS)
+
+認証 (Supabase Auth) と BaaS (Storage / Realtime) に Supabase を利用する。**DB アクセスは Prisma 経由** で Supabase Postgres に接続する方針のため、`@supabase/supabase-js` の `.from().select()` のような直接クエリは書かない (`.claude/rules/tech-stack.md § 2.5`)。
+
+本リポジトリのコードには Supabase クライアントの雛形と `proxy.ts` (セッション更新) が含まれるが、**プロジェクト作成と env 設定はユーザーが手動で行う必要がある**。
+
+### 手順
+
+1. [Supabase Dashboard](https://supabase.com/dashboard) で新規プロジェクトを作成する。
+2. **Project Settings → API** から以下を控える:
+   - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
+   - `anon` public key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `service_role` key → `SUPABASE_SERVICE_ROLE_KEY` (server-only。漏らさない)
+3. **Project Settings → Database → Connection string** から以下を控える:
+   - **Transaction pooler** (port 6543) → `DATABASE_URL` (Prisma runtime 用)
+   - **Session pooler / Direct connection** (port 5432) → `DIRECT_URL` (`prisma migrate` / `db push` 用)
+4. `cp .env.example .env.local` で雛形をコピーし、上記値を埋める。
+5. `npm run db:push` を実行し、Prisma schema が Supabase Postgres に反映されることを確認する。
+
+### 方針メモ
+
+- DB read/write は Prisma 経由。`@supabase/supabase-js` のクエリ API は使わない。
+- RLS ポリシーには依存しない。認可は `src/proxy.ts` (Next.js 16 proxy = 旧 middleware) + `src/lib/auth.ts` の `requireAuth` / `requireRole` で行う (defense in depth)。
+- ログイン UI / `(protected)` ルートグループ / `requireAuth` の本実装は **issue #5** で対応する。本 issue はクライアント分離・env 雛形・セッション更新スケルトンまで。
+
 ## スクリプト
 
 | コマンド | 説明 |
@@ -64,6 +89,11 @@ src/
     LessonClient.tsx                                 # Monaco + 実行結果 UI
   lib/
     prisma.ts                                        # Prisma シングルトン
+    auth.ts                                          # requireAuth / requireRole (stub、#5 で実装)
+    supabase/
+      server.ts                                      # Server Component / Action / proxy 用 client
+      client.ts                                      # Browser 用 client
+  proxy.ts                                           # Next.js 16 proxy: Supabase セッション更新
 prisma/
   schema.prisma                                      # Course / Lesson / Progress
   seed.ts                                            # 初期データ
