@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { completeLessonAction } from "@/actions/progress";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -67,11 +68,7 @@ export default function LessonClient({
 
       if (passed && !completed) {
         setCompleted(true);
-        fetch("/api/progress", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lessonId: lesson.id }),
-        }).catch(() => {});
+        completeLessonAction({ lessonId: lesson.id }).catch(() => {});
       }
     } finally {
       setRunning(false);
