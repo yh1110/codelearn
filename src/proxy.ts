@@ -1,3 +1,6 @@
+// Note: エッジランタイムで動作するため `import 'server-only'` は付けない
+// (tech-stack.md § 2.12 の例外)。next.config / proxy (旧 middleware) 実行環境の
+// 制約を参照。Node.js 専用 API / `server-only` モジュールはここに持ち込めない。
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
