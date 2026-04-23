@@ -1,5 +1,5 @@
 import { requireAuth } from "@/lib/auth";
-import { UnauthorizedError } from "@/lib/errors";
+import { isKnownAppError } from "@/lib/errors";
 import { getCompletedLessonIdsByUser } from "@/services/progressService";
 
 export const runtime = "nodejs";
@@ -11,8 +11,8 @@ export async function GET() {
     const lessonIds = await getCompletedLessonIdsByUser(session.userId);
     return Response.json({ lessonIds });
   } catch (error) {
-    if (error instanceof UnauthorizedError) {
-      return Response.json({ error: "unauthorized" }, { status: 401 });
+    if (isKnownAppError(error)) {
+      return Response.json({ error: error.name }, { status: error.httpStatus });
     }
     throw error;
   }
