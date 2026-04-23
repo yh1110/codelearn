@@ -301,21 +301,34 @@ export abstract class BaseRepository {
 Service / Server Action から参照する以下のユーティリティは **契約を固定** する。AI エージェントは独自シグネチャで再実装しない。実装自体は未作成なので、新規に作るときはこの契約を守る。
 
 ```typescript
-// src/lib/errors.ts (想定)
+// src/lib/errors.ts
 import 'server-only';
 
 export class ValidationError extends Error {
   readonly name = 'ValidationError';
-}
-export class NotFoundError extends Error {
-  readonly name = 'NotFoundError';
+  readonly httpStatus = 400;
 }
 export class UnauthorizedError extends Error {
   readonly name = 'UnauthorizedError';
+  readonly httpStatus = 401;
 }
 export class ForbiddenError extends Error {
   readonly name = 'ForbiddenError';
+  readonly httpStatus = 403;
 }
+export class NotFoundError extends Error {
+  readonly name = 'NotFoundError';
+  readonly httpStatus = 404;
+}
+
+export type AppError =
+  | ValidationError
+  | UnauthorizedError
+  | ForbiddenError
+  | NotFoundError;
+
+/** Route Handler / API で known error を HTTP status に写像するための型ガード。 */
+export function isKnownAppError(error: unknown): error is AppError;
 
 /**
  * 想定外の error を既知の Error サブクラスに正規化して返す。
@@ -325,15 +338,26 @@ export class ForbiddenError extends Error {
  *     throw handleUnknownError(error);
  *   }
  */
-export function handleUnknownError(error: unknown): Error {
-  if (error instanceof ValidationError) return error;
-  if (error instanceof NotFoundError) return error;
-  if (error instanceof UnauthorizedError) return error;
-  if (error instanceof ForbiddenError) return error;
-  if (error instanceof Error) return error;
-  return new Error(typeof error === 'string' ? error : 'Unknown error');
-}
+export function handleUnknownError(error: unknown): Error;
 ```
+
+- 各 `AppError` は `httpStatus` を readonly で持つ。Route Handler 側は `isKnownAppError(e)` で分岐し `e.httpStatus` でレスポンスを返す。
+- Server Action / Service 層では従来どおり throw に徹する。HTTP レスポンスへの変換は API 境界の責務。
+- **Route Handler は Server Action と違って `try` 内で `requireAuth()` を呼んで `UnauthorizedError` をキャッチし 401 を返してよい**。Server Action は `error.tsx` 画面に伝播させるために `requireAuth()` を `try` の外に置くが、Route Handler (`src/app/api/**`) は fetch クライアントが `res.status` を見て分岐する設計のため、`isKnownAppError(e)` で捕捉して `Response.json({ error: e.name }, { status: e.httpStatus })` を返すのが正しい。
+
+#### エラーページの責務（`src/app/`）
+
+Next.js App Router の error boundary / 404 ページは以下の役割分担で配置する。AI エージェントは新規作成・編集時にこの分担を崩さない。
+
+| ファイル | 役割 | Component 種別 |
+| :-- | :-- | :-- |
+| `src/app/error.tsx` | route 単位の実行時エラーの受け皿。`reset()` で再試行、ホーム導線を提示する。 | `'use client'` 必須 |
+| `src/app/global-error.tsx` | root layout 自体が壊れた時の最後の砦。自前で `<html>` / `<body>` を描画する。 | `'use client'` 必須 |
+| `src/app/not-found.tsx` | `notFound()` / 未ヒット URL のページ。 | Server Component |
+| `src/app/(protected)/error.tsx`（任意） | 認証領域専用のエラー UI が必要な場合のみ追加。 | `'use client'` 必須 |
+
+- `error.tsx` は production では `error.message` を生出ししない。dev のみ `process.env.NODE_ENV !== 'production'` でデバッグ情報を出す。
+- shadcn `Card` / `Button` + lucide アイコンを使い、ユーザーに次のアクション（再試行 / ホームへ戻る）を明示する。
 
 ```typescript
 // src/lib/auth.ts
