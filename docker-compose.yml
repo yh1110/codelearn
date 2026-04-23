@@ -1,18 +1,24 @@
+# Local Postgres used exclusively as the Prisma shadow database for
+# `prisma migrate dev`. Prisma needs a shadow DB to diff the schema when
+# generating a new migration; Supabase does not allow the hosted Postgres
+# user to create shadow databases, so we point `SHADOW_DATABASE_URL` at this
+# container. Application runtime queries still go to Supabase via
+# `DATABASE_URL` / `DIRECT_URL` — nothing reads this container at runtime.
 services:
   db:
     image: postgres:16-alpine
-    container_name: codelearn-db
+    container_name: codelearn-shadow-db
     restart: unless-stopped
     ports:
       - "5434:5432"
     environment:
       POSTGRES_USER: codelearn
       POSTGRES_PASSWORD: codelearn
-      POSTGRES_DB: codelearn
+      POSTGRES_DB: codelearn_shadow
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U codelearn -d codelearn"]
+      test: ["CMD-SHELL", "pg_isready -U codelearn -d codelearn_shadow"]
       interval: 5s
       timeout: 5s
       retries: 10

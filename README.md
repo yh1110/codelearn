@@ -16,7 +16,7 @@ Progate 風の TypeScript 学習プラットフォーム。ブラウザ上のエ
 | Client Read | SWR |
 | 認証 / BaaS | Supabase Auth (GitHub / Google OAuth) + Prisma Edge proxy、`(protected)` ルートグループ |
 | Linter / Formatter | biome (ESLint / Prettier は使わない) |
-| CI | GitHub Actions (biome check + tsc) |
+| CI | GitHub Actions (biome check + tsc + prisma migrate diff) |
 | Code Review Bot | [Claude Code GitHub Action](https://github.com/anthropics/claude-code-action) (`@claude` mention + PR opened 時の自動レビュー) |
 
 ### 未導入 (`.claude/rules/tech-stack.md` に方針記載)
@@ -39,8 +39,9 @@ zustand / playwright / vitest / nuqs / server-only / react-hook-form + `@hookfor
 - npm
 - Supabase アカウント (無料プランで OK)
 - GitHub / Google OAuth アプリ (Supabase Dashboard → Authentication → Providers で有効化)
+- Docker (ローカルでの `prisma migrate dev` 用 shadow database のみ。ランタイム DB は Supabase)
 
-> **Docker は不要になりました**。以前はローカル開発で Postgres コンテナを使っていましたが、DB は Supabase Postgres に統一しています。`docker-compose.yml` と `npm run db:up/db:down` スクリプトは過渡期の残骸なので将来削除予定。
+> **Docker の役割**: 以前はアプリ DB 本体を Docker Postgres で動かしていたが、本番は Supabase Postgres に統一済み。現在 `docker-compose.yml` が起動する Postgres (`codelearn-shadow-db`) は **`prisma migrate dev` の shadow database 専用**。Supabase はホスト側で shadow DB を作らせてくれないため、ローカル Docker を shadow として使う。`migrate dev` を走らせないなら不要。
 
 ## セットアップ
 
@@ -69,17 +70,56 @@ Supabase Dashboard で控えた値を `.env` に貼る。
 
 ### 3. DB スキーマ反映 + seed
 
+本リポジトリは **`prisma migrate` ベース**で DB スキーマを管理する (PR #36 以降)。`db:push` は本番運用では使わない。
+
+#### 3-a. 初回セットアップ (既存 Supabase プロジェクトに baseline)
+
+既に本番 Supabase DB にテーブルが存在する状態で migration 管理を始めるケース。`prisma/migrations/` 配下の baseline migration を「適用済み」として `_prisma_migrations` テーブルに記録する。
+
 ```bash
 npm install
-npm run db:push   # 内部で DIRECT_URL (port 5432) を使う
-npm run db:seed   # サンプルコース / レッスンを投入
+# baseline 名は prisma/migrations/ 配下のディレクトリ名 (例: 20260423052541_init)
+npx prisma migrate resolve --applied <baseline_migration_name>
+npm run db:seed
 ```
+
+これで Supabase DB に対して schema は触らずに「この migration は適用済み」とマークだけされる。以降 schema 変更は `npm run db:migrate` で管理できる。
+
+#### 3-b. クリーンな Supabase プロジェクトで初めから migrate を使う場合
+
+```bash
+npm install
+npm run db:migrate:deploy   # prisma/migrations/ の全 migration を DB に apply
+npm run db:seed
+```
+
+#### 3-c. schema 変更 (日常の開発フロー)
+
+```bash
+npm run db:up                              # shadow DB (Docker Postgres) を起動
+# prisma/schema.prisma を編集
+npm run db:migrate -- --name <description> # migration ファイル生成 + shadow → 本番 DB に apply
+git add prisma/migrations/<新規ディレクトリ>
+git commit -m "feat(prisma): <description>"
+```
+
+`db:migrate` (`prisma migrate dev`) は:
+
+1. ローカル Docker の **shadow DB** に対して「現 schema までの migration を再生 → 新 schema との diff を生成」
+2. 新しい migration ファイルを `prisma/migrations/<timestamp>_<name>/migration.sql` に書き出す
+3. `DIRECT_URL` 先 (Supabase) にその migration を apply する
+
+#### 3-d. 本番 deploy
+
+CI または `vercel build` 前に必ず `npm run db:migrate:deploy` を走らせる (未適用 migration を apply する、新規 migration を生成しない安全なコマンド)。
+
+> **`db:push` の扱い**: ローカルでの schema 実験 / `--force-reset` で shadow DB をクリーンアップする用途のみ。**本番 Supabase DB に対しては使わない** (migration 履歴と乖離する)。`db:reset` / `db:migrate:reset` も同様で、Supabase 本番 DB に流すとデータが全消えする。
 
 > **pgbouncer hang について**: Prisma schema engine が pooler (`?pgbouncer=true`, port 6543) 経由の接続で stuck することがあるため、`prisma.config.ts` は **`DIRECT_URL` (port 5432)** を schema engine に使わせている。runtime クエリは引き続き `DATABASE_URL` (pooler) を driver adapter 経由で使う。
 
 ### 4. 認証 trigger SQL の適用 (必須)
 
-`auth.users` (Supabase Auth 管理) → `public.profiles` (Prisma 管理) を同期させる trigger を一度だけ適用する:
+`auth.users` (Supabase Auth 管理) → `public.profiles` (Prisma 管理) を同期させる trigger を一度だけ適用する。**この trigger は Prisma migration の管理外** (Prisma schema が表現できない `auth` スキーマ側への CREATE TRIGGER のため) なので、migration とは別に手動で流す:
 
 ```bash
 # psql がローカルにあれば
@@ -120,15 +160,20 @@ npm run dev
 | `npm run dev` | Next.js 開発サーバー |
 | `npm run build` | プロダクションビルド |
 | `npm run start` | プロダクション起動 |
-| `npm run db:push` | Prisma schema を DB に反映 (`DIRECT_URL` 使用) |
+| `npm run db:up` / `db:down` | ローカル shadow DB (Docker Postgres) の起動 / 停止 (`migrate dev` 用) |
+| `npm run db:migrate` | schema 変更 → 新規 migration 生成 → `DIRECT_URL` に apply (日常の開発) |
+| `npm run db:migrate:deploy` | 未適用 migration のみを apply (本番 / CI 用、新規生成しない) |
+| `npm run db:migrate:status` | 適用済み migration の状況を表示 |
+| `npm run db:migrate:reset` | **危険**: 全 migration を wipe して再適用。shadow / ローカル以外に使わない |
+| `npm run db:push` | **ローカル shadow DB 実験専用**。本番 Supabase には使わない (migration 履歴と乖離する) |
 | `npm run db:seed` | サンプルコース / レッスン投入 |
 | `npm run db:studio` | Prisma Studio |
-| `npm run db:reset` | DB をリセット → seed |
+| `npm run db:reset` | **危険**: `db:push --force-reset` 経由で DB を全消し。本番 Supabase には絶対使わない |
 | `npm run check` / `check:fix` | biome (lint + format) |
 | `npm run format` / `format:fix` | biome format |
 | `npm run lint` | biome lint |
 
-> `db:up` / `db:down` は Docker Postgres 用の旧スクリプト。Supabase 移行後は使わない (そのうち削除)。
+> `db:up` / `db:down` は **shadow DB 用** (Docker Postgres)。`prisma migrate dev` を走らせる前に `db:up` で起動しておく。アプリケーションのランタイム DB ではない。
 
 ## ディレクトリ構成 (`src/` 11 ディレクトリ固定)
 
@@ -173,11 +218,16 @@ src/
 ├── utils/                      # 純粋ユーティリティ (将来用)
 └── proxy.ts                    # Next.js 16 proxy (旧 middleware): Supabase セッション refresh
 prisma/
-├── schema.prisma               # Course / Lesson / Progress
-└── seed.ts
-prisma.config.ts                # Prisma 7: schema engine 用 DIRECT_URL fallback 含む
+├── schema.prisma               # Course / Lesson / Progress / Profile
+├── seed.ts
+├── migrations/                 # Prisma Migrate 履歴 (git 管理)
+│   ├── migration_lock.toml
+│   └── <timestamp>_init/migration.sql
+└── sql/
+    └── 001_profiles_trigger.sql # auth.users → profiles 同期 trigger (migrate 管理外、手動適用)
+prisma.config.ts                # Prisma 7: schema engine 用 DIRECT_URL + shadow DB 設定
 .github/workflows/
-├── ci.yml                      # biome check + tsc
+├── ci.yml                      # biome check + tsc + prisma migrate diff (drift check)
 ├── claude.yml                  # @claude mention → Claude が作業
 └── claude-code-review.yml      # PR opened で自動レビュー (日本語固定)
 ```
@@ -230,7 +280,8 @@ console.log / console.error を override
 ### CI (`.github/workflows/ci.yml`)
 
 - push to main / pull_request に対して実行
-- Node 24 + `npm ci` + `npx prisma generate` + `npm run check` (biome) + `npx tsc --noEmit`
+- Node 24 + `npm ci` + `npx prisma generate` + `npx next typegen` + `npm run check` (biome) + `npx tsc --noEmit`
+- **Prisma 移行 drift チェック**: Postgres 16 を service container として起動し (`SHADOW_DATABASE_URL` を指す)、`prisma migrate diff --from-migrations ... --to-schema ... --exit-code` で **commit 済み migration と `schema.prisma` が乖離していないか** を検証する。`schema.prisma` を編集したのに migration 追加を忘れている PR は CI で落ちる。
 
 ### Claude Code GitHub Action
 

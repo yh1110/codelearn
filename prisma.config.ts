@@ -27,5 +27,12 @@ export default defineConfig({
     // Runtime queries still use DATABASE_URL (port 6543 pooler) via the
     // Prisma driver adapter in `src/lib/prisma.ts`.
     url: resolveDatasourceUrl(),
+    // Only consulted by `prisma migrate dev`. Supabase does not permit
+    // Prisma to create an ephemeral shadow DB on the hosted instance, so
+    // a local Docker Postgres (see docker-compose.yml) is used instead.
+    // Leaving this undefined (not empty string) so `migrate dev` emits a
+    // clear "SHADOW_DATABASE_URL is not set" error rather than a confusing
+    // URL parse error; `prisma generate` does not read this field.
+    shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL,
   },
 });
