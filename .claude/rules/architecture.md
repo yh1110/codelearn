@@ -343,6 +343,7 @@ export function handleUnknownError(error: unknown): Error;
 
 - 各 `AppError` は `httpStatus` を readonly で持つ。Route Handler 側は `isKnownAppError(e)` で分岐し `e.httpStatus` でレスポンスを返す。
 - Server Action / Service 層では従来どおり throw に徹する。HTTP レスポンスへの変換は API 境界の責務。
+- **Route Handler は Server Action と違って `try` 内で `requireAuth()` を呼んで `UnauthorizedError` をキャッチし 401 を返してよい**。Server Action は `error.tsx` 画面に伝播させるために `requireAuth()` を `try` の外に置くが、Route Handler (`src/app/api/**`) は fetch クライアントが `res.status` を見て分岐する設計のため、`isKnownAppError(e)` で捕捉して `Response.json({ error: e.name }, { status: e.httpStatus })` を返すのが正しい。
 
 #### エラーページの責務（`src/app/`）
 

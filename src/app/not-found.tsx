@@ -6,7 +6,7 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/comp
 export default function NotFound() {
   return (
     <main className="flex min-h-[60vh] items-center justify-center p-6">
-      <Card className="w-full max-w-md">
+      <Card role="status" className="w-full max-w-md">
         <CardHeader>
           <div className="mb-2 flex items-center gap-2 text-muted-foreground">
             <FileQuestion className="size-5" aria-hidden />

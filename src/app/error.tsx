@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default function GlobalRouteError({
+export default function ErrorPage({
   error,
   reset,
 }: {
@@ -28,7 +28,7 @@ export default function GlobalRouteError({
 
   return (
     <main className="flex min-h-[60vh] items-center justify-center p-6">
-      <Card className="w-full max-w-md">
+      <Card role="alert" className="w-full max-w-md">
         <CardHeader>
           <div className="mb-2 flex items-center gap-2 text-destructive">
             <AlertTriangle className="size-5" aria-hidden />
