@@ -106,8 +106,7 @@ ES2015 以降の JavaScript / TypeScript では、変数宣言に \`var\` では
 
 > 参考: [TypeScript Deep Dive — let](https://typescript-jp.gitbook.io/deep-dive/future-javascript/let)
 `,
-        starterCode: `const pi = 3.14;
-let count = 0;
+        starterCode: `let count = 0;
 // TODO: count を 3 回 +1 する
 
 console.log(count);
@@ -120,29 +119,32 @@ console.log(count);
         order: 4,
         contentMd: `# 真偽値と truthy / falsy
 
-\`boolean\` 型は \`true\` / \`false\` の 2 値だけを取ります。条件式では \`boolean\` 以外の値も真偽値として評価されます (truthy / falsy)。
+\`boolean\` 型は \`true\` / \`false\` の 2 値だけを取ります。一方、条件式では \`boolean\` 以外の値も真偽値として評価されます (truthy / falsy)。
 
-代表的な falsy: \`false\` \`0\` \`""\` \`null\` \`undefined\` \`NaN\`。これら以外は truthy です。
+代表的な falsy: \`false\` \`0\` \`""\` \`null\` \`undefined\` \`NaN\`。これら以外はすべて truthy です。
 
 ## やること
 
-\`age\` (= 20) が 18 以上のとき \`true\` になるよう \`isAdult\` を埋めて、結果を出力してください。
+配列 \`values\` の各要素について、truthy なら \`"T"\`、falsy なら \`"F"\` をその順に連結した文字列を出力してください。
+
+例えば \`[1, "", "hello", 0]\` なら \`"TFTF"\` です。
 
 ## 期待出力
 
 \`\`\`
-adult
+FFFTT
 \`\`\`
 
 > 参考: [サバイバル TypeScript — boolean](https://typescriptbook.jp/reference/values-types-variables/boolean)
 `,
-        starterCode: `const age = 20;
-// TODO: age が 18 以上のとき true になる式を入れる
-const isAdult: boolean = false;
+        starterCode: `const values: unknown[] = [0, "", null, "hi", 42];
 
-console.log(isAdult ? "adult" : "child");
+// TODO: 各要素を truthy なら "T"、falsy なら "F" に変換して連結
+let result = "";
+
+console.log(result);
 `,
-        expectedOutput: "adult",
+        expectedOutput: "FFFTT",
       },
       {
         slug: "conditionals",
@@ -342,8 +344,9 @@ console.log(\`\${user.name} is \${user.age} years old\`);
         starterCode: `const point: [number, number] = [3, 4];
 
 // TODO: 分割代入で x と y を取り出して和を出力
-const [x, y] = point;
-console.log(0);
+const sum: number = 0;
+
+console.log(sum);
 `,
         expectedOutput: "7",
       },
@@ -811,7 +814,7 @@ function first<T>(arr: T[]): T | undefined {
 `,
         starterCode: `function identity<T>(value: T): T {
   // TODO: value をそのまま返す
-  return value;
+  return undefined as unknown as T;
 }
 
 console.log(identity<number>(123));
