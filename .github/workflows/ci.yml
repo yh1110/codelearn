@@ -18,10 +18,26 @@ jobs:
     runs-on: ubuntu-latest
     # Prisma 7's config loader evaluates env("DATABASE_URL") eagerly, so
     # `prisma generate` (and npm ci's postinstall hook that runs it) needs
-    # DATABASE_URL to be defined. CI never connects to a real database;
-    # a dummy URL is enough to satisfy the parser.
+    # DATABASE_URL to be defined. CI never connects to the real production DB;
+    # a dummy URL is enough for generate, and the `shadow` service below is
+    # used only by `prisma migrate diff` to verify migration/schema drift.
     env:
       DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
+      SHADOW_DATABASE_URL: "postgresql://codelearn:codelearn@localhost:5434/codelearn_shadow?schema=public"
+    services:
+      shadow:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: codelearn
+          POSTGRES_PASSWORD: codelearn
+          POSTGRES_DB: codelearn_shadow
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd="pg_isready -U codelearn -d codelearn_shadow"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,3 +54,9 @@ jobs:
       - name: Biome check (GitHub annotations)
         run: npx biome check --reporter=github .
       - run: npx tsc --noEmit
+      # Detect drift between committed migrations and schema.prisma.
+      # Fails when schema.prisma is edited without a corresponding migration.
+      # `--from-migrations` requires a shadow DB to replay migrations on;
+      # the `shadow` service above provides it.
+      - name: Prisma migrate diff (schema drift check)
+        run: npx prisma migrate diff --from-migrations prisma/migrations --to-schema prisma/schema.prisma --exit-code
