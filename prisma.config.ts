@@ -30,7 +30,9 @@ export default defineConfig({
     // Only consulted by `prisma migrate dev`. Supabase does not permit
     // Prisma to create an ephemeral shadow DB on the hosted instance, so
     // a local Docker Postgres (see docker-compose.yml) is used instead.
-    // Empty fallback keeps `prisma generate` working without the var.
-    shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL ?? "",
+    // Leaving this undefined (not empty string) so `migrate dev` emits a
+    // clear "SHADOW_DATABASE_URL is not set" error rather than a confusing
+    // URL parse error; `prisma generate` does not read this field.
+    shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL,
   },
 });
