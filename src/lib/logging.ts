@@ -15,7 +15,7 @@ const LEVEL_TO_SEVERITY: Record<number, string> = {
 
 const isDev = process.env.NODE_ENV !== "production";
 
-export const logger = pino({
+const logger = pino({
   level: process.env.LOG_LEVEL ?? (isDev ? "debug" : "info"),
   formatters: {
     level(label, number) {
@@ -26,7 +26,7 @@ export const logger = pino({
     },
   },
   messageKey: "message",
-  timestamp: () => `,"time":"${new Date().toISOString()}"`,
+  timestamp: pino.stdTimeFunctions.isoTime,
   // TODO: inject trace / spanId once request-scoped context is introduced.
   ...(isDev && {
     transport: {
@@ -46,13 +46,20 @@ function serializeError(error: unknown) {
 }
 
 export function logInfo(event: string, payload?: LogPayload): void {
-  logger.info({ event, ...payload });
+  logger.info({ event, ...payload }, event);
 }
 
 export function logWarn(event: string, payload?: LogPayload): void {
-  logger.warn({ event, ...payload });
+  logger.warn({ event, ...payload }, event);
 }
 
 export function logError(event: string, payload?: LogPayload, error?: unknown): void {
-  logger.error({ event, ...payload, error: serializeError(error) });
+  logger.error(
+    {
+      event,
+      ...payload,
+      ...(error !== undefined && { error: serializeError(error) }),
+    },
+    event,
+  );
 }

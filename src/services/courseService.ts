@@ -1,7 +1,7 @@
 import "server-only";
 
 import { handleUnknownError, NotFoundError } from "@/lib/errors";
-import { logError, logInfo } from "@/lib/logging";
+import { logError, logInfo, logWarn } from "@/lib/logging";
 import {
   type CourseRepository,
   type CourseWithLessonIds,
@@ -37,6 +37,10 @@ export async function getCourseBySlug(
     });
     return course;
   } catch (error) {
+    if (error instanceof NotFoundError) {
+      logWarn("courseService.getCourseBySlug.notFound", { slug });
+      throw error;
+    }
     logError("courseService.getCourseBySlug.error", { slug }, error);
     throw handleUnknownError(error);
   }
