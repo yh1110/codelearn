@@ -42,7 +42,7 @@ export async function getPublishedCoursesByNewest(
 
 export async function getOfficialPublishedCourses(
   repository: CourseRepository = courseRepository,
-): Promise<CourseWithLessonIds[]> {
+): Promise<CourseWithLessonsAndAuthor[]> {
   logInfo("courseService.getOfficialPublishedCourses.start");
   try {
     const result = await repository.findOfficialPublished();

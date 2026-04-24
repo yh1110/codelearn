@@ -80,7 +80,7 @@ export class CourseRepository extends BaseRepository {
     });
   }
 
-  async findOfficialPublished(): Promise<CourseWithLessonIds[]> {
+  async findOfficialPublished(): Promise<CourseWithLessonsAndAuthor[]> {
     return this.client.course.findMany({
       where: { isPublished: true, providerType: "OFFICIAL" },
       orderBy: { order: "asc" },
@@ -89,6 +89,9 @@ export class CourseRepository extends BaseRepository {
           where: { isPublished: true },
           select: { id: true },
           orderBy: { order: "asc" },
+        },
+        author: {
+          select: { id: true, email: true, name: true, avatarUrl: true },
         },
       },
     });
