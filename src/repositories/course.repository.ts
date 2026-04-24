@@ -82,10 +82,6 @@ export class CourseRepository extends BaseRepository {
     return this.client.course.findUnique({ where: { id } });
   }
 
-  async findByIdForAuthor(id: string, authorId: string): Promise<Course | null> {
-    return this.client.course.findFirst({ where: { id, authorId } });
-  }
-
   async create(input: CreateCourseInput): Promise<Course> {
     return this.client.course.create({
       data: {
