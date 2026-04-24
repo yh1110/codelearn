@@ -17,6 +17,10 @@ model Course {
   isPublished Boolean  @default(false) @map("is_published")
   lessons     Lesson[]
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([authorId])
+  @@index([isPublished])
 }
 
 model Lesson {
@@ -32,8 +36,10 @@ model Lesson {
   isPublished    Boolean    @default(false) @map("is_published")
   progress       Progress[]
   createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt @map("updated_at")
 
   @@unique([courseId, slug])
+  @@index([courseId, isPublished])
 }
 
 model Progress {
