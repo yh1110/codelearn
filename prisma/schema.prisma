@@ -12,6 +12,9 @@ model Course {
   title       String
   description String
   order       Int
+  authorId    String?  @db.Uuid @map("author_id")
+  author      Profile? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  isPublished Boolean  @default(false) @map("is_published")
   lessons     Lesson[]
   createdAt   DateTime @default(now())
 }
@@ -26,6 +29,7 @@ model Lesson {
   starterCode    String
   expectedOutput String?
   order          Int
+  isPublished    Boolean    @default(false) @map("is_published")
   progress       Progress[]
   createdAt      DateTime   @default(now())
 
@@ -52,6 +56,7 @@ model Profile {
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt      @map("updated_at")
   progress  Progress[]
+  courses   Course[]
 
   @@map("profiles")
 }
