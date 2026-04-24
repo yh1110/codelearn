@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
+import { isLessonBookmarked } from "@/services/bookmarkService";
 import { getCourseBySlug } from "@/services/courseService";
 import { isLessonCompleted } from "@/services/progressService";
 import LessonClient from "./_components/LessonClient";
@@ -28,7 +29,10 @@ export default async function LessonPage({
   const prev = idx > 0 ? course.lessons[idx - 1] : null;
   const next = idx < course.lessons.length - 1 ? course.lessons[idx + 1] : null;
 
-  const completed = await isLessonCompleted(session.userId, lesson.id);
+  const [completed, bookmarked] = await Promise.all([
+    isLessonCompleted(session.userId, lesson.id),
+    isLessonBookmarked({ userId: session.userId, lessonId: lesson.id }),
+  ]);
 
   return (
     <LessonClient
@@ -45,6 +49,7 @@ export default async function LessonPage({
       prevSlug={prev?.slug ?? null}
       nextSlug={next?.slug ?? null}
       initiallyCompleted={completed}
+      initiallyBookmarked={bookmarked}
     />
   );
 }

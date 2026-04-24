@@ -15,6 +15,7 @@ import Link from "next/link";
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { BookmarkButton } from "@/components/BookmarkButton";
 import { cn } from "@/lib/utils";
 import { useLessonRunner } from "../_hooks/useLessonRunner";
 
@@ -40,6 +41,7 @@ type Props = {
   prevSlug: string | null;
   nextSlug: string | null;
   initiallyCompleted: boolean;
+  initiallyBookmarked: boolean;
 };
 
 export default function LessonClient({
@@ -49,6 +51,7 @@ export default function LessonClient({
   prevSlug,
   nextSlug,
   initiallyCompleted,
+  initiallyBookmarked,
 }: Props) {
   const { code, setCode, output, running, completed, run, reset } = useLessonRunner({
     lessonId: lesson.id,
@@ -179,6 +182,12 @@ export default function LessonClient({
               <Check className="size-3" aria-hidden="true" /> クリア済み
             </span>
           ) : null}
+          <BookmarkButton
+            target="lesson"
+            lessonId={lesson.id}
+            bookmarked={initiallyBookmarked}
+            variant="compact"
+          />
         </div>
       </header>
 
