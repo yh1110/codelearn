@@ -6,6 +6,7 @@ import { TopBar } from "./TopBar";
 type Props = {
   displayName: string;
   avatarInitial: string;
+  unreadCount: number;
 };
 
 export function TopBarSwitcher(props: Props) {

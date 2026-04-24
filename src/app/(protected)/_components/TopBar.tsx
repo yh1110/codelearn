@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 type Props = {
   displayName: string;
   avatarInitial: string;
+  unreadCount: number;
 };
 
 type NavGroup = "learn" | "explore" | "create" | null;
@@ -21,11 +22,14 @@ function resolveNavGroup(pathname: string): NavGroup {
   return null;
 }
 
-export function TopBar({ displayName, avatarInitial }: Props) {
+export function TopBar({ displayName, avatarInitial, unreadCount }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const group = resolveNavGroup(pathname);
   const initialQuery = pathname === "/search" ? (searchParams.get("q") ?? "") : "";
+  const hasUnread = unreadCount > 0;
+  const badgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
+  const bellAriaLabel = hasUnread ? `通知 (${unreadCount} 件の未読)` : "通知";
 
   return (
     <header
@@ -102,18 +106,28 @@ export function TopBar({ displayName, avatarInitial }: Props) {
             作る
           </NavTab>
         </nav>
-        <button
-          type="button"
-          aria-label="通知"
-          className="relative grid size-9 place-items-center rounded-[10px] transition"
+        <Link
+          href="/notifications"
+          aria-label={bellAriaLabel}
+          aria-current={pathname === "/notifications" ? "page" : undefined}
+          className="relative grid size-9 place-items-center rounded-[10px] transition hover:bg-[var(--bg-2)]"
           style={{ color: "var(--text-2)" }}
         >
           <Bell className="size-[18px]" />
-          <span
-            className="absolute top-2 right-2 size-2 rounded-full"
-            style={{ background: "var(--accent-solid)", border: "2px solid var(--bg-0)" }}
-          />
-        </button>
+          {hasUnread ? (
+            <span
+              aria-hidden="true"
+              className="absolute top-0.5 right-0.5 inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full px-1 font-semibold text-[10px] leading-none"
+              style={{
+                background: "var(--accent-solid)",
+                color: "var(--bg-0)",
+                border: "2px solid var(--bg-0)",
+              }}
+            >
+              {badgeLabel}
+            </span>
+          ) : null}
+        </Link>
         <Link
           href="/me"
           className="cm-avatar"
