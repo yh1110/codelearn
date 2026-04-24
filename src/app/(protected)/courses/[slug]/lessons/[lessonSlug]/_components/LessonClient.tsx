@@ -12,10 +12,15 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 import { useLessonRunner } from "../_hooks/useLessonRunner";
+
+const MIN_LEFT_PX = 280;
+const MAX_LEFT_RATIO = 0.75;
+const KEY_NUDGE_PX = 24;
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -60,6 +65,76 @@ export default function LessonClient({
       output.exitCode === 0 &&
       lesson.expectedOutput !== null &&
       output.stdout.trim() === lesson.expectedOutput.trim());
+
+  const splitRef = useRef<HTMLDivElement>(null);
+  const [leftWidth, setLeftWidth] = useState<number | null>(null);
+  const draggingRef = useRef(false);
+
+  const clampLeftWidth = useCallback((raw: number, containerWidth: number) => {
+    const max = Math.max(MIN_LEFT_PX, containerWidth * MAX_LEFT_RATIO);
+    return Math.max(MIN_LEFT_PX, Math.min(raw, max));
+  }, []);
+
+  const onResizerMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    draggingRef.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, []);
+
+  const onResizerKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!splitRef.current) return;
+      const rect = splitRef.current.getBoundingClientRect();
+      const current = leftWidth ?? rect.width / 2;
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        setLeftWidth(clampLeftWidth(current - KEY_NUDGE_PX, rect.width));
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        setLeftWidth(clampLeftWidth(current + KEY_NUDGE_PX, rect.width));
+      } else if (event.key === "Home") {
+        event.preventDefault();
+        setLeftWidth(MIN_LEFT_PX);
+      } else if (event.key === "End") {
+        event.preventDefault();
+        setLeftWidth(clampLeftWidth(rect.width * MAX_LEFT_RATIO, rect.width));
+      }
+    },
+    [leftWidth, clampLeftWidth],
+  );
+
+  useEffect(() => {
+    // Syncing drag state with window-level mouse events so dragging still works
+    // when the pointer leaves the resizer handle.
+    const onMove = (event: MouseEvent) => {
+      if (!draggingRef.current || !splitRef.current) return;
+      const rect = splitRef.current.getBoundingClientRect();
+      const raw = event.clientX - rect.left;
+      setLeftWidth(clampLeftWidth(raw, rect.width));
+    };
+    const onUp = () => {
+      if (!draggingRef.current) return;
+      draggingRef.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [clampLeftWidth]);
+
+  const splitStyle: CSSProperties =
+    leftWidth !== null
+      ? { gridTemplateColumns: `${leftWidth}px 6px minmax(0,1fr)`, flex: 1 }
+      : {
+          gridTemplateColumns: "minmax(280px, 1fr) 6px minmax(420px, 1.2fr)",
+          flex: 1,
+        };
 
   return (
     <div
@@ -108,16 +183,10 @@ export default function LessonClient({
       </header>
 
       {/* Split pane */}
-      <div
-        className="grid overflow-hidden"
-        style={{
-          gridTemplateColumns: "minmax(280px, 1fr) minmax(420px, 1.2fr)",
-          flex: 1,
-        }}
-      >
+      <div ref={splitRef} className="grid overflow-hidden" style={splitStyle}>
         {/* LEFT: problem statement */}
         <div
-          className="flex flex-col overflow-hidden border-r"
+          className="flex flex-col overflow-hidden"
           style={{ borderColor: "var(--line-1)", minWidth: 0 }}
         >
           <div
@@ -262,6 +331,30 @@ export default function LessonClient({
               ) : null}
             </div>
           </div>
+        </div>
+
+        {/* Resizer */}
+        {/* biome-ignore lint/a11y/useSemanticElements: ARIA separator role is required for split-pane resize handles; <hr> cannot host interactive behavior */}
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="問題とエディターの横幅を調整"
+          aria-valuemin={MIN_LEFT_PX}
+          aria-valuenow={leftWidth ?? undefined}
+          tabIndex={0}
+          onMouseDown={onResizerMouseDown}
+          onKeyDown={onResizerKeyDown}
+          className="relative flex cursor-col-resize touch-none items-center justify-center border-r border-l transition-colors hover:bg-[var(--bg-2)] focus-visible:bg-[var(--bg-2)]"
+          style={{
+            borderColor: "var(--line-1)",
+            background: "var(--bg-0)",
+          }}
+        >
+          <span
+            aria-hidden="true"
+            className="h-8 w-0.5 rounded"
+            style={{ background: "var(--line-2)" }}
+          />
         </div>
 
         {/* RIGHT: editor + results */}
