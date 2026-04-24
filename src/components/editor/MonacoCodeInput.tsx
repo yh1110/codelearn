@@ -9,6 +9,8 @@ type Props = {
   onChange: (value: string) => void;
   language?: string;
   height?: string;
+  id?: string;
+  ariaLabelledBy?: string;
 };
 
 export function MonacoCodeInput({
@@ -16,9 +18,18 @@ export function MonacoCodeInput({
   onChange,
   language = "typescript",
   height = "320px",
+  id,
+  ariaLabelledBy,
 }: Props) {
   return (
-    <div className="overflow-hidden rounded-md border border-input" style={{ height }}>
+    // biome-ignore lint/a11y/useSemanticElements: fieldset/legend would disrupt the Monaco wrapper layout; role=group with aria-labelledby is the documented ARIA equivalent
+    <div
+      aria-labelledby={ariaLabelledBy}
+      className="overflow-hidden rounded-md border border-input"
+      id={id}
+      role="group"
+      style={{ height }}
+    >
       <MonacoEditor
         height="100%"
         language={language}

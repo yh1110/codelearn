@@ -160,9 +160,11 @@ export function LessonForm(props: Props) {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="lesson-starter">スターターコード</Label>
+        <Label id="lesson-starter-label">スターターコード</Label>
         <MonacoCodeInput
+          ariaLabelledBy="lesson-starter-label"
           height="300px"
+          id="lesson-starter"
           value={values.starterCode}
           onChange={(v) => setValue("starterCode", v)}
         />
