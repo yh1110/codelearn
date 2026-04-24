@@ -12,8 +12,21 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-1 flex-col items-center justify-center px-6 py-16">
       <div className="w-full">
-        <h1 className="text-3xl font-bold tracking-tight">codelearn</h1>
-        <p className="mt-2 text-sm text-zinc-400">サインインして学習を続けよう。</p>
+        <div className="flex items-center gap-2.5">
+          <span className="cm-brand-mark" aria-hidden="true">
+            {"</>"}
+          </span>
+          <h1 className="m-0 font-bold text-[26px] tracking-tight">codeMaker</h1>
+          <span
+            className="ml-0.5 font-mono font-normal text-[11px]"
+            style={{ color: "var(--text-3)" }}
+          >
+            beta
+          </span>
+        </div>
+        <p className="mt-3 text-sm" style={{ color: "var(--text-3)" }}>
+          サインインして学習を続けよう。
+        </p>
 
         {error ? (
           <p className="mt-6 rounded-md border border-red-900 bg-red-950/40 px-3 py-2 text-sm text-red-200">

@@ -11,8 +11,10 @@ export const profileRepository = new ProfileRepository();
 export const progressRepository = new ProgressRepository();
 
 export type {
+  CourseAuthor,
   CourseWithLessonIds,
   CourseWithLessons,
+  CourseWithLessonsAndAuthor,
   CreateCourseInput,
   UpdateCourseInput,
 } from "./course.repository";

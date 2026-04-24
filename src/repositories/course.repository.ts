@@ -9,6 +9,17 @@ export type CourseWithLessons = Prisma.CourseGetPayload<{
 
 export type CourseWithLessonIds = Course & { lessons: Pick<Lesson, "id">[] };
 
+export type CourseAuthor = {
+  id: string;
+  email: string | null;
+  name: string | null;
+  avatarUrl: string | null;
+};
+
+export type CourseWithLessonsAndAuthor = CourseWithLessonIds & {
+  author: CourseAuthor | null;
+};
+
 export type CreateCourseInput = {
   slug: string;
   title: string;
@@ -44,6 +55,23 @@ export class CourseRepository extends BaseRepository {
           where: { isPublished: true },
           select: { id: true },
           orderBy: { order: "asc" },
+        },
+      },
+    });
+  }
+
+  async findAllPublishedByNewest(): Promise<CourseWithLessonsAndAuthor[]> {
+    return this.client.course.findMany({
+      where: { isPublished: true },
+      orderBy: { createdAt: "desc" },
+      include: {
+        lessons: {
+          where: { isPublished: true },
+          select: { id: true },
+          orderBy: { order: "asc" },
+        },
+        author: {
+          select: { id: true, email: true, name: true, avatarUrl: true },
         },
       },
     });

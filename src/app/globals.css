@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans-family);
+  --font-mono: var(--font-mono-family);
+  --font-heading: var(--font-sans-family);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,73 +48,144 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* =======================================================
+   codeMaker tokens — dark-only, warm neutrals + violet accent
+   ======================================================= */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* --- Neutrals (slight warm tint, very low chroma) --- */
+  --bg-0: oklch(0.18 0.008 280);
+  --bg-1: oklch(0.215 0.01 280);
+  --bg-2: oklch(0.25 0.012 280);
+  --bg-3: oklch(0.3 0.014 280);
+  --bg-code: oklch(0.15 0.008 280);
+
+  --line-1: oklch(0.3 0.012 280 / 0.8);
+  --line-2: oklch(0.38 0.014 280 / 0.9);
+  --line-3: oklch(0.48 0.014 280);
+
+  --text-1: oklch(0.97 0.005 280);
+  --text-2: oklch(0.8 0.008 280);
+  --text-3: oklch(0.64 0.01 280);
+  --text-4: oklch(0.5 0.01 280);
+
+  /* --- Accent (violet) --- */
+  --accent-h: 295;
+  --accent-c: 0.18;
+  --accent-solid: oklch(0.78 var(--accent-c) var(--accent-h));
+  --accent-2: oklch(0.68 var(--accent-c) var(--accent-h));
+  --accent-3: oklch(0.55 var(--accent-c) var(--accent-h));
+  --accent-soft: oklch(0.78 var(--accent-c) var(--accent-h) / 0.14);
+  --accent-line: oklch(0.78 var(--accent-c) var(--accent-h) / 0.4);
+  --accent-ink: oklch(0.16 0.02 var(--accent-h));
+
+  /* --- Semantic status colors --- */
+  --ok: oklch(0.82 0.16 145);
+  --ok-soft: oklch(0.82 0.16 145 / 0.14);
+  --warn: oklch(0.84 0.15 85);
+  --warn-soft: oklch(0.84 0.15 85 / 0.14);
+  --err: oklch(0.72 0.19 25);
+  --err-soft: oklch(0.72 0.19 25 / 0.14);
+  --info: oklch(0.78 0.14 230);
+  --info-soft: oklch(0.78 0.14 230 / 0.14);
+  --re: oklch(0.72 0.16 310);
+  --re-soft: oklch(0.72 0.16 310 / 0.14);
+
+  /* Difficulty (3 levels) */
+  --diff-1: oklch(0.82 0.16 145);
+  --diff-2: oklch(0.84 0.15 85);
+  --diff-3: oklch(0.72 0.19 25);
+
+  /* --- Radii --- */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-pill: 999px;
+
+  /* --- Shadows --- */
+  --shadow-1: 0 1px 0 0 oklch(1 0 0 / 0.03) inset, 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-2: 0 1px 0 0 oklch(1 0 0 / 0.04) inset, 0 8px 24px oklch(0 0 0 / 0.45);
+  --shadow-pop: 0 12px 36px oklch(0 0 0 / 0.55), 0 0 0 1px var(--line-2);
+  --glow-accent:
+    0 0 0 1px var(--accent-line), 0 6px 24px oklch(0.78 var(--accent-c) var(--accent-h) / 0.25);
+
+  /* --- Type stacks (composed with next/font variables) --- */
+  --font-sans-family:
+    var(--font-inter), "Noto Sans JP", var(--font-noto-jp), system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
+  --font-mono-family:
+    var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* --- shadcn variable remapping (so existing shadcn components pick up codeMaker palette) --- */
+  --background: var(--bg-0);
+  --foreground: var(--text-1);
+  --card: var(--bg-1);
+  --card-foreground: var(--text-1);
+  --popover: var(--bg-1);
+  --popover-foreground: var(--text-1);
+  --primary: var(--accent-solid);
+  --primary-foreground: var(--accent-ink);
+  --secondary: var(--bg-2);
+  --secondary-foreground: var(--text-1);
+  --muted: var(--bg-2);
+  --muted-foreground: var(--text-3);
+  --accent: var(--bg-2);
+  --accent-foreground: var(--text-1);
+  --destructive: var(--err);
+  --border: var(--line-1);
+  --input: var(--line-2);
+  --ring: var(--accent-solid);
+  --chart-1: var(--accent-solid);
+  --chart-2: var(--info);
+  --chart-3: var(--ok);
+  --chart-4: var(--warn);
+  --chart-5: var(--re);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: var(--bg-1);
+  --sidebar-foreground: var(--text-1);
+  --sidebar-primary: var(--accent-solid);
+  --sidebar-primary-foreground: var(--accent-ink);
+  --sidebar-accent: var(--bg-2);
+  --sidebar-accent-foreground: var(--text-1);
+  --sidebar-border: var(--line-1);
+  --sidebar-ring: var(--accent-solid);
 }
 
+/* dark-only の冗長フォールバック。class なしでも同じ値が効く */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Dark-fixed project: same values (palette is dark-only). */
+  --background: var(--bg-0);
+  --foreground: var(--text-1);
+  --card: var(--bg-1);
+  --card-foreground: var(--text-1);
+  --popover: var(--bg-1);
+  --popover-foreground: var(--text-1);
+  --primary: var(--accent-solid);
+  --primary-foreground: var(--accent-ink);
+  --secondary: var(--bg-2);
+  --secondary-foreground: var(--text-1);
+  --muted: var(--bg-2);
+  --muted-foreground: var(--text-3);
+  --accent: var(--bg-2);
+  --accent-foreground: var(--text-1);
+  --destructive: var(--err);
+  --border: var(--line-1);
+  --input: var(--line-2);
+  --ring: var(--accent-solid);
+  --chart-1: var(--accent-solid);
+  --chart-2: var(--info);
+  --chart-3: var(--ok);
+  --chart-4: var(--warn);
+  --chart-5: var(--re);
+  --sidebar: var(--bg-1);
+  --sidebar-foreground: var(--text-1);
+  --sidebar-primary: var(--accent-solid);
+  --sidebar-primary-foreground: var(--accent-ink);
+  --sidebar-accent: var(--bg-2);
+  --sidebar-accent-foreground: var(--text-1);
+  --sidebar-border: var(--line-1);
+  --sidebar-ring: var(--accent-solid);
 }
 
 @layer base {
@@ -123,8 +194,369 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
   }
   html {
     @apply font-sans;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--text-1);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--bg-3);
+    border-radius: 10px;
+    border: 2px solid var(--bg-0);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--line-3);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-solid);
+    outline-offset: 2px;
+    border-radius: var(--r-sm);
+  }
+}
+
+/* =======================================================
+   codeMaker utility atoms (consumed by bespoke layout pieces —
+   shadcn primitives are still preferred for buttons / cards).
+   ======================================================= */
+@layer components {
+  .cm-surface {
+    background: var(--bg-1);
+    border: 1px solid var(--line-1);
+    border-radius: var(--r-lg);
+  }
+
+  .cm-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: var(--r-pill);
+    background: var(--bg-3);
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--line-1);
+    white-space: nowrap;
+  }
+  .cm-chip-accent {
+    background: var(--accent-soft);
+    color: var(--accent-solid);
+    border-color: var(--accent-line);
+  }
+
+  .cm-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    font-family: var(--font-mono-family);
+    font-size: 11px;
+    color: var(--text-2);
+    background: var(--bg-3);
+    border: 1px solid var(--line-2);
+    border-bottom-width: 2px;
+    border-radius: var(--r-xs);
+  }
+
+  .cm-diff-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 9px;
+    border-radius: var(--r-pill);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid currentColor;
+  }
+  .cm-diff-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .cm-diff-1 {
+    color: var(--diff-1);
+    background: oklch(0.82 0.16 145 / 0.12);
+  }
+  .cm-diff-2 {
+    color: var(--diff-2);
+    background: oklch(0.84 0.15 85 / 0.12);
+  }
+  .cm-diff-3 {
+    color: var(--diff-3);
+    background: oklch(0.72 0.19 25 / 0.12);
+  }
+
+  .cm-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .cm-status-ac {
+    background: var(--ok);
+    box-shadow: 0 0 0 3px var(--ok-soft);
+  }
+  .cm-status-wa {
+    background: var(--err);
+    box-shadow: 0 0 0 3px var(--err-soft);
+  }
+  .cm-status-try {
+    background: var(--warn);
+    box-shadow: 0 0 0 3px var(--warn-soft);
+  }
+  .cm-status-none {
+    background: var(--line-3);
+  }
+
+  .cm-progress {
+    position: relative;
+    height: 6px;
+    border-radius: var(--r-pill);
+    background: var(--bg-3);
+    overflow: hidden;
+  }
+  .cm-progress > span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: linear-gradient(90deg, var(--accent-3), var(--accent-solid));
+    border-radius: var(--r-pill);
+    transition: width 0.4s ease;
+  }
+
+  .cm-segment {
+    display: inline-flex;
+    padding: 3px;
+    background: var(--bg-2);
+    border: 1px solid var(--line-1);
+    border-radius: var(--r-md);
+    gap: 2px;
+  }
+  .cm-segment button {
+    padding: 5px 12px;
+    border-radius: var(--r-sm);
+    font-size: 12px;
+    color: var(--text-3);
+    font-weight: 500;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+  .cm-segment button:hover {
+    color: var(--text-1);
+  }
+  .cm-segment button[aria-pressed="true"] {
+    background: var(--bg-0);
+    color: var(--text-1);
+    box-shadow: var(--shadow-1);
+  }
+
+  .cm-heat-cell {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--bg-2);
+  }
+  .cm-heat-1 {
+    background: oklch(0.78 var(--accent-c) var(--accent-h) / 0.2);
+  }
+  .cm-heat-2 {
+    background: oklch(0.78 var(--accent-c) var(--accent-h) / 0.38);
+  }
+  .cm-heat-3 {
+    background: oklch(0.78 var(--accent-c) var(--accent-h) / 0.6);
+  }
+  .cm-heat-4 {
+    background: oklch(0.78 var(--accent-c) var(--accent-h) / 0.85);
+  }
+
+  .cm-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: var(--r-pill);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .cm-status-pill-draft {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .cm-status-pill-pub {
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+
+  .cm-cover {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--r-md);
+  }
+  .cm-cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 55%, oklch(0 0 0 / 0.5));
+  }
+  .cm-cover-glyph {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono-family);
+    font-size: 48px;
+    font-weight: 700;
+    color: oklch(1 0 0 / 0.85);
+    letter-spacing: -0.04em;
+    mix-blend-mode: overlay;
+  }
+  .cm-cover-1 {
+    background:
+      linear-gradient(135deg, oklch(0.4 0.12 300), oklch(0.28 0.1 260)),
+      repeating-linear-gradient(45deg, transparent 0 8px, oklch(1 0 0 / 0.04) 8px 9px);
+    background-blend-mode: overlay;
+  }
+  .cm-cover-2 {
+    background: linear-gradient(135deg, oklch(0.38 0.1 150), oklch(0.25 0.06 220));
+  }
+  .cm-cover-3 {
+    background: linear-gradient(135deg, oklch(0.42 0.11 30), oklch(0.3 0.08 320));
+  }
+  .cm-cover-4 {
+    background: linear-gradient(135deg, oklch(0.36 0.1 220), oklch(0.24 0.08 280));
+  }
+  .cm-cover-5 {
+    background: linear-gradient(135deg, oklch(0.4 0.1 85), oklch(0.26 0.06 180));
+  }
+  .cm-cover-6 {
+    background: linear-gradient(135deg, oklch(0.38 0.12 330), oklch(0.22 0.06 260));
+  }
+
+  .cm-grain {
+    position: relative;
+    overflow: hidden;
+  }
+  .cm-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(
+        circle at 20% 10%,
+        oklch(0.78 var(--accent-c) var(--accent-h) / 0.22),
+        transparent 55%
+      ),
+      radial-gradient(circle at 80% 90%, oklch(0.78 0.14 230 / 0.14), transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .cm-brand-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent-solid), oklch(0.68 0.16 250));
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono-family);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--accent-ink);
+    box-shadow: var(--shadow-1);
+  }
+
+  .cm-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, oklch(0.68 0.14 30), oklch(0.72 0.16 320));
+    display: grid;
+    place-items: center;
+    color: var(--accent-ink);
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+    border: 2px solid var(--bg-1);
+  }
+  .cm-avatar-sm {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+    border-width: 1px;
+  }
+  .cm-avatar-lg {
+    width: 64px;
+    height: 64px;
+    font-size: 22px;
+    border-width: 3px;
+  }
+  .cm-avatar-xl {
+    width: 96px;
+    height: 96px;
+    font-size: 32px;
+    border-width: 4px;
+  }
+
+  .cm-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-4);
+    font-weight: 600;
+  }
+
+  .cm-mono {
+    font-family: var(--font-mono-family);
+    font-size: 12px;
+  }
+
+  @keyframes cm-pulse-dot {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+  }
+  .cm-pulse {
+    animation: cm-pulse-dot 1.6s ease-in-out infinite;
+  }
+
+  @keyframes cm-route-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .cm-route-enter {
+    animation: cm-route-in 0.22s ease-out both;
   }
 }

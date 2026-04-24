@@ -1,28 +1,37 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Noto_Sans_JP } from "next/font/google";
 import { SwrProvider } from "@/components/providers/SwrProvider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const notoSansJp = Noto_Sans_JP({
+  variable: "--font-noto-jp",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "codelearn — learn TypeScript in your browser",
-  description: "Progate-style TypeScript learning platform",
+  title: "codeMaker — ブラウザで TypeScript を学ぶ",
+  description: "モノづくりで学ぶ TypeScript 学習プラットフォーム",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="ja"
-      className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`dark ${inter.variable} ${jetbrainsMono.variable} ${notoSansJp.variable} h-full antialiased`}
       style={{ colorScheme: "dark" }}
       suppressHydrationWarning
     >

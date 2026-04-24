@@ -7,6 +7,7 @@ import {
   type CourseRepository,
   type CourseWithLessonIds,
   type CourseWithLessons,
+  type CourseWithLessonsAndAuthor,
   courseRepository,
 } from "@/repositories";
 import { ensureAuthorOwnsCourse } from "./authorGuard";
@@ -21,6 +22,20 @@ export async function getCoursesWithLessons(
     return result;
   } catch (error) {
     logError("courseService.getCoursesWithLessons.error", undefined, error);
+    throw handleUnknownError(error);
+  }
+}
+
+export async function getPublishedCoursesByNewest(
+  repository: CourseRepository = courseRepository,
+): Promise<CourseWithLessonsAndAuthor[]> {
+  logInfo("courseService.getPublishedCoursesByNewest.start");
+  try {
+    const result = await repository.findAllPublishedByNewest();
+    logInfo("courseService.getPublishedCoursesByNewest.success", { count: result.length });
+    return result;
+  } catch (error) {
+    logError("courseService.getPublishedCoursesByNewest.error", undefined, error);
     throw handleUnknownError(error);
   }
 }

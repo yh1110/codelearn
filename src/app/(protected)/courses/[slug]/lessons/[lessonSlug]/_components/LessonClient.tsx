@@ -1,12 +1,20 @@
 "use client";
 
-import { Check } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ChevronRight,
+  FileText,
+  Play,
+  RotateCcw,
+  X,
+} from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useLessonRunner } from "../_hooks/useLessonRunner";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
@@ -44,161 +52,476 @@ export default function LessonClient({
     initiallyCompleted,
   });
 
+  const passed =
+    completed ||
+    (!!output &&
+      !output.stderr &&
+      !output.timedOut &&
+      output.exitCode === 0 &&
+      lesson.expectedOutput !== null &&
+      output.stdout.trim() === lesson.expectedOutput.trim());
+
   return (
-    <div className="flex h-screen flex-1 flex-col">
-      <header className="flex items-center gap-4 border-b border-zinc-200 px-6 py-3 dark:border-zinc-800">
-        <Link href={`/courses/${courseSlug}`} className="text-sm text-zinc-500 hover:underline">
-          ← {courseTitle}
-        </Link>
-        <h1 className="text-lg font-semibold">{lesson.title}</h1>
-        {completed && (
-          <Badge
-            className="ml-auto bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-            variant="secondary"
+    <div
+      className="flex h-screen flex-col"
+      style={{ background: "var(--bg-0)", color: "var(--text-1)" }}
+    >
+      {/* Problem top bar */}
+      <header
+        className="grid items-center gap-4 border-b px-5 py-2.5"
+        style={{
+          gridTemplateColumns: "1fr auto 1fr",
+          borderColor: "var(--line-1)",
+          background: "var(--bg-0)",
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/courses/${courseSlug}`}
+            className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[12px]"
+            style={{ color: "var(--text-2)" }}
           >
-            <Check aria-hidden="true" />
-            クリア済み
-          </Badge>
-        )}
+            <ArrowLeft className="size-3.5" aria-hidden="true" /> コース
+          </Link>
+          <div className="flex items-center gap-1.5 text-[12px]" style={{ color: "var(--text-3)" }}>
+            <span>{courseTitle}</span>
+            <ChevronRight className="size-3" aria-hidden="true" />
+            <b style={{ color: "var(--text-1)", fontWeight: 500 }}>レッスン</b>
+          </div>
+        </div>
+        <div className="text-center">
+          <h1 className="m-0 font-semibold text-[15px] tracking-tight">{lesson.title}</h1>
+          <div className="mt-0.5 font-mono text-[11px]" style={{ color: "var(--text-4)" }}>
+            #{lesson.slug} · <span className="cm-diff-badge cm-diff-1 align-middle">初級</span>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-2">
+          {passed ? (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1 font-semibold text-[11px]"
+              style={{ background: "var(--ok-soft)", color: "var(--ok)" }}
+            >
+              <Check className="size-3" aria-hidden="true" /> クリア済み
+            </span>
+          ) : null}
+        </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-1/2 overflow-y-auto border-r border-zinc-200 p-8 dark:border-zinc-800">
-          <div className="mx-auto max-w-prose">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                h1: ({ children }) => <h1 className="mb-5 mt-2 text-3xl font-bold">{children}</h1>,
-                h2: ({ children }) => (
-                  <h2 className="mb-3 mt-8 text-xl font-semibold">{children}</h2>
-                ),
-                h3: ({ children }) => (
-                  <h3 className="mb-2 mt-6 text-base font-semibold">{children}</h3>
-                ),
-                p: ({ children }) => (
-                  <p className="mb-4 leading-7 text-zinc-700 dark:text-zinc-300">{children}</p>
-                ),
-                code: ({ className, children }) => {
-                  const isInline = !className;
-                  return isInline ? (
-                    <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[0.9em] text-pink-600 dark:bg-zinc-800 dark:text-pink-400">
+      {/* Split pane */}
+      <div
+        className="grid overflow-hidden"
+        style={{
+          gridTemplateColumns: "minmax(280px, 1fr) minmax(420px, 1.2fr)",
+          flex: 1,
+        }}
+      >
+        {/* LEFT: problem statement */}
+        <div
+          className="flex flex-col overflow-hidden border-r"
+          style={{ borderColor: "var(--line-1)", minWidth: 0 }}
+        >
+          <div
+            className="flex flex-shrink-0 items-center gap-0.5 border-b px-3 py-1.5"
+            style={{ borderColor: "var(--line-1)", background: "var(--bg-0)" }}
+          >
+            <div
+              className="inline-flex items-center gap-1.5 rounded-[6px] px-3 py-1.5 font-medium text-[12px]"
+              style={{
+                color: "var(--text-1)",
+                background: "var(--bg-2)",
+              }}
+            >
+              <FileText className="size-3.5" aria-hidden="true" /> 問題
+            </div>
+          </div>
+          <div className="flex-1 overflow-auto px-6 py-5">
+            <div className="mx-auto max-w-[720px]" style={{ color: "var(--text-2)" }}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h1: ({ children }) => (
+                    <h1
+                      className="mt-1 mb-4 font-bold text-[22px] tracking-tight"
+                      style={{ color: "var(--text-1)" }}
+                    >
                       {children}
-                    </code>
-                  ) : (
-                    <code className={className}>{children}</code>
-                  );
-                },
-                pre: ({ children }) => (
-                  <pre className="mb-4 overflow-x-auto rounded-md bg-zinc-900 p-4 text-sm text-zinc-100">
-                    {children}
-                  </pre>
-                ),
-                ul: ({ children }) => (
-                  <ul className="mb-4 list-disc space-y-1 pl-6 text-zinc-700 dark:text-zinc-300">
-                    {children}
-                  </ul>
-                ),
-                ol: ({ children }) => (
-                  <ol className="mb-4 list-decimal space-y-1 pl-6 text-zinc-700 dark:text-zinc-300">
-                    {children}
-                  </ol>
-                ),
-                a: ({ href, children }) => (
-                  <a href={href} className="text-blue-600 hover:underline">
-                    {children}
-                  </a>
-                ),
-                strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-              }}
-            >
-              {lesson.contentMd}
-            </ReactMarkdown>
-          </div>
-        </aside>
-
-        <main className="flex w-1/2 flex-col">
-          <div className="flex items-center gap-2 border-b border-zinc-200 px-4 py-2 dark:border-zinc-800">
-            <Button
-              className="bg-emerald-600 text-white hover:bg-emerald-700"
-              disabled={running}
-              onClick={run}
-              size="sm"
-              type="button"
-            >
-              {running ? "実行中..." : "▶ 実行"}
-            </Button>
-            <Button onClick={reset} size="sm" type="button" variant="outline">
-              リセット
-            </Button>
-            {lesson.expectedOutput && (
-              <span className="ml-2 text-xs text-zinc-500">期待出力と一致すればクリア</span>
-            )}
-          </div>
-
-          <div className="flex-1">
-            <MonacoEditor
-              height="100%"
-              language="typescript"
-              theme="vs-dark"
-              value={code}
-              onChange={(v) => setCode(v ?? "")}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                scrollBeyondLastLine: false,
-                tabSize: 2,
-                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-              }}
-            />
-          </div>
-
-          <div className="h-48 shrink-0 overflow-auto border-t border-zinc-200 bg-zinc-50 p-3 font-mono text-sm dark:border-zinc-800 dark:bg-zinc-950">
-            {output ? (
-              <>
-                {output.stdout && (
-                  <pre className="whitespace-pre-wrap text-zinc-800 dark:text-zinc-100">
-                    {output.stdout}
-                  </pre>
-                )}
-                {output.stderr && (
-                  <pre className="whitespace-pre-wrap text-red-600 dark:text-red-400">
-                    {output.stderr}
-                  </pre>
-                )}
-                {output.timedOut && <p className="text-amber-600">⏱ タイムアウト (5s)</p>}
-                {!output.stdout && !output.stderr && !output.timedOut && (
-                  <p className="text-zinc-500">(出力なし)</p>
-                )}
-              </>
-            ) : (
-              <p className="text-zinc-500">実行するとここに結果が表示されます</p>
-            )}
-          </div>
-
-          <nav className="flex shrink-0 items-center justify-between border-t border-zinc-200 p-3 dark:border-zinc-800">
-            {prevSlug ? (
-              <Link
-                href={`/courses/${courseSlug}/lessons/${prevSlug}`}
-                className="text-sm text-zinc-600 hover:underline dark:text-zinc-300"
+                    </h1>
+                  ),
+                  h2: ({ children }) => (
+                    <h2
+                      className="mt-6 mb-2 font-semibold text-[15px] tracking-tight"
+                      style={{ color: "var(--text-1)" }}
+                    >
+                      {children}
+                    </h2>
+                  ),
+                  h3: ({ children }) => (
+                    <h3
+                      className="mt-5 mb-2 font-semibold text-[14px]"
+                      style={{ color: "var(--text-1)" }}
+                    >
+                      {children}
+                    </h3>
+                  ),
+                  p: ({ children }) => <p className="mb-3 leading-7 text-[13.5px]">{children}</p>,
+                  code: ({ className, children, ...rest }) => {
+                    // react-markdown v10+ no longer passes an `inline` prop. Treat a single
+                    // text node without a language class as inline; anything structural
+                    // (multi-line content, nested nodes) is a fenced block.
+                    const isInline =
+                      !className && typeof children === "string" && !children.includes("\n");
+                    return isInline ? (
+                      <code
+                        className="rounded px-1.5 py-0.5 font-mono text-[0.9em]"
+                        style={{
+                          background: "var(--bg-2)",
+                          color: "var(--accent-solid)",
+                          border: "1px solid var(--line-1)",
+                        }}
+                      >
+                        {children}
+                      </code>
+                    ) : (
+                      <code className={className} {...rest}>
+                        {children}
+                      </code>
+                    );
+                  },
+                  pre: ({ children }) => (
+                    <pre
+                      className="mb-4 overflow-x-auto rounded-[10px] p-3 font-mono text-[12.5px] leading-relaxed"
+                      style={{
+                        background: "var(--bg-code)",
+                        border: "1px solid var(--line-1)",
+                        color: "var(--text-1)",
+                      }}
+                    >
+                      {children}
+                    </pre>
+                  ),
+                  ul: ({ children }) => (
+                    <ul className="mb-3 list-disc space-y-1 pl-5">{children}</ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol className="mb-3 list-decimal space-y-1 pl-5">{children}</ol>
+                  ),
+                  a: ({ href, children }) => (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                      style={{ color: "var(--accent-solid)" }}
+                    >
+                      {children}
+                    </a>
+                  ),
+                  strong: ({ children }) => (
+                    <strong className="font-semibold" style={{ color: "var(--text-1)" }}>
+                      {children}
+                    </strong>
+                  ),
+                }}
               >
-                ← 前のレッスン
-              </Link>
-            ) : (
-              <span />
-            )}
-            {nextSlug ? (
-              <Link
-                href={`/courses/${courseSlug}/lessons/${nextSlug}`}
-                className="text-sm text-zinc-600 hover:underline dark:text-zinc-300"
+                {lesson.contentMd}
+              </ReactMarkdown>
+
+              {lesson.expectedOutput ? (
+                <section className="mt-6">
+                  <h2
+                    className="mt-6 mb-2 font-semibold text-[15px] tracking-tight"
+                    style={{ color: "var(--text-1)" }}
+                  >
+                    期待される出力
+                  </h2>
+                  <div
+                    className="overflow-hidden rounded-[10px]"
+                    style={{
+                      background: "var(--bg-1)",
+                      border: "1px solid var(--line-1)",
+                    }}
+                  >
+                    <div
+                      className="border-b px-3 py-2 font-mono text-[11px]"
+                      style={{
+                        borderColor: "var(--line-1)",
+                        background: "var(--bg-2)",
+                        color: "var(--text-3)",
+                      }}
+                    >
+                      Expected stdout
+                    </div>
+                    <pre
+                      className="m-0 p-3 font-mono text-[12.5px] leading-relaxed"
+                      style={{ background: "var(--bg-code)", color: "var(--text-1)" }}
+                    >
+                      {lesson.expectedOutput}
+                    </pre>
+                  </div>
+                </section>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: editor + results */}
+        <div
+          className="grid overflow-hidden"
+          style={{
+            gridTemplateRows: "1fr 240px",
+            background: "var(--bg-code)",
+            minWidth: 0,
+          }}
+        >
+          {/* Editor */}
+          <div className="flex flex-col overflow-hidden">
+            <div
+              className="flex flex-shrink-0 items-center justify-between border-b px-2.5 py-1.5"
+              style={{ background: "var(--bg-0)", borderColor: "var(--line-1)" }}
+            >
+              <div
+                className="flex items-center gap-2 text-[12px]"
+                style={{ color: "var(--text-3)" }}
               >
-                次のレッスン →
-              </Link>
-            ) : (
-              <span />
-            )}
-          </nav>
-        </main>
+                <span
+                  className="rounded-[6px] px-2 py-0.5 font-mono text-[11px]"
+                  style={{ background: "var(--bg-2)", border: "1px solid var(--line-1)" }}
+                >
+                  TypeScript
+                </span>
+                <span className="font-mono">main.ts</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={reset}
+                  className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1 text-[12px] transition hover:bg-[var(--bg-2)]"
+                  style={{ color: "var(--text-2)" }}
+                >
+                  <RotateCcw className="size-3" aria-hidden="true" /> リセット
+                </button>
+              </div>
+            </div>
+            <div className="relative flex-1" style={{ background: "var(--bg-code)" }}>
+              <MonacoEditor
+                height="100%"
+                language="typescript"
+                theme="vs-dark"
+                value={code}
+                onChange={(v) => setCode(v ?? "")}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 13.5,
+                  lineHeight: 22,
+                  scrollBeyondLastLine: false,
+                  smoothScrolling: true,
+                  padding: { top: 12, bottom: 12 },
+                  tabSize: 2,
+                  fontFamily: "var(--font-mono-family)",
+                  fontLigatures: true,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Results */}
+          <div
+            className="flex flex-col overflow-hidden border-t"
+            style={{ background: "var(--bg-0)", borderColor: "var(--line-1)" }}
+          >
+            <div
+              className="flex flex-shrink-0 items-center justify-between gap-2 border-b px-3 py-1.5"
+              style={{ borderColor: "var(--line-1)" }}
+            >
+              <div
+                className="inline-flex items-center gap-1.5 rounded-[6px] px-3 py-1.5 font-medium text-[12px]"
+                style={{
+                  color: "var(--text-1)",
+                  background: "var(--bg-2)",
+                }}
+              >
+                <Play className="size-3" aria-hidden="true" /> 実行結果
+              </div>
+              {running ? (
+                <span
+                  className="cm-pulse inline-flex items-center gap-1.5 font-mono text-[11px]"
+                  style={{ color: "var(--text-3)" }}
+                >
+                  ● 実行中…
+                </span>
+              ) : null}
+            </div>
+            <div
+              className="flex-1 overflow-auto p-4 font-mono text-[12px]"
+              style={{ color: "var(--text-1)" }}
+            >
+              <ResultBody output={output} expected={lesson.expectedOutput} passed={passed} />
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Bottom bar */}
+      <footer
+        className="grid items-center gap-4 border-t px-5 py-2.5"
+        style={{ gridTemplateColumns: "1fr auto 1fr", borderColor: "var(--line-1)" }}
+      >
+        <div className="flex gap-2">
+          {prevSlug ? (
+            <Link
+              href={`/courses/${courseSlug}/lessons/${prevSlug}`}
+              className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[12px]"
+              style={{
+                background: "var(--bg-2)",
+                border: "1px solid var(--line-2)",
+                color: "var(--text-1)",
+              }}
+            >
+              <ArrowLeft className="size-3.5" aria-hidden="true" /> 前のレッスン
+            </Link>
+          ) : (
+            <span />
+          )}
+          {nextSlug ? (
+            <Link
+              href={`/courses/${courseSlug}/lessons/${nextSlug}`}
+              className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[12px]"
+              style={{
+                background: "var(--bg-2)",
+                border: "1px solid var(--line-2)",
+                color: "var(--text-1)",
+              }}
+            >
+              次のレッスン <ArrowRight className="size-3.5" aria-hidden="true" />
+            </Link>
+          ) : null}
+        </div>
+        <div
+          className="flex items-center gap-1.5 font-mono text-[11px]"
+          style={{ color: "var(--text-3)" }}
+        >
+          {lesson.expectedOutput ? "期待出力と一致すればクリア" : "実行して動作を確認しよう"}
+        </div>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            disabled={running}
+            onClick={run}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-[10px] px-4 py-1.5 font-semibold text-[13px] transition",
+              running ? "cursor-not-allowed opacity-60" : "",
+            )}
+            style={{ background: "var(--accent-solid)", color: "var(--accent-ink)" }}
+          >
+            <Play className="size-3.5" aria-hidden="true" />
+            {running ? "実行中…" : "実行"}
+          </button>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function ResultBody({
+  output,
+  expected,
+  passed,
+}: {
+  output: ReturnType<typeof useLessonRunner>["output"];
+  expected: string | null;
+  passed: boolean;
+}) {
+  if (!output) {
+    return (
+      <div className="py-10 text-center font-sans text-[13px]" style={{ color: "var(--text-3)" }}>
+        実行するとここに結果が表示されます
+      </div>
+    );
+  }
+
+  const hasStderr = !!output.stderr;
+  const hasStdout = !!output.stdout;
+
+  return (
+    <div className="space-y-3">
+      {expected !== null ? (
+        <div
+          className="flex items-center gap-2 rounded-[8px] px-3 py-2 font-sans text-[12.5px]"
+          style={{
+            background: passed ? "var(--ok-soft)" : "var(--err-soft)",
+            border: `1px solid ${passed ? "oklch(0.82 0.16 145 / 0.4)" : "oklch(0.72 0.19 25 / 0.4)"}`,
+            color: passed ? "var(--ok)" : "var(--err)",
+          }}
+        >
+          {passed ? (
+            <Check className="size-4" aria-hidden="true" />
+          ) : (
+            <X className="size-4" aria-hidden="true" />
+          )}
+          <b>{passed ? "Accepted — 期待出力と一致!" : "Wrong Answer — 期待出力と一致しません"}</b>
+        </div>
+      ) : null}
+
+      {hasStdout ? (
+        <div
+          className="overflow-hidden rounded-[8px]"
+          style={{ background: "var(--bg-1)", border: "1px solid var(--line-1)" }}
+        >
+          <div
+            className="border-b px-3 py-1.5 font-mono text-[11px]"
+            style={{
+              borderColor: "var(--line-1)",
+              background: "var(--bg-2)",
+              color: "var(--text-3)",
+            }}
+          >
+            stdout
+          </div>
+          <pre className="m-0 whitespace-pre-wrap break-all p-3" style={{ color: "var(--text-1)" }}>
+            {output.stdout}
+          </pre>
+        </div>
+      ) : null}
+
+      {hasStderr ? (
+        <div
+          className="overflow-hidden rounded-[8px]"
+          style={{ background: "var(--bg-1)", border: "1px solid oklch(0.72 0.19 25 / 0.4)" }}
+        >
+          <div
+            className="border-b px-3 py-1.5 font-mono text-[11px]"
+            style={{
+              borderColor: "var(--line-1)",
+              background: "var(--bg-2)",
+              color: "var(--err)",
+            }}
+          >
+            stderr
+          </div>
+          <pre className="m-0 whitespace-pre-wrap break-all p-3" style={{ color: "var(--err)" }}>
+            {output.stderr}
+          </pre>
+        </div>
+      ) : null}
+
+      {output.timedOut ? (
+        <div
+          className="rounded-[8px] px-3 py-2 font-sans text-[12.5px]"
+          style={{
+            background: "var(--warn-soft)",
+            border: "1px solid oklch(0.84 0.15 85 / 0.4)",
+            color: "var(--warn)",
+          }}
+        >
+          ⏱ タイムアウト (5s)
+        </div>
+      ) : null}
+
+      {!hasStdout && !hasStderr && !output.timedOut ? (
+        <div className="font-sans" style={{ color: "var(--text-3)" }}>
+          (出力なし)
+        </div>
+      ) : null}
     </div>
   );
 }

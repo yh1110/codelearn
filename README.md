@@ -1,6 +1,8 @@
-# codelearn
+# codeMaker (codelearn)
 
-Progate 風の TypeScript 学習プラットフォーム。ブラウザ上のエディタで TypeScript を書き、**そのままブラウザ内で transpile / 実行**して結果を期待出力と突き合わせる。
+**codeMaker** (internal repo 名: `codelearn`) は Progate 風の TypeScript 学習プラットフォーム。ブラウザ上のエディタで TypeScript を書き、**そのままブラウザ内で transpile / 実行**して結果を期待出力と突き合わせる。
+
+> UI 上のブランド名は **codeMaker**。リポジトリ名・npm package 名は歴史的経緯で `codelearn` のまま。
 
 ## 技術スタック
 
