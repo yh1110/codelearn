@@ -40,6 +40,36 @@ export async function getPublishedCoursesByNewest(
   }
 }
 
+export async function getOfficialPublishedCourses(
+  repository: CourseRepository = courseRepository,
+): Promise<CourseWithLessonIds[]> {
+  logInfo("courseService.getOfficialPublishedCourses.start");
+  try {
+    const result = await repository.findOfficialPublished();
+    logInfo("courseService.getOfficialPublishedCourses.success", { count: result.length });
+    return result;
+  } catch (error) {
+    logError("courseService.getOfficialPublishedCourses.error", undefined, error);
+    throw handleUnknownError(error);
+  }
+}
+
+export async function getCommunityPublishedCoursesByNewest(
+  repository: CourseRepository = courseRepository,
+): Promise<CourseWithLessonsAndAuthor[]> {
+  logInfo("courseService.getCommunityPublishedCoursesByNewest.start");
+  try {
+    const result = await repository.findCommunityPublishedByNewest();
+    logInfo("courseService.getCommunityPublishedCoursesByNewest.success", {
+      count: result.length,
+    });
+    return result;
+  } catch (error) {
+    logError("courseService.getCommunityPublishedCoursesByNewest.error", undefined, error);
+    throw handleUnknownError(error);
+  }
+}
+
 export async function getCourseBySlug(
   slug: string,
   repository: CourseRepository = courseRepository,
