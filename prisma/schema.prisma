@@ -17,6 +17,7 @@ model Course {
   isPublished  Boolean            @default(false) @map("is_published")
   providerType CourseProviderType @default(COMMUNITY) @map("provider_type")
   lessons      Lesson[]
+  bookmarks    Bookmark[]
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt @map("updated_at")
 
@@ -42,6 +43,7 @@ model Lesson {
   order          Int
   isPublished    Boolean    @default(false) @map("is_published")
   progress       Progress[]
+  bookmarks      Bookmark[]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt @map("updated_at")
 
@@ -71,6 +73,7 @@ model Profile {
   progress      Progress[]
   courses       Course[]
   notifications Notification[]
+  bookmarks     Bookmark[]
 
   @@map("profiles")
 }
@@ -96,4 +99,20 @@ model Notification {
   @@index([recipientId, createdAt])
   @@index([recipientId, readAt])
   @@map("notifications")
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String   @db.Uuid @map("user_id")
+  user      Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String?  @map("course_id")
+  course    Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessonId  String?  @map("lesson_id")
+  lesson    Lesson?  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, courseId], name: "user_course_bookmark")
+  @@unique([userId, lessonId], name: "user_lesson_bookmark")
+  @@index([userId])
+  @@map("bookmarks")
 }
