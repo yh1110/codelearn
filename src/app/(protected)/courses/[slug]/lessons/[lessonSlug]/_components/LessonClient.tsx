@@ -129,7 +129,6 @@ export default function LessonClient({
               style={{
                 color: "var(--text-1)",
                 background: "var(--bg-2)",
-                boxShadow: "inset 0 -2px 0 var(--accent-solid)",
               }}
             >
               <FileText className="size-3.5" aria-hidden="true" /> 問題
@@ -339,7 +338,6 @@ export default function LessonClient({
                 style={{
                   color: "var(--text-1)",
                   background: "var(--bg-2)",
-                  boxShadow: "inset 0 -2px 0 var(--accent-solid)",
                 }}
               >
                 <Play className="size-3" aria-hidden="true" /> 実行結果

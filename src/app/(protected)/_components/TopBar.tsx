@@ -59,9 +59,10 @@ export function TopBar({ displayName, avatarInitial }: Props) {
         />
         <input
           type="search"
-          placeholder="コース / レッスンを検索…"
-          aria-label="検索"
-          className="w-full rounded-[10px] py-[9px] pr-16 pl-10 text-[13px] outline-none transition"
+          disabled
+          placeholder="検索 (近日公開)"
+          aria-label="検索 (近日公開)"
+          className="w-full cursor-not-allowed rounded-[10px] py-[9px] pr-16 pl-10 text-[13px] outline-none transition"
           style={{
             background: "var(--bg-1)",
             border: "1px solid var(--line-2)",

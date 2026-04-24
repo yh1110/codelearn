@@ -25,6 +25,20 @@ export async function getCoursesWithLessons(
   }
 }
 
+export async function getPublishedCoursesByNewest(
+  repository: CourseRepository = courseRepository,
+): Promise<CourseWithLessonIds[]> {
+  logInfo("courseService.getPublishedCoursesByNewest.start");
+  try {
+    const result = await repository.findAllPublishedByNewest();
+    logInfo("courseService.getPublishedCoursesByNewest.success", { count: result.length });
+    return result;
+  } catch (error) {
+    logError("courseService.getPublishedCoursesByNewest.error", undefined, error);
+    throw handleUnknownError(error);
+  }
+}
+
 export async function getCourseBySlug(
   slug: string,
   repository: CourseRepository = courseRepository,

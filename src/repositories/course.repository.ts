@@ -49,6 +49,20 @@ export class CourseRepository extends BaseRepository {
     });
   }
 
+  async findAllPublishedByNewest(): Promise<CourseWithLessonIds[]> {
+    return this.client.course.findMany({
+      where: { isPublished: true },
+      orderBy: { createdAt: "desc" },
+      include: {
+        lessons: {
+          where: { isPublished: true },
+          select: { id: true },
+          orderBy: { order: "asc" },
+        },
+      },
+    });
+  }
+
   async findBySlugWithLessons(slug: string): Promise<CourseWithLessons | null> {
     return this.client.course.findUnique({
       where: { slug },

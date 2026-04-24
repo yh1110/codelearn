@@ -1,4 +1,4 @@
-import { ArrowRight, BookText, CheckCircle2, Flame, Plus } from "lucide-react";
+import { ArrowRight, BookText, CheckCircle2, Plus } from "lucide-react";
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -76,10 +76,6 @@ export default async function Home() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="cm-chip" title="連続日数の集計は近日公開">
-              <Flame className="size-3" style={{ color: "var(--warn)" }} aria-hidden="true" />
-              連続 -- 日
-            </span>
             <span className="cm-chip cm-chip-accent">
               <CheckCircle2 className="size-3" aria-hidden="true" />
               {totalDone} クリア
@@ -185,48 +181,6 @@ export default async function Home() {
             })}
           </ul>
         )}
-      </section>
-
-      {/* Activity heatmap placeholder */}
-      <section className="mt-10">
-        <div className="mb-4">
-          <h2 className="m-0 font-semibold text-[18px] tracking-tight">学習ヒートマップ</h2>
-          <span className="text-xs" style={{ color: "var(--text-3)" }}>
-            過去52週間の活動 (準備中)
-          </span>
-        </div>
-        <div
-          className="overflow-x-auto rounded-[14px]"
-          style={{ background: "var(--bg-1)", border: "1px solid var(--line-1)" }}
-        >
-          <div
-            className="grid gap-[3px] p-4"
-            style={{
-              gridAutoFlow: "column",
-              gridTemplateRows: "repeat(7, 10px)",
-              width: "max-content",
-            }}
-          >
-            {Array.from({ length: 7 * 52 }, (_, i) => `cell-${i}`).map((id) => (
-              <div key={id} className="cm-heat-cell" />
-            ))}
-          </div>
-          <div
-            className="flex items-center justify-between border-t px-4 py-2.5 text-[12px]"
-            style={{ borderColor: "var(--line-1)", color: "var(--text-3)" }}
-          >
-            <span>活動データは近日公開</span>
-            <div className="flex items-center gap-1 text-[11px]" style={{ color: "var(--text-4)" }}>
-              少ない
-              <span className="cm-heat-cell" />
-              <span className="cm-heat-cell cm-heat-1" />
-              <span className="cm-heat-cell cm-heat-2" />
-              <span className="cm-heat-cell cm-heat-3" />
-              <span className="cm-heat-cell cm-heat-4" />
-              多い
-            </div>
-          </div>
-        </div>
       </section>
     </div>
   );
