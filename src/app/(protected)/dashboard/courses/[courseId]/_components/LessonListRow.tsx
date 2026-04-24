@@ -57,7 +57,7 @@ export function LessonListRow({ courseId, lesson }: Props) {
             type="button"
             variant={lesson.isPublished ? "outline" : "default"}
           >
-            {lesson.isPublished ? "非公開" : "公開"}
+            {lesson.isPublished ? "非公開にする" : "公開する"}
           </Button>
           <DeleteLessonButton lessonId={lesson.id} title={lesson.title} />
         </div>
