@@ -49,8 +49,9 @@ function glyphFor(title: string) {
 }
 
 function authorLabel(author: CourseAuthor | null): string {
-  if (!author) return "Anonymous";
-  return author.name ?? (author.email ? author.email.split("@")[0] : "Anonymous");
+  // Fall back to "Anonymous" when the author didn't set a display name —
+  // do NOT derive a handle from the email address (privacy).
+  return author?.name ?? "Anonymous";
 }
 
 function authorInitial(author: CourseAuthor | null): string {
