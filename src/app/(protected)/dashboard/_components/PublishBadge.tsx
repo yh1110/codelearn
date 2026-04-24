@@ -1,19 +1,11 @@
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export function PublishBadge({ isPublished }: { isPublished: boolean }) {
-  if (isPublished) {
-    return (
-      <Badge
-        className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-        variant="secondary"
-      >
-        公開
-      </Badge>
-    );
-  }
   return (
-    <Badge className="text-zinc-500" variant="outline">
-      非公開
-    </Badge>
+    <span
+      className={cn("cm-status-pill", isPublished ? "cm-status-pill-pub" : "cm-status-pill-draft")}
+    >
+      {isPublished ? "公開中" : "下書き"}
+    </span>
   );
 }
