@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
@@ -7,6 +8,9 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   return (
     <>
       <header className="flex items-center justify-end gap-3 border-b border-zinc-800 px-4 py-2 text-sm">
+        <Link href="/dashboard" className="mr-auto text-zinc-400 hover:text-zinc-200">
+          ダッシュボード
+        </Link>
         <span className="text-zinc-400">{displayName}</span>
         <form action="/auth/signout" method="post">
           <button
