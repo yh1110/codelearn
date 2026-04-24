@@ -152,6 +152,7 @@
   --sidebar-ring: var(--accent-solid);
 }
 
+/* dark-only の冗長フォールバック。class なしでも同じ値が効く */
 .dark {
   /* Dark-fixed project: same values (palette is dark-only). */
   --background: var(--bg-0);

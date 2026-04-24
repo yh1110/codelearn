@@ -86,7 +86,9 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
             ) : null}
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-[10px] px-4 py-2 text-[13px]"
+              disabled
+              aria-label="お気に入り (近日公開)"
+              className="inline-flex cursor-not-allowed items-center gap-2 rounded-[10px] px-4 py-2 text-[13px] opacity-60"
               style={{
                 background: "var(--bg-2)",
                 border: "1px solid var(--line-2)",
@@ -152,51 +154,58 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
           <span>Difficulty</span>
         </div>
 
-        {course.lessons.map((l, i) => {
-          const state: "ac" | "none" = completedIds.has(l.id) ? "ac" : "none";
-          return (
-            <Link
-              key={l.id}
-              href={`/courses/${course.slug}/lessons/${l.slug}`}
-              className="grid cursor-pointer items-center gap-4 border-b px-5 py-3.5 transition last:border-b-0 hover:bg-[var(--bg-2)]"
-              style={{
-                gridTemplateColumns: "40px 24px 1fr 120px",
-                borderColor: "var(--line-1)",
-              }}
-            >
-              <span className="cm-mono" style={{ color: "var(--text-4)" }}>
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span
-                role="img"
-                aria-label={state === "ac" ? "クリア済み" : "未着手"}
-                title={state === "ac" ? "クリア済み" : "未着手"}
-                className={cn("cm-status-dot", statusClass(state))}
-              />
-              <div>
-                <div className="font-medium text-[14px]" style={{ color: "var(--text-1)" }}>
-                  {l.title}
-                </div>
-                <div
-                  className="mt-0.5 inline-flex items-center gap-1 text-[12px]"
-                  style={{ color: "var(--text-3)" }}
-                >
-                  <BookText className="size-3" aria-hidden="true" />
-                  レッスン {i + 1}
-                </div>
-              </div>
-              <span>
-                <span className="cm-diff-badge cm-diff-1">初級</span>
-              </span>
-            </Link>
-          );
-        })}
-
         {course.lessons.length === 0 ? (
           <div className="px-5 py-10 text-center text-[13px]" style={{ color: "var(--text-3)" }}>
             このコースにはまだレッスンがありません。
           </div>
-        ) : null}
+        ) : (
+          <ul>
+            {course.lessons.map((l, i) => {
+              const state: "ac" | "none" = completedIds.has(l.id) ? "ac" : "none";
+              const isLast = i === course.lessons.length - 1;
+              return (
+                <li key={l.id}>
+                  <Link
+                    href={`/courses/${course.slug}/lessons/${l.slug}`}
+                    className={cn(
+                      "grid cursor-pointer items-center gap-4 px-5 py-3.5 transition hover:bg-[var(--bg-2)]",
+                      !isLast && "border-b",
+                    )}
+                    style={{
+                      gridTemplateColumns: "40px 24px 1fr 120px",
+                      borderColor: "var(--line-1)",
+                    }}
+                  >
+                    <span className="cm-mono" style={{ color: "var(--text-4)" }}>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span
+                      role="img"
+                      aria-label={state === "ac" ? "クリア済み" : "未着手"}
+                      title={state === "ac" ? "クリア済み" : "未着手"}
+                      className={cn("cm-status-dot", statusClass(state))}
+                    />
+                    <div>
+                      <div className="font-medium text-[14px]" style={{ color: "var(--text-1)" }}>
+                        {l.title}
+                      </div>
+                      <div
+                        className="mt-0.5 inline-flex items-center gap-1 text-[12px]"
+                        style={{ color: "var(--text-3)" }}
+                      >
+                        <BookText className="size-3" aria-hidden="true" />
+                        レッスン {i + 1}
+                      </div>
+                    </div>
+                    <span>
+                      <span className="cm-diff-badge cm-diff-1">初級</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </div>
   );

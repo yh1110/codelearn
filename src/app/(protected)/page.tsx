@@ -76,9 +76,9 @@ export default async function Home() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="cm-chip">
+            <span className="cm-chip" title="連続日数の集計は近日公開">
               <Flame className="size-3" style={{ color: "var(--warn)" }} aria-hidden="true" />
-              0日連続
+              連続 -- 日
             </span>
             <span className="cm-chip cm-chip-accent">
               <CheckCircle2 className="size-3" aria-hidden="true" />

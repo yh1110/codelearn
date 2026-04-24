@@ -165,8 +165,12 @@ export default function LessonClient({
                     </h3>
                   ),
                   p: ({ children }) => <p className="mb-3 leading-7 text-[13.5px]">{children}</p>,
-                  code: ({ className, children }) => {
-                    const isInline = !className;
+                  code: ({ className, children, ...rest }) => {
+                    // react-markdown v10+ no longer passes an `inline` prop. Treat a single
+                    // text node without a language class as inline; anything structural
+                    // (multi-line content, nested nodes) is a fenced block.
+                    const isInline =
+                      !className && typeof children === "string" && !children.includes("\n");
                     return isInline ? (
                       <code
                         className="rounded px-1.5 py-0.5 font-mono text-[0.9em]"
@@ -179,7 +183,9 @@ export default function LessonClient({
                         {children}
                       </code>
                     ) : (
-                      <code className={className}>{children}</code>
+                      <code className={className} {...rest}>
+                        {children}
+                      </code>
                     );
                   },
                   pre: ({ children }) => (
@@ -201,7 +207,13 @@ export default function LessonClient({
                     <ol className="mb-3 list-decimal space-y-1 pl-5">{children}</ol>
                   ),
                   a: ({ href, children }) => (
-                    <a href={href} className="underline" style={{ color: "var(--accent-solid)" }}>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                      style={{ color: "var(--accent-solid)" }}
+                    >
                       {children}
                     </a>
                   ),

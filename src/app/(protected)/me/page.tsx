@@ -96,8 +96,8 @@ export default async function MePage() {
         <Stat
           icon={<Flame className="size-3.5" aria-hidden="true" />}
           label="連続日数"
-          value="0"
-          unit="日"
+          value="--"
+          sub="集計は近日公開"
         />
         <Stat
           icon={<Sparkles className="size-3.5" aria-hidden="true" />}
