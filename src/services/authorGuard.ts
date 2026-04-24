@@ -17,20 +17,17 @@ export async function ensureAuthorOwnsCourse(
 ): Promise<Course> {
   try {
     const course = await repository.findById(courseId);
-    if (!course) throw new NotFoundError(`Course not found: ${courseId}`);
+    if (!course) {
+      logWarn("authorGuard.ensureAuthorOwnsCourse.notFound", { courseId });
+      throw new NotFoundError(`Course not found: ${courseId}`);
+    }
     if (course.authorId !== authorId) {
+      logWarn("authorGuard.ensureAuthorOwnsCourse.forbidden", { courseId, authorId });
       throw new ForbiddenError(`Not the author of course: ${courseId}`);
     }
     return course;
   } catch (error) {
-    if (error instanceof NotFoundError) {
-      logWarn("authorGuard.ensureAuthorOwnsCourse.notFound", { courseId });
-      throw error;
-    }
-    if (error instanceof ForbiddenError) {
-      logWarn("authorGuard.ensureAuthorOwnsCourse.forbidden", { courseId, authorId });
-      throw error;
-    }
+    if (error instanceof NotFoundError || error instanceof ForbiddenError) throw error;
     logError("authorGuard.ensureAuthorOwnsCourse.error", { courseId, authorId }, error);
     throw handleUnknownError(error);
   }
@@ -44,18 +41,16 @@ export async function ensureAuthorOwnsLesson(
 ): Promise<Lesson> {
   try {
     const lesson = await lessonRepo.findById(lessonId);
-    if (!lesson) throw new NotFoundError(`Lesson not found: ${lessonId}`);
+    if (!lesson) {
+      logWarn("authorGuard.ensureAuthorOwnsLesson.notFound", { lessonId });
+      throw new NotFoundError(`Lesson not found: ${lessonId}`);
+    }
+    // ensureAuthorOwnsCourse already logs its own NotFoundError / ForbiddenError
+    // warnings; rethrow as-is here to avoid duplicate log lines.
     await ensureAuthorOwnsCourse(lesson.courseId, authorId, courseRepo);
     return lesson;
   } catch (error) {
-    if (error instanceof NotFoundError) {
-      logWarn("authorGuard.ensureAuthorOwnsLesson.notFound", { lessonId });
-      throw error;
-    }
-    if (error instanceof ForbiddenError) {
-      logWarn("authorGuard.ensureAuthorOwnsLesson.forbidden", { lessonId, authorId });
-      throw error;
-    }
+    if (error instanceof NotFoundError || error instanceof ForbiddenError) throw error;
     logError("authorGuard.ensureAuthorOwnsLesson.error", { lessonId, authorId }, error);
     throw handleUnknownError(error);
   }

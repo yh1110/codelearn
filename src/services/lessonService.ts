@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { Lesson } from "@prisma/client";
-import { handleUnknownError, ValidationError } from "@/lib/errors";
+import { ForbiddenError, handleUnknownError, NotFoundError, ValidationError } from "@/lib/errors";
 import { logError, logInfo, logWarn } from "@/lib/logging";
 import {
   type CourseRepository,
@@ -80,10 +80,15 @@ export async function createLesson(
     logInfo("lessonService.createLesson.success", { id: lesson.id, courseId });
     return lesson;
   } catch (error) {
-    if (isUniqueConstraintError(error)) {
+    if (isUniqueConstraintError(error, "slug")) {
       logWarn("lessonService.createLesson.slugConflict", { courseId, slug });
       throw new ValidationError(`Lesson slug already exists in this course: ${slug}`);
     }
+    if (error instanceof NotFoundError) {
+      logWarn("lessonService.createLesson.notFound", { courseId });
+      throw error;
+    }
+    if (error instanceof ForbiddenError) throw error;
     logError("lessonService.createLesson.error", { courseId, authorId, slug }, error);
     throw handleUnknownError(error);
   }
@@ -120,10 +125,16 @@ export async function updateLesson(
     logInfo("lessonService.updateLesson.success", { id, authorId });
     return lesson;
   } catch (error) {
-    if (isUniqueConstraintError(error)) {
+    if (isUniqueConstraintError(error, "slug")) {
       logWarn("lessonService.updateLesson.slugConflict", { id, slug });
       throw new ValidationError(`Lesson slug already exists in this course: ${slug}`);
     }
+    if (error instanceof NotFoundError) {
+      logWarn("lessonService.updateLesson.notFound", { id });
+      throw error;
+    }
+    if (error instanceof ForbiddenError) throw error;
+    logError("lessonService.updateLesson.error", { id, authorId }, error);
     throw handleUnknownError(error);
   }
 }
@@ -140,6 +151,12 @@ export async function deleteLesson(
     await repository.delete(id);
     logInfo("lessonService.deleteLesson.success", { id, authorId });
   } catch (error) {
+    if (error instanceof NotFoundError) {
+      logWarn("lessonService.deleteLesson.notFound", { id });
+      throw error;
+    }
+    if (error instanceof ForbiddenError) throw error;
+    logError("lessonService.deleteLesson.error", { id, authorId }, error);
     throw handleUnknownError(error);
   }
 }
@@ -157,12 +174,23 @@ export async function togglePublishLesson(
     logInfo("lessonService.togglePublishLesson.success", { id, authorId, isPublished });
     return lesson;
   } catch (error) {
+    if (error instanceof NotFoundError) {
+      logWarn("lessonService.togglePublishLesson.notFound", { id });
+      throw error;
+    }
+    if (error instanceof ForbiddenError) throw error;
+    logError("lessonService.togglePublishLesson.error", { id, authorId }, error);
     throw handleUnknownError(error);
   }
 }
 
-function isUniqueConstraintError(error: unknown): boolean {
+function isUniqueConstraintError(error: unknown, field?: string): boolean {
   if (typeof error !== "object" || error === null) return false;
-  const e = error as { code?: unknown };
-  return e.code === "P2002";
+  const e = error as { code?: unknown; meta?: { target?: unknown } };
+  if (e.code !== "P2002") return false;
+  if (!field) return true;
+  const target = e.meta?.target;
+  if (Array.isArray(target)) return target.includes(field);
+  if (typeof target === "string") return target.includes(field);
+  return false;
 }

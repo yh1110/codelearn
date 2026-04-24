@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { Course } from "@prisma/client";
-import { handleUnknownError, NotFoundError, ValidationError } from "@/lib/errors";
+import { ForbiddenError, handleUnknownError, NotFoundError, ValidationError } from "@/lib/errors";
 import { logError, logInfo, logWarn } from "@/lib/logging";
 import {
   type CourseRepository,
@@ -137,6 +137,12 @@ export async function updateCourse(
       logWarn("courseService.updateCourse.slugConflict", { id, slug });
       throw new ValidationError(`Course slug already exists: ${slug}`);
     }
+    if (error instanceof NotFoundError) {
+      logWarn("courseService.updateCourse.notFound", { id });
+      throw error;
+    }
+    if (error instanceof ForbiddenError) throw error;
+    logError("courseService.updateCourse.error", { id, authorId }, error);
     throw handleUnknownError(error);
   }
 }
@@ -152,6 +158,12 @@ export async function deleteCourse(
     await repository.delete(id);
     logInfo("courseService.deleteCourse.success", { id, authorId });
   } catch (error) {
+    if (error instanceof NotFoundError) {
+      logWarn("courseService.deleteCourse.notFound", { id });
+      throw error;
+    }
+    if (error instanceof ForbiddenError) throw error;
+    logError("courseService.deleteCourse.error", { id, authorId }, error);
     throw handleUnknownError(error);
   }
 }
@@ -168,6 +180,12 @@ export async function togglePublishCourse(
     logInfo("courseService.togglePublishCourse.success", { id, authorId, isPublished });
     return course;
   } catch (error) {
+    if (error instanceof NotFoundError) {
+      logWarn("courseService.togglePublishCourse.notFound", { id });
+      throw error;
+    }
+    if (error instanceof ForbiddenError) throw error;
+    logError("courseService.togglePublishCourse.error", { id, authorId }, error);
     throw handleUnknownError(error);
   }
 }
