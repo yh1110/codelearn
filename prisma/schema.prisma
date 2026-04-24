@@ -7,20 +7,27 @@ datasource db {
 }
 
 model Course {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  title       String
-  description String
-  order       Int
-  authorId    String?  @db.Uuid @map("author_id")
-  author      Profile? @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  isPublished Boolean  @default(false) @map("is_published")
-  lessons     Lesson[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id           String             @id @default(cuid())
+  slug         String             @unique
+  title        String
+  description  String
+  order        Int
+  authorId     String?            @db.Uuid @map("author_id")
+  author       Profile?           @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  isPublished  Boolean            @default(false) @map("is_published")
+  providerType CourseProviderType @default(COMMUNITY) @map("provider_type")
+  lessons      Lesson[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt @map("updated_at")
 
   @@index([authorId])
   @@index([isPublished])
+  @@index([providerType])
+}
+
+enum CourseProviderType {
+  OFFICIAL
+  COMMUNITY
 }
 
 model Lesson {
