@@ -35,7 +35,7 @@ export function TopBar({ displayName, avatarInitial }: Props) {
       }}
     >
       <Link
-        href="/"
+        href="/explore"
         className="flex items-center gap-2.5 font-bold text-[15px] tracking-tight"
         aria-label="codeMaker ホーム"
       >
