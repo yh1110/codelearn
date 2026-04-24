@@ -59,11 +59,13 @@ export function TopBar({ displayName, avatarInitial }: Props) {
           className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 size-3.5"
           style={{ color: "var(--text-3)" }}
         />
+        {/* `key` forces a remount whenever the URL query changes so `defaultValue`
+            re-syncs (e.g. navigating back/forward between search pages). */}
         <input
+          key={initialQuery}
           type="search"
           name="q"
           defaultValue={initialQuery}
-          key={initialQuery}
           placeholder="コース・レッスンを検索"
           aria-label="コース・レッスンを検索"
           autoComplete="off"
@@ -74,9 +76,6 @@ export function TopBar({ displayName, avatarInitial }: Props) {
             color: "var(--text-1)",
           }}
         />
-        <button type="submit" className="sr-only">
-          検索する
-        </button>
       </form>
 
       <div className="flex items-center gap-2">

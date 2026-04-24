@@ -2,7 +2,7 @@ import { BookText, FileText, Search as SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
 import type { CourseSearchHit, LessonSearchHit } from "@/repositories";
-import { search } from "@/services/searchService";
+import { MIN_QUERY_LENGTH, search } from "@/services/searchService";
 
 export const dynamic = "force-dynamic";
 
@@ -15,18 +15,23 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   await requireAuth();
   const sp = await searchParams;
   const rawQuery = firstParam(sp?.q);
-  const { query, courses, lessons } = await search(rawQuery);
+  const { query, tooShort, courses, lessons } = await search(rawQuery);
   const hasQuery = query.length > 0;
   const totalHits = courses.length + lessons.length;
 
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "1280px" }}>
-      <Header query={query} hasQuery={hasQuery} totalHits={totalHits} />
+      <Header query={query} hasQuery={hasQuery && !tooShort} totalHits={totalHits} />
 
       {!hasQuery ? (
         <EmptyState
           title="検索キーワードを入力してください"
           description="上部の検索バーにコース名やレッスン名、本文のキーワードを入力して Enter。"
+        />
+      ) : tooShort ? (
+        <EmptyState
+          title={`${MIN_QUERY_LENGTH} 文字以上で検索してください`}
+          description="短すぎるキーワードは検索対象外です。"
         />
       ) : totalHits === 0 ? (
         <EmptyState
