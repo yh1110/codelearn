@@ -371,9 +371,9 @@
   }
 
   .cm-heat-cell {
-    width: 10px;
-    height: 10px;
-    border-radius: 2px;
+    width: 13px;
+    height: 13px;
+    border-radius: 3px;
     background: var(--bg-2);
   }
   .cm-heat-1 {
