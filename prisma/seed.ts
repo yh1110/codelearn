@@ -839,6 +839,7 @@ async function main() {
         title: course.title,
         description: course.description,
         order: course.order,
+        isPublished: true,
         lessons: {
           create: course.lessons.map((l) => ({
             slug: l.slug,
@@ -847,6 +848,7 @@ async function main() {
             contentMd: l.contentMd,
             starterCode: l.starterCode,
             expectedOutput: l.expectedOutput,
+            isPublished: true,
           })),
         },
       },

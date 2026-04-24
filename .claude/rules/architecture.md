@@ -91,14 +91,23 @@ src/
 ```
 src/
 ├── app/
-│   ├── page.tsx                                  # 現状は prisma を直接呼んでいる
+│   ├── (protected)/
+│   │   ├── page.tsx                              # learner view (isPublished=true コースのみ)
+│   │   ├── courses/[slug]/page.tsx
+│   │   ├── courses/[slug]/lessons/[lessonSlug]/
+│   │   │   ├── page.tsx
+│   │   │   ├── _components/LessonClient.tsx       # ページ固有 (private folder)
+│   │   │   └── _hooks/useLessonRunner.ts          # ページ固有 (private folder)
+│   │   └── dashboard/                             # UGC クリエイターダッシュボード
+│   │       ├── layout.tsx
+│   │       ├── page.tsx                          # 自分のコース一覧 (author 認可)
+│   │       ├── _components/                      # dashboard 共有 UI
+│   │       └── courses/
+│   │           ├── new/                          # Course 作成フォーム
+│   │           └── [courseId]/                   # Course 編集 + レッスン一覧
+│   │               └── lessons/{new,[lessonId]}/ # Lesson 作成 / 編集
 │   ├── layout.tsx
 │   ├── globals.css
-│   ├── courses/[slug]/page.tsx
-│   ├── courses/[slug]/lessons/[lessonSlug]/
-│   │   ├── page.tsx
-│   │   ├── _components/LessonClient.tsx           # ページ固有 (private folder)
-│   │   └── _hooks/useLessonRunner.ts              # ページ固有 (private folder)
 │   └── api/
 │       ├── run/route.ts                          # POST、Server Action 移行予定
 │       └── progress/route.ts                     # POST、Server Action 移行予定
@@ -106,6 +115,7 @@ src/
     └── prisma.ts
 prisma/
 ├── schema.prisma
+├── migrations/                                   # prisma migrate dev で生成、commit 対象
 └── seed.ts
 docker-compose.yml
 ```
@@ -124,6 +134,18 @@ docker-compose.yml
   - `requireRole('ADMIN' | 'USER' | ...)` — ロール必須のアクション
   - いずれも `src/lib/auth.ts`（`import 'server-only';`）に実装する。
 - middleware 認証だけに頼らない理由: Route Handler が middleware の matcher から漏れる設計ミスが起きやすく、Server Action も `Next-Action` header 付き POST で発火しうるため。Defense in depth。
+
+### 3.1 UGC の authorId ベース認可
+
+UGC (ユーザー投稿コース・レッスン) の所有権チェックは、`src/services/authorGuard.ts` の 2 つの関数で **必ず** 行う。Service 層で直接 `authorId` を比較しない。
+
+```typescript
+// 違ったら ForbiddenError / NotFoundError を throw
+ensureAuthorOwnsCourse(courseId: string, authorId: string): Promise<Course>;
+ensureAuthorOwnsLesson(lessonId: string, authorId: string): Promise<Lesson>;
+```
+
+`ensureAuthorOwnsLesson` は経由する Course の authorId も検証する。認可 error は safe-action middleware を通じて `error.tsx` に伝播する。Service 側は `ctx.userId` を service 関数に渡すだけ（Action で分岐しない）。
 
 ---
 
