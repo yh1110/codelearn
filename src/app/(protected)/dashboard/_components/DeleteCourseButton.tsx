@@ -1,8 +1,19 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { deleteCourseAction } from "@/actions/dashboard/course";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -11,27 +22,49 @@ type Props = {
 };
 
 export function DeleteCourseButton({ courseId, title }: Props) {
+  const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const onClick = () => {
-    if (!window.confirm(`コース「${title}」を削除しますか？\nレッスンも一緒に削除されます。`)) {
-      return;
-    }
+  const onConfirm = () => {
     startTransition(async () => {
       await deleteCourseAction({ id: courseId });
+      setOpen(false);
     });
   };
 
   return (
-    <Button
-      aria-label={`コース「${title}」を削除`}
-      disabled={isPending}
-      onClick={onClick}
-      size="icon-sm"
-      type="button"
-      variant="destructive"
-    >
-      <Trash2 aria-hidden="true" />
-    </Button>
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger
+        render={
+          <Button
+            aria-label={`コース「${title}」を削除`}
+            size="icon-sm"
+            type="button"
+            variant="destructive"
+          />
+        }
+      >
+        <Trash2 aria-hidden="true" />
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>コースを削除しますか？</AlertDialogTitle>
+          <AlertDialogDescription>
+            コース「{title}」と紐づくレッスンがすべて削除されます。この操作は取り消せません。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending}>キャンセル</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            disabled={isPending}
+            onClick={onConfirm}
+            type="button"
+          >
+            {isPending ? "削除中…" : "削除する"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
