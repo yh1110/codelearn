@@ -7,6 +7,7 @@ import {
   type CourseRepository,
   type CourseWithLessonIds,
   type CourseWithLessons,
+  type CourseWithLessonsAndAuthor,
   courseRepository,
 } from "@/repositories";
 import { ensureAuthorOwnsCourse } from "./authorGuard";
@@ -27,7 +28,7 @@ export async function getCoursesWithLessons(
 
 export async function getPublishedCoursesByNewest(
   repository: CourseRepository = courseRepository,
-): Promise<CourseWithLessonIds[]> {
+): Promise<CourseWithLessonsAndAuthor[]> {
   logInfo("courseService.getPublishedCoursesByNewest.start");
   try {
     const result = await repository.findAllPublishedByNewest();
