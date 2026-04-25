@@ -1,25 +1,7 @@
 import Link from "next/link";
+import { coverFor, glyphFor } from "@/app/(protected)/_components/courseCover";
 import { cn } from "@/lib/utils";
 import type { CourseBookmarkWithCourse } from "@/repositories";
-
-const COVER_VARIANTS = [
-  "cm-cover-1",
-  "cm-cover-2",
-  "cm-cover-3",
-  "cm-cover-4",
-  "cm-cover-5",
-  "cm-cover-6",
-] as const;
-
-function coverFor(index: number) {
-  return COVER_VARIANTS[index % COVER_VARIANTS.length];
-}
-
-function glyphFor(title: string) {
-  const trimmed = title.trim();
-  if (!trimmed) return "TS";
-  return Array.from(trimmed).slice(0, 2).join("").toUpperCase();
-}
 
 type BookmarkCourseListProps = {
   courses: CourseBookmarkWithCourse[];
