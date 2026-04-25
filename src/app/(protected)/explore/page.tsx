@@ -1,5 +1,5 @@
 import { requireAuth } from "@/lib/auth";
-import { getPublishedCoursesByNewest } from "@/services/courseService";
+import { getCommunityPublishedCoursesByNewest } from "@/services/courseService";
 import { getCompletedLessonIdsByUser } from "@/services/progressService";
 import { BrowseFilterPanel } from "../_components/BrowseFilterPanel";
 import { BrowseToolbar, type SortOption } from "../_components/BrowseToolbar";
@@ -17,7 +17,7 @@ const EXPLORE_SORT_OPTIONS: ReadonlyArray<SortOption> = [
 export default async function ExplorePage() {
   const session = await requireAuth();
   const [courses, completed] = await Promise.all([
-    getPublishedCoursesByNewest(),
+    getCommunityPublishedCoursesByNewest(),
     getCompletedLessonIdsByUser(session.userId),
   ]);
   const completedIds = new Set(completed);

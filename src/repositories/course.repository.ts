@@ -80,6 +80,40 @@ export class CourseRepository extends BaseRepository {
     });
   }
 
+  async findOfficialPublished(): Promise<CourseWithLessonsAndAuthor[]> {
+    return this.client.course.findMany({
+      where: { isPublished: true, providerType: "OFFICIAL" },
+      orderBy: { order: "asc" },
+      include: {
+        lessons: {
+          where: { isPublished: true },
+          select: { id: true },
+          orderBy: { order: "asc" },
+        },
+        author: {
+          select: { id: true, email: true, name: true, avatarUrl: true },
+        },
+      },
+    });
+  }
+
+  async findCommunityPublishedByNewest(): Promise<CourseWithLessonsAndAuthor[]> {
+    return this.client.course.findMany({
+      where: { isPublished: true, providerType: "COMMUNITY" },
+      orderBy: { createdAt: "desc" },
+      include: {
+        lessons: {
+          where: { isPublished: true },
+          select: { id: true },
+          orderBy: { order: "asc" },
+        },
+        author: {
+          select: { id: true, email: true, name: true, avatarUrl: true },
+        },
+      },
+    });
+  }
+
   async findBySlugWithLessons(slug: string): Promise<CourseWithLessons | null> {
     return this.client.course.findUnique({
       where: { slug },

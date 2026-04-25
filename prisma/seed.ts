@@ -840,6 +840,7 @@ async function main() {
         description: course.description,
         order: course.order,
         isPublished: true,
+        providerType: "OFFICIAL",
         lessons: {
           create: course.lessons.map((l) => ({
             slug: l.slug,
