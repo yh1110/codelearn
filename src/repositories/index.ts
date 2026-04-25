@@ -30,6 +30,7 @@ export type {
 } from "./course.repository";
 export type { CreateLessonInput, UpdateLessonInput } from "./lesson.repository";
 export type { CreateNotificationInput } from "./notification.repository";
+export type { ProfileUpdateInput, ProfileUpsertInput } from "./profile.repository";
 export type { CourseSearchHit, LessonSearchHit } from "./search.repository";
 export {
   BookmarkRepository,

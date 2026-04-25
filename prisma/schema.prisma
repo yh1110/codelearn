@@ -67,6 +67,8 @@ model Profile {
   id            String         @id @db.Uuid
   email         String?
   name          String?
+  username      String?        @unique
+  bio           String?
   avatarUrl     String?        @map("avatar_url")
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt      @map("updated_at")
@@ -75,6 +77,7 @@ model Profile {
   notifications Notification[]
   bookmarks     Bookmark[]
 
+  @@index([username])
   @@map("profiles")
 }
 
