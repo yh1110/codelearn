@@ -1,8 +1,8 @@
 import "server-only";
 
 import type { Notification, NotificationType } from "@prisma/client";
-import { ForbiddenError, handleUnknownError, NotFoundError } from "@/lib/errors";
-import { logError, logInfo } from "@/lib/logging";
+import { ForbiddenError, handleUnknownError, NotFoundError, ValidationError } from "@/lib/errors";
+import { logError, logInfo, logWarn } from "@/lib/logging";
 import { type NotificationRepository, notificationRepository } from "@/repositories";
 
 const DEFAULT_LIMIT = 20;
@@ -105,6 +105,7 @@ export async function createNotification(
     type: params.type,
   });
   try {
+    assertSafeLinkUrl(params.linkUrl);
     const created = await repository.create(params);
     logInfo("notificationService.createNotification.success", {
       id: created.id,
@@ -113,6 +114,13 @@ export async function createNotification(
     });
     return created;
   } catch (error) {
+    if (error instanceof ValidationError) {
+      logWarn("notificationService.createNotification.invalidInput", {
+        recipientId: params.recipientId,
+        type: params.type,
+      });
+      throw error;
+    }
     logError(
       "notificationService.createNotification.error",
       { recipientId: params.recipientId, type: params.type },
@@ -126,4 +134,15 @@ function clampLimit(limit: number | undefined): number {
   if (limit === undefined) return DEFAULT_LIMIT;
   if (!Number.isFinite(limit) || limit <= 0) return DEFAULT_LIMIT;
   return Math.min(Math.floor(limit), MAX_LIMIT);
+}
+
+// Guard against persisting unsafe URLs that would later be handed to
+// `router.push` on the client. Only app-internal paths are allowed — a leading
+// `/` followed by a non-slash character (rejecting `//host` protocol-relative
+// URLs and `javascript:` / `data:` schemes). Future callers that need to link
+// to a trusted external origin should extend this allowlist explicitly.
+function assertSafeLinkUrl(value: string | null | undefined): void {
+  if (value == null || value === "") return;
+  if (/^\/(?!\/)/.test(value)) return;
+  throw new ValidationError(`Unsafe linkUrl: ${value}`);
 }
