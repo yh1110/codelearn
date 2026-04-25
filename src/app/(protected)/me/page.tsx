@@ -12,8 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function MePage() {
   const session = await requireAuth();
   const displayName = session.profile.name ?? session.email ?? session.userId;
-  const handle =
-    session.profile.username ?? (session.email ? session.email.split("@")[0] : session.userId);
+  const handle = session.profile.username;
   const initial = (displayName.trim()[0] ?? "?").toUpperCase();
 
   const [myCourses, allCourses, completedIds, bookmarks] = await Promise.all([
