@@ -14,7 +14,7 @@ import { UpdateProfileSchema } from "@/types/profile";
 
 type FormValues = {
   name: string;
-  username: string;
+  handle: string;
   bio: string;
   avatarUrl: string;
 };
@@ -71,20 +71,24 @@ export function ProfileEditForm({ initial }: Props) {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="profile-username">ユーザー名</Label>
+        <Label htmlFor="profile-handle">ハンドル (URL 用)</Label>
         <Input
-          id="profile-username"
-          {...register("username")}
+          id="profile-handle"
+          {...register("handle")}
           placeholder="例: chii81020"
-          aria-invalid={!!errors.username}
+          aria-invalid={!!errors.handle}
           autoComplete="username"
         />
         <p className="text-xs text-muted-foreground">
-          小文字英数字 / アンダースコア / ハイフン、2〜30 文字。コース URL に使われます。
+          小文字英数字 / アンダースコア / ハイフン、2〜30 文字。コース URL (/courses/{"{"}ハンドル
+          {"}"}) に使われます。
         </p>
-        {errors.username && (
+        <p className="text-xs text-muted-foreground">
+          変更すると 90 日間は他のユーザーが取得できなくなります。旧 URL は無効になります。
+        </p>
+        {errors.handle && (
           <p className="text-xs text-destructive" role="alert">
-            {errors.username.message}
+            {errors.handle.message}
           </p>
         )}
       </div>

@@ -25,7 +25,7 @@ export default async function ProfileEditPage() {
       <header className="mb-7">
         <h1 className="m-0 font-bold text-[24px] tracking-tight">プロフィール編集</h1>
         <p className="mt-1 text-[13px]" style={{ color: "var(--text-3)" }}>
-          表示名・ユーザー名・自己紹介・アバター画像 URL を編集できます。
+          表示名・ハンドル・自己紹介・アバター画像 URL を編集できます。
         </p>
       </header>
 
@@ -36,7 +36,7 @@ export default async function ProfileEditPage() {
         <ProfileEditForm
           initial={{
             name: profile.name ?? "",
-            username: profile.username,
+            handle: profile.handle,
             bio: profile.bio ?? "",
             avatarUrl: profile.avatarUrl ?? "",
           }}
