@@ -12,23 +12,23 @@ const COVER_VARIANTS = [
   "cm-cover-6",
 ] as const;
 
-export function coverForIndex(index: number) {
+function coverForIndex(index: number) {
   return COVER_VARIANTS[index % COVER_VARIANTS.length];
 }
 
-export function glyphForTitle(title: string) {
+function glyphForTitle(title: string) {
   const trimmed = title.trim();
   if (!trimmed) return "TS";
   return Array.from(trimmed).slice(0, 2).join("").toUpperCase();
 }
 
-export function authorLabel(author: CourseAuthor | null): string {
+function authorLabel(author: CourseAuthor | null): string {
   // Fall back to "Anonymous" when the author didn't set a display name —
   // do NOT derive a handle from the email address (privacy).
   return author?.name ?? "Anonymous";
 }
 
-export function authorInitial(author: CourseAuthor | null): string {
+function authorInitial(author: CourseAuthor | null): string {
   const label = authorLabel(author);
   return (Array.from(label.trim())[0] ?? "?").toUpperCase();
 }
