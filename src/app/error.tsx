@@ -21,6 +21,7 @@ export default function ErrorPage({
   reset: () => void;
 }) {
   useEffect(() => {
+    // Forward render-time errors to the browser console for ad-hoc debugging.
     console.error(error);
   }, [error]);
 

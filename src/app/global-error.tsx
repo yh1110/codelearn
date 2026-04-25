@@ -10,6 +10,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
+    // Forward render-time errors to the browser console for ad-hoc debugging.
     console.error(error);
   }, [error]);
 
