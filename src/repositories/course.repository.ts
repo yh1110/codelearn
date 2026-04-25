@@ -1,11 +1,8 @@
 import "server-only";
 
-import type { Course, Lesson, Prisma } from "@prisma/client";
+import type { Course, Lesson } from "@prisma/client";
+import { OFFICIAL_HANDLE } from "@/lib/routes";
 import { BaseRepository } from "./base.repository";
-
-export type CourseWithLessons = Prisma.CourseGetPayload<{
-  include: { lessons: true };
-}>;
 
 export type CourseWithLessonIds = Course & { lessons: Pick<Lesson, "id">[] };
 
@@ -13,10 +10,24 @@ export type CourseAuthor = {
   id: string;
   email: string | null;
   name: string | null;
+  username: string;
   avatarUrl: string | null;
 };
 
+const COURSE_AUTHOR_SELECT = {
+  id: true,
+  email: true,
+  name: true,
+  username: true,
+  avatarUrl: true,
+} as const;
+
 export type CourseWithLessonsAndAuthor = CourseWithLessonIds & {
+  author: CourseAuthor | null;
+};
+
+export type CourseDetailWithAuthor = Course & {
+  lessons: Lesson[];
   author: CourseAuthor | null;
 };
 
@@ -56,9 +67,7 @@ export class CourseRepository extends BaseRepository {
           select: { id: true },
           orderBy: { order: "asc" },
         },
-        author: {
-          select: { id: true, email: true, name: true, avatarUrl: true },
-        },
+        author: { select: COURSE_AUTHOR_SELECT },
       },
     });
   }
@@ -73,9 +82,7 @@ export class CourseRepository extends BaseRepository {
           select: { id: true },
           orderBy: { order: "asc" },
         },
-        author: {
-          select: { id: true, email: true, name: true, avatarUrl: true },
-        },
+        author: { select: COURSE_AUTHOR_SELECT },
       },
     });
   }
@@ -90,9 +97,7 @@ export class CourseRepository extends BaseRepository {
           select: { id: true },
           orderBy: { order: "asc" },
         },
-        author: {
-          select: { id: true, email: true, name: true, avatarUrl: true },
-        },
+        author: { select: COURSE_AUTHOR_SELECT },
       },
     });
   }
@@ -107,28 +112,46 @@ export class CourseRepository extends BaseRepository {
           select: { id: true },
           orderBy: { order: "asc" },
         },
-        author: {
-          select: { id: true, email: true, name: true, avatarUrl: true },
-        },
+        author: { select: COURSE_AUTHOR_SELECT },
       },
     });
   }
 
-  async findBySlugWithLessons(slug: string): Promise<CourseWithLessons | null> {
-    return this.client.course.findUnique({
-      where: { slug },
-      include: { lessons: { orderBy: { order: "asc" } } },
-    });
-  }
+  /**
+   * Resolve a course addressed by `/courses/{handle}/{slug}`.
+   * - `handle === OFFICIAL_HANDLE` matches courses with `authorId IS NULL`.
+   * - Any other handle is looked up against `Profile.username`; an unknown
+   *   handle returns `null` (the page should `notFound()`).
+   *
+   * Two queries on the UGC path is fine — both columns are indexed
+   * (`profiles.username` unique + `Course(authorId, slug)` unique).
+   */
+  async findPublishedByHandleAndSlugWithPublishedLessons(params: {
+    handle: string;
+    slug: string;
+  }): Promise<CourseDetailWithAuthor | null> {
+    const { handle, slug } = params;
 
-  async findPublishedBySlugWithPublishedLessons(slug: string): Promise<CourseWithLessons | null> {
+    let authorId: string | null;
+    if (handle === OFFICIAL_HANDLE) {
+      authorId = null;
+    } else {
+      const profile = await this.client.profile.findUnique({
+        where: { username: handle },
+        select: { id: true },
+      });
+      if (!profile) return null;
+      authorId = profile.id;
+    }
+
     return this.client.course.findFirst({
-      where: { slug, isPublished: true },
+      where: { slug, isPublished: true, authorId },
       include: {
         lessons: {
           where: { isPublished: true },
           orderBy: { order: "asc" },
         },
+        author: { select: COURSE_AUTHOR_SELECT },
       },
     });
   }

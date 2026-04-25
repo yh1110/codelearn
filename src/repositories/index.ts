@@ -22,8 +22,8 @@ export type {
 } from "./bookmark.repository";
 export type {
   CourseAuthor,
+  CourseDetailWithAuthor,
   CourseWithLessonIds,
-  CourseWithLessons,
   CourseWithLessonsAndAuthor,
   CreateCourseInput,
   UpdateCourseInput,
