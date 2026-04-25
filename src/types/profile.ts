@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { OFFICIAL_HANDLE } from "@/lib/routes";
 
-const USERNAME_REGEX = /^[a-z0-9_-]+$/i;
+// Lower-case only: course URLs of the form /courses/{handle}/{slug} resolve
+// the handle via a case-sensitive Postgres unique on Profile.username, so a
+// mixed-case handle would silently 404 when the URL is shared lower-cased.
+const USERNAME_REGEX = /^[a-z0-9_-]+$/;
 
 // Reserved handles that own dedicated /courses/{handle}/... namespaces and so
 // must never be claimed by an end user. `official` is the public alias for
@@ -20,7 +23,7 @@ export const UpdateProfileSchema = z.object({
     .trim()
     .min(2, "2 文字以上で入力してください")
     .max(30, "30 文字以内で入力してください")
-    .regex(USERNAME_REGEX, "英数字、_、- のみ使用できます")
+    .regex(USERNAME_REGEX, "小文字英数字、_、- のみ使用できます")
     .refine((v) => !RESERVED_USERNAMES.includes(v.toLowerCase()), "このユーザー名は使用できません"),
   bio: optionalText(z.string().trim().max(200, "200 文字以内で入力してください")),
   avatarUrl: optionalText(

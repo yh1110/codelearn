@@ -80,7 +80,7 @@ export function ProfileEditForm({ initial }: Props) {
           autoComplete="username"
         />
         <p className="text-xs text-muted-foreground">
-          英数字 / アンダースコア / ハイフン、2〜30 文字。コース URL に使われます。
+          小文字英数字 / アンダースコア / ハイフン、2〜30 文字。コース URL に使われます。
         </p>
         {errors.username && (
           <p className="text-xs text-destructive" role="alert">
