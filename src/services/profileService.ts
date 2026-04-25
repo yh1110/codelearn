@@ -3,25 +3,83 @@ import "server-only";
 import type { Profile } from "@prisma/client";
 import { handleUnknownError, ValidationError } from "@/lib/errors";
 import { logError, logInfo } from "@/lib/logging";
-import { type ProfileRepository, type ProfileUpdateInput, profileRepository } from "@/repositories";
+import { OFFICIAL_HANDLE } from "@/lib/routes";
+import {
+  type HandleReservationRepository,
+  handleReservationRepository,
+  type ProfileRepository,
+  type ProfileUpdateInput,
+  profileRepository,
+} from "@/repositories";
 
+export type UpdateProfileDeps = {
+  profile?: ProfileRepository;
+  reservation?: HandleReservationRepository;
+  now?: () => Date;
+};
+
+/**
+ * Update a Profile, enforcing the 90-day handle reservation rule.
+ *
+ * When the handle changes we (1) reject reserved namespaces, (2) reject
+ * handles parked by an earlier rename whose cooldown has not elapsed,
+ * (3) write the update (the unique constraint catches concurrent races),
+ * and (4) park the previous handle so old `/courses/{handle}/...` URLs
+ * do not silently start resolving to a different person.
+ */
 export async function updateProfile(
   userId: string,
   data: ProfileUpdateInput,
-  repository: ProfileRepository = profileRepository,
+  deps: UpdateProfileDeps = {},
 ): Promise<Profile> {
+  const profileRepo = deps.profile ?? profileRepository;
+  const reservationRepo = deps.reservation ?? handleReservationRepository;
+  const now = deps.now ?? (() => new Date());
+
   logInfo("profileService.updateProfile.start", { userId });
   try {
-    const updated = await repository.update(userId, data);
+    const current = await profileRepo.findById(userId);
+    if (!current) {
+      throw new ValidationError("プロフィールが見つかりません");
+    }
+
+    const handleChanged = data.handle !== undefined && data.handle !== current.handle;
+    if (handleChanged && data.handle) {
+      await assertHandleAvailable(data.handle, reservationRepo, now());
+    }
+
+    const updated = await profileRepo.update(userId, data);
+
+    if (handleChanged) {
+      await reservationRepo.reserve(current.handle, now());
+    }
+
     logInfo("profileService.updateProfile.success", { userId });
     return updated;
   } catch (error) {
-    if (isUniqueConstraintError(error, "username")) {
-      logInfo("profileService.updateProfile.duplicateUsername", { userId });
-      throw new ValidationError("このユーザー名は既に使われています");
+    if (error instanceof ValidationError) {
+      throw error;
+    }
+    if (isUniqueConstraintError(error, "handle")) {
+      logInfo("profileService.updateProfile.duplicateHandle", { userId });
+      throw new ValidationError("このハンドルは既に使われています");
     }
     logError("profileService.updateProfile.error", { userId }, error);
     throw handleUnknownError(error);
+  }
+}
+
+async function assertHandleAvailable(
+  handle: string,
+  reservationRepo: HandleReservationRepository,
+  now: Date,
+): Promise<void> {
+  if (handle === OFFICIAL_HANDLE) {
+    throw new ValidationError("このハンドルは使用できません");
+  }
+  const reservation = await reservationRepo.findByHandle(handle);
+  if (reservation && reservation.releasedAt > now) {
+    throw new ValidationError("このハンドルは現在使用できません (予約期間中)");
   }
 }
 

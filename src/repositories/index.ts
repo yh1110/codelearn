@@ -2,6 +2,7 @@ import "server-only";
 
 import { BookmarkRepository } from "./bookmark.repository";
 import { CourseRepository } from "./course.repository";
+import { HandleReservationRepository } from "./handleReservation.repository";
 import { LessonRepository } from "./lesson.repository";
 import { NotificationRepository } from "./notification.repository";
 import { ProfileRepository } from "./profile.repository";
@@ -10,6 +11,7 @@ import { SearchRepository } from "./search.repository";
 
 export const bookmarkRepository = new BookmarkRepository();
 export const courseRepository = new CourseRepository();
+export const handleReservationRepository = new HandleReservationRepository();
 export const lessonRepository = new LessonRepository();
 export const notificationRepository = new NotificationRepository();
 export const profileRepository = new ProfileRepository();
@@ -35,6 +37,7 @@ export type { CourseSearchHit, LessonSearchHit } from "./search.repository";
 export {
   BookmarkRepository,
   CourseRepository,
+  HandleReservationRepository,
   LessonRepository,
   NotificationRepository,
   ProfileRepository,

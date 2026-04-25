@@ -8,17 +8,15 @@ export type CourseWithLessonIds = Course & { lessons: Pick<Lesson, "id">[] };
 
 export type CourseAuthor = {
   id: string;
-  email: string | null;
   name: string | null;
-  username: string;
+  handle: string;
   avatarUrl: string | null;
 };
 
 const COURSE_AUTHOR_SELECT = {
   id: true,
-  email: true,
   name: true,
-  username: true,
+  handle: true,
   avatarUrl: true,
 } as const;
 
@@ -120,11 +118,11 @@ export class CourseRepository extends BaseRepository {
   /**
    * Resolve a course addressed by `/courses/{handle}/{slug}`.
    * - `handle === OFFICIAL_HANDLE` matches courses with `authorId IS NULL`.
-   * - Any other handle is looked up against `Profile.username`; an unknown
+   * - Any other handle is looked up against `Profile.handle`; an unknown
    *   handle returns `null` (the page should `notFound()`).
    *
    * Two queries on the UGC path is fine — both columns are indexed
-   * (`profiles.username` unique + `Course(authorId, slug)` unique).
+   * (`profiles.handle` unique + `Course(authorId, slug)` unique).
    */
   async findPublishedByHandleAndSlugWithPublishedLessons(params: {
     handle: string;
@@ -137,7 +135,7 @@ export class CourseRepository extends BaseRepository {
       authorId = null;
     } else {
       const profile = await this.client.profile.findUnique({
-        where: { username: handle },
+        where: { handle },
         select: { id: true },
       });
       if (!profile) return null;

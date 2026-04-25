@@ -2,7 +2,7 @@
  * Centralised URL builders for Course / Lesson learner pages.
  *
  * Course pages live under `/courses/{handle}/{slug}` where:
- *   - `handle` is the author's `Profile.username` for UGC courses
+ *   - `handle` is the author's `Profile.handle` for UGC courses
  *   - `handle` is the reserved literal `OFFICIAL_HANDLE` for official courses
  *     whose `authorId` is NULL
  *
@@ -14,11 +14,11 @@ export const OFFICIAL_HANDLE = "official";
 
 export type CourseLinkable = {
   slug: string;
-  author: { username: string } | null;
+  author: { handle: string } | null;
 };
 
-export function authorHandle(author: { username: string } | null): string {
-  return author?.username ?? OFFICIAL_HANDLE;
+export function authorHandle(author: { handle: string } | null): string {
+  return author?.handle ?? OFFICIAL_HANDLE;
 }
 
 export function courseUrl(course: CourseLinkable): string {

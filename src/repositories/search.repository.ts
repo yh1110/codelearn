@@ -6,7 +6,7 @@ import { BaseRepository } from "./base.repository";
 
 export type CourseSearchHit = Prisma.CourseGetPayload<{
   include: {
-    author: { select: { id: true; name: true; username: true; avatarUrl: true } };
+    author: { select: { id: true; name: true; handle: true; avatarUrl: true } };
     lessons: { where: { isPublished: true }; select: { id: true } };
   };
 }>;
@@ -18,7 +18,7 @@ export type LessonSearchHit = Prisma.LessonGetPayload<{
         id: true;
         slug: true;
         title: true;
-        author: { select: { id: true; name: true; username: true } };
+        author: { select: { id: true; name: true; handle: true } };
       };
     };
   };
@@ -37,7 +37,7 @@ export class SearchRepository extends BaseRepository {
       orderBy: { createdAt: "desc" },
       take: SEARCH_LIMIT,
       include: {
-        author: { select: { id: true, name: true, username: true, avatarUrl: true } },
+        author: { select: { id: true, name: true, handle: true, avatarUrl: true } },
         lessons: {
           where: { isPublished: true },
           select: { id: true },
@@ -65,7 +65,7 @@ export class SearchRepository extends BaseRepository {
             id: true,
             slug: true,
             title: true,
-            author: { select: { id: true, name: true, username: true } },
+            author: { select: { id: true, name: true, handle: true } },
           },
         },
       },

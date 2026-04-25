@@ -4,13 +4,13 @@ import type { Bookmark, Course, Lesson } from "@prisma/client";
 import { BaseRepository } from "./base.repository";
 
 export type CourseBookmarkWithCourse = Bookmark & {
-  course: Course & { author: { username: string } | null };
+  course: Course & { author: { handle: string } | null };
 };
 
 export type LessonBookmarkWithLesson = Bookmark & {
   lesson: Lesson & {
     course: Pick<Course, "id" | "slug" | "title"> & {
-      author: { username: string } | null;
+      author: { handle: string } | null;
     };
   };
 };
@@ -29,7 +29,7 @@ export class BookmarkRepository extends BaseRepository {
       orderBy: { createdAt: "desc" },
       include: {
         course: {
-          include: { author: { select: { username: true } } },
+          include: { author: { select: { handle: true } } },
         },
       },
     });
@@ -48,7 +48,7 @@ export class BookmarkRepository extends BaseRepository {
                 id: true,
                 slug: true,
                 title: true,
-                author: { select: { username: true } },
+                author: { select: { handle: true } },
               },
             },
           },

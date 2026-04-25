@@ -12,7 +12,7 @@ model Course {
   title        String
   description  String
   order        Int
-  authorId     String?            @db.Uuid @map("author_id")
+  authorId     String?            @map("author_id")
   author       Profile?           @relation(fields: [authorId], references: [id], onDelete: SetNull)
   isPublished  Boolean            @default(false) @map("is_published")
   providerType CourseProviderType @default(COMMUNITY) @map("provider_type")
@@ -54,7 +54,7 @@ model Lesson {
 
 model Progress {
   id          String   @id @default(cuid())
-  userId      String   @db.Uuid @map("user_id")
+  userId      String   @map("user_id")
   lessonId    String
   user        Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
@@ -65,10 +65,10 @@ model Progress {
 }
 
 model Profile {
-  id            String         @id @db.Uuid
-  email         String?
+  id            String         @id @default(cuid())
+  authUserId    String         @unique @db.Uuid @map("auth_user_id")
+  handle        String         @unique
   name          String?
-  username      String         @unique
   bio           String?
   avatarUrl     String?        @map("avatar_url")
   createdAt     DateTime       @default(now()) @map("created_at")
@@ -78,7 +78,7 @@ model Profile {
   notifications Notification[]
   bookmarks     Bookmark[]
 
-  @@index([username])
+  @@index([authUserId])
   @@map("profiles")
 }
 
@@ -91,7 +91,7 @@ enum NotificationType {
 
 model Notification {
   id          String           @id @default(cuid())
-  recipientId String           @db.Uuid @map("recipient_id")
+  recipientId String           @map("recipient_id")
   recipient   Profile          @relation(fields: [recipientId], references: [id], onDelete: Cascade)
   type        NotificationType
   title       String
@@ -107,7 +107,7 @@ model Notification {
 
 model Bookmark {
   id        String   @id @default(cuid())
-  userId    String   @db.Uuid @map("user_id")
+  userId    String   @map("user_id")
   user      Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId  String?  @map("course_id")
   course    Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -119,4 +119,13 @@ model Bookmark {
   @@unique([userId, lessonId], name: "user_lesson_bookmark")
   @@index([userId])
   @@map("bookmarks")
+}
+
+model HandleReservation {
+  handle     String   @id
+  releasedAt DateTime @map("released_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([releasedAt])
+  @@map("handle_reservations")
 }
