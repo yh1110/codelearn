@@ -26,25 +26,26 @@ export async function requireAuth(): Promise<Session> {
     if (error || !user) throw new UnauthorizedError("not signed in");
 
     // Happy path: the auth.users -> profiles trigger has already created the
-    // row, so a single SELECT is enough. Fall back to UPSERT only when the
-    // trigger has not run yet (first-time sign-in before the migration is
-    // applied) — avoids a write on every protected request.
-    let profile = await profileRepository.findById(user.id);
+    // row keyed by auth_user_id, so a single SELECT is enough. Fall back to
+    // UPSERT only when the trigger has not run yet (first-time sign-in before
+    // the migration is applied) — avoids a write on every protected request.
+    let profile = await profileRepository.findByAuthUserId(user.id);
     if (!profile) {
       const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
       const name = typeof meta.name === "string" ? meta.name : null;
       const avatarUrl = typeof meta.avatar_url === "string" ? meta.avatar_url : null;
       profile = await profileRepository.upsert({
-        id: user.id,
-        email: user.email ?? null,
+        authUserId: user.id,
         name,
-        username: defaultUsernameFor(user.id),
+        handle: defaultHandleFor(user.id),
         avatarUrl,
       });
     }
 
     return {
-      userId: user.id,
+      // userId is the cuid Profile.id, not the auth UUID. Downstream code
+      // (services, repositories, FKs) only ever sees the application id.
+      userId: profile.id,
       email: user.email ?? null,
       role: "USER",
       profile,
@@ -55,12 +56,12 @@ export async function requireAuth(): Promise<Session> {
 }
 
 /**
- * Mirrors the SQL fallback used by the `handle_new_user` trigger and the
- * `backfill_profile_username` migration so a user landing here before the
- * trigger has populated their row gets the same handle either way.
+ * Mirrors the SQL fallback used by the `handle_new_user` trigger so a user
+ * landing here before the trigger has populated their row gets the same
+ * handle either way.
  */
-function defaultUsernameFor(userId: string): string {
-  return `user_${userId.replace(/-/g, "").slice(0, 12)}`;
+function defaultHandleFor(authUserId: string): string {
+  return `user_${authUserId.replace(/-/g, "").slice(0, 12)}`;
 }
 
 export async function requireRole(role: Role): Promise<Session> {
