@@ -1,5 +1,6 @@
 import "server-only";
 
+import { MIN_QUERY_LENGTH } from "@/config/search";
 import { handleUnknownError } from "@/lib/errors";
 import { logError, logInfo } from "@/lib/logging";
 import {
@@ -17,10 +18,6 @@ export type SearchResults = {
   courses: CourseSearchHit[];
   lessons: LessonSearchHit[];
 };
-
-// Single-character queries explode the ILIKE cost and match nearly everything,
-// so require at least 2 characters before hitting the repository.
-export const MIN_QUERY_LENGTH = 2;
 
 export async function search(
   query: string,

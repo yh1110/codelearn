@@ -15,13 +15,10 @@ import Link from "next/link";
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { BookmarkButton } from "@/components/BookmarkButton";
+import { BookmarkButton } from "@/components/bookmarks/BookmarkButton";
+import { KEY_NUDGE_PX, MAX_LEFT_RATIO, MIN_LEFT_PX } from "@/config/editor";
 import { cn } from "@/lib/utils";
 import { useLessonRunner } from "../_hooks/useLessonRunner";
-
-const MIN_LEFT_PX = 280;
-const MAX_LEFT_RATIO = 0.75;
-const KEY_NUDGE_PX = 24;
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 

@@ -2,33 +2,15 @@ import { BookText } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { CourseAuthor, CourseWithLessonsAndAuthor } from "@/repositories";
+import { coverFor, glyphFor } from "./courseCover";
 
-const COVER_VARIANTS = [
-  "cm-cover-1",
-  "cm-cover-2",
-  "cm-cover-3",
-  "cm-cover-4",
-  "cm-cover-5",
-  "cm-cover-6",
-] as const;
-
-export function coverForIndex(index: number) {
-  return COVER_VARIANTS[index % COVER_VARIANTS.length];
-}
-
-export function glyphForTitle(title: string) {
-  const trimmed = title.trim();
-  if (!trimmed) return "TS";
-  return Array.from(trimmed).slice(0, 2).join("").toUpperCase();
-}
-
-export function authorLabel(author: CourseAuthor | null): string {
+function authorLabel(author: CourseAuthor | null): string {
   // Fall back to "Anonymous" when the author didn't set a display name —
   // do NOT derive a handle from the email address (privacy).
   return author?.name ?? "Anonymous";
 }
 
-export function authorInitial(author: CourseAuthor | null): string {
+function authorInitial(author: CourseAuthor | null): string {
   const label = authorLabel(author);
   return (Array.from(label.trim())[0] ?? "?").toUpperCase();
 }
@@ -53,12 +35,12 @@ export function CourseCard({ course, index, completedIds }: Props) {
       )}
       style={{ background: "var(--bg-1)", border: "1px solid var(--line-1)" }}
     >
-      <div className={cn("cm-cover", coverForIndex(index))}>
+      <div className={cn("cm-cover", coverFor(index))}>
         <div className="absolute top-2.5 left-2.5 z-10 flex gap-1.5">
           <span className="cm-diff-badge cm-diff-1">初級</span>
         </div>
         <span className="cm-cover-glyph" aria-hidden="true">
-          {glyphForTitle(course.title)}
+          {glyphFor(course.title)}
         </span>
       </div>
       <div className="flex flex-1 flex-col gap-2.5 p-4">

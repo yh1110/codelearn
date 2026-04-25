@@ -1,5 +1,6 @@
 import "client-only";
 import * as esbuild from "esbuild-wasm";
+import { ESBUILD_WASM_URL, RUN_CODE_MAX_OUTPUT, RUN_CODE_TIMEOUT_MS } from "@/config/run-code";
 
 export type RunResult = {
   stdout: string;
@@ -8,16 +9,11 @@ export type RunResult = {
   exitCode: number | null;
 };
 
-const TIMEOUT_MS = 5_000;
-const MAX_OUTPUT = 100_000;
-const ESBUILD_VERSION = "0.28.0";
-const WASM_URL = `https://unpkg.com/esbuild-wasm@${ESBUILD_VERSION}/esbuild.wasm`;
-
 let initialized: Promise<void> | null = null;
 
 function ensureInit(): Promise<void> {
   if (!initialized) {
-    initialized = esbuild.initialize({ wasmURL: WASM_URL }).catch((error) => {
+    initialized = esbuild.initialize({ wasmURL: ESBUILD_WASM_URL }).catch((error) => {
       initialized = null;
       throw error;
     });
@@ -83,7 +79,8 @@ function runInWorker(js: string): Promise<RunResult> {
       clearTimeout(timer);
       worker.terminate();
       URL.revokeObjectURL(url);
-      const truncate = (s: string) => (s.length > MAX_OUTPUT ? s.slice(0, MAX_OUTPUT) : s);
+      const truncate = (s: string) =>
+        s.length > RUN_CODE_MAX_OUTPUT ? s.slice(0, RUN_CODE_MAX_OUTPUT) : s;
       resolve({
         stdout: truncate(result.stdout),
         stderr: truncate(result.stderr),
@@ -95,7 +92,7 @@ function runInWorker(js: string): Promise<RunResult> {
     timer = setTimeout(() => {
       // Worker.terminate() reliably kills infinite loops (unlike iframe.remove()).
       finish({ stdout: partialStdout, stderr: partialStderr, timedOut: true, exitCode: null });
-    }, TIMEOUT_MS);
+    }, RUN_CODE_TIMEOUT_MS);
 
     worker.onmessage = (event: MessageEvent) => {
       const data = event.data as {
