@@ -1,6 +1,7 @@
-import { CheckCircle2, LogOut, Sparkles } from "lucide-react";
+import { CheckCircle2, LogOut, Sparkles, Star } from "lucide-react";
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
+import { getUserBookmarks } from "@/services/bookmarkService";
 import { getCoursesWithLessons, getMyCourses } from "@/services/courseService";
 import { getCompletedLessonIdsByUser } from "@/services/progressService";
 
@@ -12,16 +13,18 @@ export default async function MePage() {
   const handle = session.email ? session.email.split("@")[0] : session.userId;
   const initial = (displayName.trim()[0] ?? "?").toUpperCase();
 
-  const [myCourses, allCourses, completedIds] = await Promise.all([
+  const [myCourses, allCourses, completedIds, bookmarks] = await Promise.all([
     getMyCourses(session.userId),
     getCoursesWithLessons(),
     getCompletedLessonIdsByUser(session.userId),
+    getUserBookmarks(session.userId),
   ]);
 
   const acCount = completedIds.length;
   const totalLessonsAvailable = allCourses.reduce((acc, c) => acc + c.lessons.length, 0);
   const createdCount = myCourses.length;
   const publishedCount = myCourses.filter((c) => c.isPublished).length;
+  const bookmarkCount = bookmarks.courses.length + bookmarks.lessons.length;
 
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "1280px" }}>
@@ -99,6 +102,28 @@ export default async function MePage() {
           value={String(createdCount)}
           sub={`${publishedCount} 公開中`}
         />
+        <Link
+          href="/bookmarks"
+          className="rounded-[14px] p-4 transition hover:-translate-y-0.5 hover:border-[color:var(--line-3)]"
+          style={{ background: "var(--bg-1)", border: "1px solid var(--line-1)" }}
+        >
+          <div
+            className="mb-1.5 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.08em]"
+            style={{ color: "var(--text-4)", fontWeight: 600 }}
+          >
+            <Star className="size-3.5" aria-hidden="true" />
+            お気に入り
+          </div>
+          <div
+            className="font-semibold text-[28px] tracking-tight"
+            style={{ fontFamily: "var(--font-mono-family)" }}
+          >
+            {bookmarkCount}
+          </div>
+          <div className="mt-1 font-mono text-[11.5px]" style={{ color: "var(--text-3)" }}>
+            一覧を見る →
+          </div>
+        </Link>
       </div>
 
       {/* Learning heatmap (placeholder) */}

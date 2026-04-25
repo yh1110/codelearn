@@ -1,9 +1,11 @@
-import { ArrowLeft, BookText, Play, Star } from "lucide-react";
+import { ArrowLeft, BookText, Play } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BookmarkButton } from "@/components/BookmarkButton";
 import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 import { cn } from "@/lib/utils";
+import { isCourseBookmarked } from "@/services/bookmarkService";
 import { getCourseBySlug } from "@/services/courseService";
 import { getCompletedLessonIdsByUser } from "@/services/progressService";
 
@@ -27,10 +29,13 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
     throw error;
   }
 
-  const completed = await getCompletedLessonIdsByUser(
-    session.userId,
-    course.lessons.map((l) => l.id),
-  );
+  const [completed, bookmarked] = await Promise.all([
+    getCompletedLessonIdsByUser(
+      session.userId,
+      course.lessons.map((l) => l.id),
+    ),
+    isCourseBookmarked({ userId: session.userId, courseId: course.id }),
+  ]);
   const completedIds = new Set(completed);
   const done = course.lessons.filter((l) => completedIds.has(l.id)).length;
   const total = course.lessons.length;
@@ -84,19 +89,7 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
                 {done > 0 && done < total ? "続きから学ぶ" : "最初から始める"}
               </Link>
             ) : null}
-            <button
-              type="button"
-              disabled
-              aria-label="お気に入り (近日公開)"
-              className="inline-flex cursor-not-allowed items-center gap-2 rounded-[10px] px-4 py-2 text-[13px] opacity-60"
-              style={{
-                background: "var(--bg-2)",
-                border: "1px solid var(--line-2)",
-                color: "var(--text-1)",
-              }}
-            >
-              <Star className="size-3.5" aria-hidden="true" /> お気に入り
-            </button>
+            <BookmarkButton target="course" courseId={course.id} bookmarked={bookmarked} />
           </div>
         </div>
 
