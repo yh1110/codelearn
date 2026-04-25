@@ -4,20 +4,20 @@ import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 import { isCourseBookmarked } from "@/services/bookmarkService";
-import { getCourseBySlug } from "@/services/courseService";
+import { getCourseByHandleAndSlug } from "@/services/courseService";
 import { getCompletedLessonIdsByUser } from "@/services/progressService";
 import { CourseHero } from "./_components/CourseHero";
 import { LessonList } from "./_components/LessonList";
 
 export const dynamic = "force-dynamic";
 
-export default async function CoursePage({ params }: PageProps<"/courses/[slug]">) {
+export default async function CoursePage({ params }: PageProps<"/courses/[handle]/[slug]">) {
   const session = await requireAuth();
-  const { slug } = await params;
+  const { handle, slug } = await params;
 
-  let course: Awaited<ReturnType<typeof getCourseBySlug>>;
+  let course: Awaited<ReturnType<typeof getCourseByHandleAndSlug>>;
   try {
-    course = await getCourseBySlug(slug);
+    course = await getCourseByHandleAndSlug({ handle, slug });
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
     throw error;
@@ -47,7 +47,7 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
 
       <CourseHero course={course} done={done} total={total} pct={pct} bookmarked={bookmarked} />
 
-      <LessonList courseSlug={course.slug} lessons={course.lessons} completedIds={completedIds} />
+      <LessonList course={course} lessons={course.lessons} completedIds={completedIds} />
     </div>
   );
 }

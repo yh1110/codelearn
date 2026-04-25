@@ -17,6 +17,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { BookmarkButton } from "@/components/bookmarks/BookmarkButton";
 import { KEY_NUDGE_PX, MAX_LEFT_RATIO, MIN_LEFT_PX } from "@/config/editor";
+import { type CourseLinkable, courseUrl, lessonUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useLessonRunner } from "../_hooks/useLessonRunner";
 
@@ -32,7 +33,7 @@ type Lesson = {
 };
 
 type Props = {
-  courseSlug: string;
+  course: CourseLinkable;
   courseTitle: string;
   lesson: Lesson;
   prevSlug: string | null;
@@ -42,7 +43,7 @@ type Props = {
 };
 
 export default function LessonClient({
-  courseSlug,
+  course,
   courseTitle,
   lesson,
   prevSlug,
@@ -152,7 +153,7 @@ export default function LessonClient({
       >
         <div className="flex items-center gap-3">
           <Link
-            href={`/courses/${courseSlug}`}
+            href={courseUrl(course)}
             className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[12px]"
             style={{ color: "var(--text-2)" }}
           >
@@ -468,7 +469,7 @@ export default function LessonClient({
         <div className="flex gap-2">
           {prevSlug ? (
             <Link
-              href={`/courses/${courseSlug}/lessons/${prevSlug}`}
+              href={lessonUrl(course, prevSlug)}
               className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[12px]"
               style={{
                 background: "var(--bg-2)",
@@ -483,7 +484,7 @@ export default function LessonClient({
           )}
           {nextSlug ? (
             <Link
-              href={`/courses/${courseSlug}/lessons/${nextSlug}`}
+              href={lessonUrl(course, nextSlug)}
               className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[12px]"
               style={{
                 background: "var(--bg-2)",

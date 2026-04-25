@@ -7,12 +7,14 @@ export type ProfileUpsertInput = {
   id: string;
   email?: string | null;
   name?: string | null;
+  /** Required on create. Update path leaves the existing username untouched. */
+  username: string;
   avatarUrl?: string | null;
 };
 
 export type ProfileUpdateInput = {
   name?: string | null;
-  username?: string | null;
+  username?: string;
   bio?: string | null;
   avatarUrl?: string | null;
 };
@@ -38,6 +40,7 @@ export class ProfileRepository extends BaseRepository {
         id: input.id,
         email: input.email ?? null,
         name: input.name ?? null,
+        username: input.username,
         avatarUrl: input.avatarUrl ?? null,
       },
     });

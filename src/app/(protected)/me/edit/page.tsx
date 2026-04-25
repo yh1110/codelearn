@@ -36,7 +36,7 @@ export default async function ProfileEditPage() {
         <ProfileEditForm
           initial={{
             name: profile.name ?? "",
-            username: profile.username ?? "",
+            username: profile.username,
             bio: profile.bio ?? "",
             avatarUrl: profile.avatarUrl ?? "",
           }}

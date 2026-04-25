@@ -1,7 +1,8 @@
 import { BookText } from "lucide-react";
 import Link from "next/link";
+import { type CourseLinkable, lessonUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
-import type { CourseWithLessons } from "@/repositories";
+import type { CourseDetailWithAuthor } from "@/repositories";
 
 function statusClass(state: "ac" | "try" | "none") {
   if (state === "ac") return "cm-status-ac";
@@ -10,12 +11,12 @@ function statusClass(state: "ac" | "try" | "none") {
 }
 
 type LessonListProps = {
-  courseSlug: string;
-  lessons: CourseWithLessons["lessons"];
+  course: CourseLinkable;
+  lessons: CourseDetailWithAuthor["lessons"];
   completedIds: Set<string>;
 };
 
-export function LessonList({ courseSlug, lessons, completedIds }: LessonListProps) {
+export function LessonList({ course, lessons, completedIds }: LessonListProps) {
   return (
     <>
       <div className="mb-4 flex items-baseline justify-between">
@@ -61,7 +62,7 @@ export function LessonList({ courseSlug, lessons, completedIds }: LessonListProp
               return (
                 <li key={l.id}>
                   <Link
-                    href={`/courses/${courseSlug}/lessons/${l.slug}`}
+                    href={lessonUrl(course, l.slug)}
                     className={cn(
                       "grid cursor-pointer items-center gap-4 px-5 py-3.5 transition hover:bg-[var(--bg-2)]",
                       !isLast && "border-b",

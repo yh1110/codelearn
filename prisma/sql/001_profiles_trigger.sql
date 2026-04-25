@@ -2,10 +2,11 @@
 -- Apply via: psql "$DIRECT_URL" -f prisma/sql/001_profiles_trigger.sql
 -- Or paste into the Supabase SQL Editor.
 
-INSERT INTO public.profiles (id, email, name, avatar_url, created_at, updated_at)
+INSERT INTO public.profiles (id, email, name, username, avatar_url, created_at, updated_at)
 SELECT id,
        email,
        raw_user_meta_data->>'name',
+       'user_' || substring(replace(id::text, '-', ''), 1, 12),
        raw_user_meta_data->>'avatar_url',
        now(),
        now()
@@ -18,11 +19,14 @@ LANGUAGE plpgsql
 SECURITY DEFINER SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, name, avatar_url, created_at, updated_at)
+  -- username is NOT NULL; seed a deterministic placeholder so the trigger
+  -- never violates the constraint. Users can rename it via /me/edit.
+  INSERT INTO public.profiles (id, email, name, username, avatar_url, created_at, updated_at)
   VALUES (
     NEW.id,
     NEW.email,
     NEW.raw_user_meta_data->>'name',
+    'user_' || substring(replace(NEW.id::text, '-', ''), 1, 12),
     NEW.raw_user_meta_data->>'avatar_url',
     now(),
     now()

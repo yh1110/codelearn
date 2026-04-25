@@ -1,10 +1,11 @@
 import { Play } from "lucide-react";
 import Link from "next/link";
 import { BookmarkButton } from "@/components/bookmarks/BookmarkButton";
-import type { CourseWithLessons } from "@/repositories";
+import { lessonUrl } from "@/lib/routes";
+import type { CourseDetailWithAuthor } from "@/repositories";
 
 type CourseHeroProps = {
-  course: CourseWithLessons;
+  course: CourseDetailWithAuthor;
   done: number;
   total: number;
   pct: number;
@@ -43,7 +44,7 @@ export function CourseHero({ course, done, total, pct, bookmarked }: CourseHeroP
         <div className="mt-5 flex flex-wrap items-center gap-2.5">
           {firstLesson ? (
             <Link
-              href={`/courses/${course.slug}/lessons/${firstLesson.slug}`}
+              href={lessonUrl(course, firstLesson.slug)}
               className="inline-flex items-center gap-2 rounded-[10px] px-4 py-2 font-semibold text-[13px] transition"
               style={{ background: "var(--accent-solid)", color: "var(--accent-ink)" }}
             >

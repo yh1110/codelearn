@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 import { isLessonBookmarked } from "@/services/bookmarkService";
-import { getCourseBySlug } from "@/services/courseService";
+import { getCourseByHandleAndSlug } from "@/services/courseService";
 import { isLessonCompleted } from "@/services/progressService";
 import LessonClient from "./_components/LessonClient";
 
@@ -10,13 +10,13 @@ export const dynamic = "force-dynamic";
 
 export default async function LessonPage({
   params,
-}: PageProps<"/courses/[slug]/lessons/[lessonSlug]">) {
+}: PageProps<"/courses/[handle]/[slug]/lessons/[lessonSlug]">) {
   const session = await requireAuth();
-  const { slug, lessonSlug } = await params;
+  const { handle, slug, lessonSlug } = await params;
 
-  let course: Awaited<ReturnType<typeof getCourseBySlug>>;
+  let course: Awaited<ReturnType<typeof getCourseByHandleAndSlug>>;
   try {
-    course = await getCourseBySlug(slug);
+    course = await getCourseByHandleAndSlug({ handle, slug });
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
     throw error;
@@ -36,7 +36,7 @@ export default async function LessonPage({
 
   return (
     <LessonClient
-      courseSlug={course.slug}
+      course={course}
       courseTitle={course.title}
       lesson={{
         id: lesson.id,

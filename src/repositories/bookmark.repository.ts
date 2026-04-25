@@ -4,11 +4,15 @@ import type { Bookmark, Course, Lesson } from "@prisma/client";
 import { BaseRepository } from "./base.repository";
 
 export type CourseBookmarkWithCourse = Bookmark & {
-  course: Course;
+  course: Course & { author: { username: string } | null };
 };
 
 export type LessonBookmarkWithLesson = Bookmark & {
-  lesson: Lesson & { course: Pick<Course, "id" | "slug" | "title"> };
+  lesson: Lesson & {
+    course: Pick<Course, "id" | "slug" | "title"> & {
+      author: { username: string } | null;
+    };
+  };
 };
 
 export class BookmarkRepository extends BaseRepository {
@@ -23,7 +27,11 @@ export class BookmarkRepository extends BaseRepository {
     const rows = await this.client.bookmark.findMany({
       where: { userId, courseId: { not: null } },
       orderBy: { createdAt: "desc" },
-      include: { course: true },
+      include: {
+        course: {
+          include: { author: { select: { username: true } } },
+        },
+      },
     });
     return rows.filter((r): r is CourseBookmarkWithCourse => r.course !== null);
   }
@@ -34,7 +42,16 @@ export class BookmarkRepository extends BaseRepository {
       orderBy: { createdAt: "desc" },
       include: {
         lesson: {
-          include: { course: { select: { id: true, slug: true, title: true } } },
+          include: {
+            course: {
+              select: {
+                id: true,
+                slug: true,
+                title: true,
+                author: { select: { username: true } },
+              },
+            },
+          },
         },
       },
     });

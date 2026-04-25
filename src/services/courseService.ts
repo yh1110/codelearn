@@ -4,9 +4,9 @@ import type { Course } from "@prisma/client";
 import { ForbiddenError, handleUnknownError, NotFoundError, ValidationError } from "@/lib/errors";
 import { logError, logInfo, logWarn } from "@/lib/logging";
 import {
+  type CourseDetailWithAuthor,
   type CourseRepository,
   type CourseWithLessonIds,
-  type CourseWithLessons,
   type CourseWithLessonsAndAuthor,
   courseRepository,
 } from "@/repositories";
@@ -70,25 +70,30 @@ export async function getCommunityPublishedCoursesByNewest(
   }
 }
 
-export async function getCourseBySlug(
-  slug: string,
+export async function getCourseByHandleAndSlug(
+  params: { handle: string; slug: string },
   repository: CourseRepository = courseRepository,
-): Promise<CourseWithLessons> {
-  logInfo("courseService.getCourseBySlug.start", { slug });
+): Promise<CourseDetailWithAuthor> {
+  const { handle, slug } = params;
+  logInfo("courseService.getCourseByHandleAndSlug.start", { handle, slug });
   try {
-    const course = await repository.findPublishedBySlugWithPublishedLessons(slug);
-    if (!course) throw new NotFoundError(`Course not found: ${slug}`);
-    logInfo("courseService.getCourseBySlug.success", {
+    const course = await repository.findPublishedByHandleAndSlugWithPublishedLessons({
+      handle,
+      slug,
+    });
+    if (!course) throw new NotFoundError(`Course not found: ${handle}/${slug}`);
+    logInfo("courseService.getCourseByHandleAndSlug.success", {
+      handle,
       slug,
       lessonCount: course.lessons.length,
     });
     return course;
   } catch (error) {
     if (error instanceof NotFoundError) {
-      logWarn("courseService.getCourseBySlug.notFound", { slug });
+      logWarn("courseService.getCourseByHandleAndSlug.notFound", { handle, slug });
       throw error;
     }
-    logError("courseService.getCourseBySlug.error", { slug }, error);
+    logError("courseService.getCourseByHandleAndSlug.error", { handle, slug }, error);
     throw handleUnknownError(error);
   }
 }

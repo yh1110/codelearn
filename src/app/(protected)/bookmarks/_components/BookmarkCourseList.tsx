@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { coverFor, glyphFor } from "@/app/(protected)/_components/courseCover";
+import { courseUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import type { CourseBookmarkWithCourse } from "@/repositories";
 
@@ -25,12 +26,7 @@ export function BookmarkCourseList({ courses }: BookmarkCourseListProps) {
       >
         {courses.map((b, idx) => (
           <li key={b.id}>
-            <CourseBookmarkCard
-              slug={b.course.slug}
-              title={b.course.title}
-              description={b.course.description}
-              index={idx}
-            />
+            <CourseBookmarkCard course={b.course} index={idx} />
           </li>
         ))}
       </ul>
@@ -39,19 +35,15 @@ export function BookmarkCourseList({ courses }: BookmarkCourseListProps) {
 }
 
 function CourseBookmarkCard({
-  slug,
-  title,
-  description,
+  course,
   index,
 }: {
-  slug: string;
-  title: string;
-  description: string;
+  course: CourseBookmarkWithCourse["course"];
   index: number;
 }) {
   return (
     <Link
-      href={`/courses/${slug}`}
+      href={courseUrl(course)}
       className={cn(
         "group flex h-full flex-col overflow-hidden rounded-[14px] transition",
         "hover:-translate-y-0.5 hover:border-[color:var(--line-3)]",
@@ -60,7 +52,7 @@ function CourseBookmarkCard({
     >
       <div className={cn("cm-cover", coverFor(index))}>
         <span className="cm-cover-glyph" aria-hidden="true">
-          {glyphFor(title)}
+          {glyphFor(course.title)}
         </span>
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
@@ -68,11 +60,11 @@ function CourseBookmarkCard({
           className="m-0 line-clamp-2 font-semibold text-[15px] leading-snug tracking-tight"
           style={{ color: "var(--text-1)" }}
         >
-          {title}
+          {course.title}
         </h3>
-        {description ? (
+        {course.description ? (
           <p className="m-0 line-clamp-2 text-[12.5px]" style={{ color: "var(--text-3)" }}>
-            {description}
+            {course.description}
           </p>
         ) : null}
       </div>
