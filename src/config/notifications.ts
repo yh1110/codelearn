@@ -1,0 +1,2 @@
+export const NOTIFICATION_DEFAULT_LIMIT = 20;
+export const NOTIFICATION_MAX_LIMIT = 100;

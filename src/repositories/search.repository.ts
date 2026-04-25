@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { Prisma } from "@prisma/client";
+import { SEARCH_LIMIT } from "@/config/search";
 import { BaseRepository } from "./base.repository";
 
 export type CourseSearchHit = Prisma.CourseGetPayload<{
@@ -22,8 +23,6 @@ export type LessonSearchHit = Prisma.LessonGetPayload<{
     };
   };
 }>;
-
-const SEARCH_LIMIT = 20;
 
 export class SearchRepository extends BaseRepository {
   async searchCourses(query: string): Promise<CourseSearchHit[]> {

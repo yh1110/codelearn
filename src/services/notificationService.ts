@@ -1,12 +1,10 @@
 import "server-only";
 
 import type { Notification, NotificationType } from "@prisma/client";
+import { NOTIFICATION_DEFAULT_LIMIT, NOTIFICATION_MAX_LIMIT } from "@/config/notifications";
 import { ForbiddenError, handleUnknownError, NotFoundError, ValidationError } from "@/lib/errors";
 import { logError, logInfo, logWarn } from "@/lib/logging";
 import { type NotificationRepository, notificationRepository } from "@/repositories";
-
-const DEFAULT_LIMIT = 20;
-const MAX_LIMIT = 100;
 
 export async function getNotifications(
   params: { userId: string; limit?: number },
@@ -131,9 +129,9 @@ export async function createNotification(
 }
 
 function clampLimit(limit: number | undefined): number {
-  if (limit === undefined) return DEFAULT_LIMIT;
-  if (!Number.isFinite(limit) || limit <= 0) return DEFAULT_LIMIT;
-  return Math.min(Math.floor(limit), MAX_LIMIT);
+  if (limit === undefined) return NOTIFICATION_DEFAULT_LIMIT;
+  if (!Number.isFinite(limit) || limit <= 0) return NOTIFICATION_DEFAULT_LIMIT;
+  return Math.min(Math.floor(limit), NOTIFICATION_MAX_LIMIT);
 }
 
 // Guard against persisting unsafe URLs that would later be handed to

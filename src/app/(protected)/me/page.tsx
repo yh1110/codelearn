@@ -1,5 +1,12 @@
 import { CheckCircle2, LogOut, Pencil, Sparkles, Star } from "lucide-react";
 import Link from "next/link";
+import {
+  HEATMAP_CELL_GAP,
+  HEATMAP_CELL_SIZE,
+  HEATMAP_DAYS,
+  HEATMAP_WEEKS,
+  MONTH_LABELS_JA,
+} from "@/config/heatmap";
 import { requireAuth } from "@/lib/auth";
 import { getUserBookmarks } from "@/services/bookmarkService";
 import { getCoursesWithLessons, getMyCourses } from "@/services/courseService";
@@ -249,25 +256,6 @@ export default async function MePage() {
     </div>
   );
 }
-
-const HEATMAP_WEEKS = 52;
-const HEATMAP_DAYS = 7;
-const HEATMAP_CELL_SIZE = 13;
-const HEATMAP_CELL_GAP = 4;
-const MONTH_LABELS_JA = [
-  "1月",
-  "2月",
-  "3月",
-  "4月",
-  "5月",
-  "6月",
-  "7月",
-  "8月",
-  "9月",
-  "10月",
-  "11月",
-  "12月",
-];
 
 function buildMonthLabels(weekCount = HEATMAP_WEEKS) {
   const today = new Date();

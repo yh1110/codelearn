@@ -1,8 +1,9 @@
 import { BookText, FileText, Search as SearchIcon } from "lucide-react";
 import Link from "next/link";
+import { MIN_QUERY_LENGTH } from "@/config/search";
 import { requireAuth } from "@/lib/auth";
 import type { CourseSearchHit, LessonSearchHit } from "@/repositories";
-import { MIN_QUERY_LENGTH, search } from "@/services/searchService";
+import { search } from "@/services/searchService";
 
 export const dynamic = "force-dynamic";
 
