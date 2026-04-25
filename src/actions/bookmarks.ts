@@ -20,7 +20,7 @@ export const toggleCourseBookmarkAction = actionClient
       userId: ctx.userId,
       courseId: parsedInput.courseId,
     });
-    revalidatePath("/bookmarks");
+    revalidatePath("/", "layout");
     return result;
   });
 
@@ -31,6 +31,6 @@ export const toggleLessonBookmarkAction = actionClient
       userId: ctx.userId,
       lessonId: parsedInput.lessonId,
     });
-    revalidatePath("/bookmarks");
+    revalidatePath("/", "layout");
     return result;
   });
