@@ -38,6 +38,7 @@ export async function requireAuth(): Promise<Session> {
         id: user.id,
         email: user.email ?? null,
         name,
+        username: defaultUsernameFor(user.id),
         avatarUrl,
       });
     }
@@ -51,6 +52,15 @@ export async function requireAuth(): Promise<Session> {
   } catch (error) {
     throw handleUnknownError(error);
   }
+}
+
+/**
+ * Mirrors the SQL fallback used by the `handle_new_user` trigger and the
+ * `backfill_profile_username` migration so a user landing here before the
+ * trigger has populated their row gets the same handle either way.
+ */
+function defaultUsernameFor(userId: string): string {
+  return `user_${userId.replace(/-/g, "").slice(0, 12)}`;
 }
 
 export async function requireRole(role: Role): Promise<Session> {
