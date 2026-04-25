@@ -46,7 +46,7 @@ export class CourseRepository extends BaseRepository {
     });
   }
 
-  async findAllPublishedWithLessons(): Promise<CourseWithLessonIds[]> {
+  async findAllPublishedWithLessons(): Promise<CourseWithLessonsAndAuthor[]> {
     return this.client.course.findMany({
       where: { isPublished: true },
       orderBy: { order: "asc" },
@@ -55,6 +55,9 @@ export class CourseRepository extends BaseRepository {
           where: { isPublished: true },
           select: { id: true },
           orderBy: { order: "asc" },
+        },
+        author: {
+          select: { id: true, email: true, name: true, avatarUrl: true },
         },
       },
     });

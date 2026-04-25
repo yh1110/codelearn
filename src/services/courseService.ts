@@ -14,7 +14,7 @@ import { ensureAuthorOwnsCourse } from "./authorGuard";
 
 export async function getCoursesWithLessons(
   repository: CourseRepository = courseRepository,
-): Promise<CourseWithLessonIds[]> {
+): Promise<CourseWithLessonsAndAuthor[]> {
   logInfo("courseService.getCoursesWithLessons.start");
   try {
     const result = await repository.findAllPublishedWithLessons();
