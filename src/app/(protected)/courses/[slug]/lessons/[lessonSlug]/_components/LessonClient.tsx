@@ -15,7 +15,7 @@ import Link from "next/link";
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { BookmarkButton } from "@/components/BookmarkButton";
+import { BookmarkButton } from "@/components/bookmarks/BookmarkButton";
 import { KEY_NUDGE_PX, MAX_LEFT_RATIO, MIN_LEFT_PX } from "@/config/editor";
 import { cn } from "@/lib/utils";
 import { useLessonRunner } from "../_hooks/useLessonRunner";

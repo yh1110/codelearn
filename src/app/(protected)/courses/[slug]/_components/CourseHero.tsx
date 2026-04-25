@@ -1,6 +1,6 @@
 import { Play } from "lucide-react";
 import Link from "next/link";
-import { BookmarkButton } from "@/components/BookmarkButton";
+import { BookmarkButton } from "@/components/bookmarks/BookmarkButton";
 import type { CourseWithLessons } from "@/repositories";
 
 type CourseHeroProps = {
