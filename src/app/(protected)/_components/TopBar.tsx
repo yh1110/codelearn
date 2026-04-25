@@ -2,7 +2,7 @@
 
 import { Bell, BookOpen, Compass, Plus, Search } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -23,7 +23,9 @@ function resolveNavGroup(pathname: string): NavGroup {
 
 export function TopBar({ displayName, avatarInitial }: Props) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const group = resolveNavGroup(pathname);
+  const initialQuery = pathname === "/search" ? (searchParams.get("q") ?? "") : "";
 
   return (
     <header
@@ -51,29 +53,30 @@ export function TopBar({ displayName, avatarInitial }: Props) {
         </span>
       </Link>
 
-      <div className="relative mx-auto w-full max-w-[520px]">
+      <form action="/search" method="get" className="relative mx-auto w-full max-w-[520px]">
         <Search
           aria-hidden="true"
           className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 size-3.5"
           style={{ color: "var(--text-3)" }}
         />
+        {/* `key` forces a remount whenever the URL query changes so `defaultValue`
+            re-syncs (e.g. navigating back/forward between search pages). */}
         <input
+          key={initialQuery}
           type="search"
-          disabled
-          placeholder="検索 (近日公開)"
-          aria-label="検索 (近日公開)"
-          className="w-full cursor-not-allowed rounded-[10px] py-[9px] pr-16 pl-10 text-[13px] outline-none transition"
+          name="q"
+          defaultValue={initialQuery}
+          placeholder="コース・レッスンを検索"
+          aria-label="コース・レッスンを検索"
+          autoComplete="off"
+          className="w-full rounded-[10px] py-[9px] pr-10 pl-10 text-[13px] outline-none transition focus:border-[color:var(--accent-solid)]"
           style={{
             background: "var(--bg-1)",
             border: "1px solid var(--line-2)",
             color: "var(--text-1)",
           }}
         />
-        <span className="-translate-y-1/2 absolute top-1/2 right-2.5 flex gap-1">
-          <span className="cm-kbd">⌘</span>
-          <span className="cm-kbd">K</span>
-        </span>
-      </div>
+      </form>
 
       <div className="flex items-center gap-2">
         <nav
