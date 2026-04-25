@@ -14,6 +14,6 @@ export const updateProfileAction = actionClient
     return {
       id: profile.id,
       name: profile.name,
-      username: profile.username,
+      handle: profile.handle,
     };
   });
