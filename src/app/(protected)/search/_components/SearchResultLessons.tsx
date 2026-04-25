@@ -1,5 +1,6 @@
 import { FileText } from "lucide-react";
 import Link from "next/link";
+import { lessonUrl } from "@/lib/routes";
 import type { LessonSearchHit } from "@/repositories";
 import { authorLabel } from "./authorLabel";
 import { SectionHeading } from "./SectionHeading";
@@ -27,7 +28,7 @@ export function SearchResultLessons({ lessons }: SearchResultLessonsProps) {
 function LessonResultRow({ lesson }: { lesson: LessonSearchHit }) {
   return (
     <Link
-      href={`/courses/${lesson.course.slug}/lessons/${lesson.slug}`}
+      href={lessonUrl(lesson.course, lesson.slug)}
       className="group flex items-start gap-3 rounded-[14px] px-4 py-3 transition hover:border-[color:var(--line-3)]"
       style={{ background: "var(--bg-1)", border: "1px solid var(--line-1)" }}
     >

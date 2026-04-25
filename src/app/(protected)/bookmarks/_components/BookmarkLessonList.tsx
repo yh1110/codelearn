@@ -1,5 +1,6 @@
 import { BookText } from "lucide-react";
 import Link from "next/link";
+import { lessonUrl } from "@/lib/routes";
 import type { LessonBookmarkWithLesson } from "@/repositories";
 
 type BookmarkLessonListProps = {
@@ -21,12 +22,7 @@ export function BookmarkLessonList({ lessons }: BookmarkLessonListProps) {
       <ul className="flex flex-col gap-2.5">
         {lessons.map((b) => (
           <li key={b.id}>
-            <LessonBookmarkRow
-              courseSlug={b.lesson.course.slug}
-              courseTitle={b.lesson.course.title}
-              lessonSlug={b.lesson.slug}
-              lessonTitle={b.lesson.title}
-            />
+            <LessonBookmarkRow lesson={b.lesson} />
           </li>
         ))}
       </ul>
@@ -34,30 +30,20 @@ export function BookmarkLessonList({ lessons }: BookmarkLessonListProps) {
   );
 }
 
-function LessonBookmarkRow({
-  courseSlug,
-  courseTitle,
-  lessonSlug,
-  lessonTitle,
-}: {
-  courseSlug: string;
-  courseTitle: string;
-  lessonSlug: string;
-  lessonTitle: string;
-}) {
+function LessonBookmarkRow({ lesson }: { lesson: LessonBookmarkWithLesson["lesson"] }) {
   return (
     <Link
-      href={`/courses/${courseSlug}/lessons/${lessonSlug}`}
+      href={lessonUrl(lesson.course, lesson.slug)}
       className="flex items-center gap-3 rounded-[12px] px-4 py-3 transition hover:bg-[var(--bg-2)]"
       style={{ background: "var(--bg-1)", border: "1px solid var(--line-1)" }}
     >
       <BookText className="size-3.5" aria-hidden="true" style={{ color: "var(--text-3)" }} />
       <div className="min-w-0 flex-1">
         <div className="truncate font-medium text-[14px]" style={{ color: "var(--text-1)" }}>
-          {lessonTitle}
+          {lesson.title}
         </div>
         <div className="mt-0.5 truncate text-[12px]" style={{ color: "var(--text-3)" }}>
-          {courseTitle}
+          {lesson.course.title}
         </div>
       </div>
     </Link>

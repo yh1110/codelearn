@@ -1,5 +1,6 @@
 import { BookText } from "lucide-react";
 import Link from "next/link";
+import { courseUrl } from "@/lib/routes";
 import type { CourseSearchHit } from "@/repositories";
 import { authorLabel } from "./authorLabel";
 import { SectionHeading } from "./SectionHeading";
@@ -28,7 +29,7 @@ function CourseResultRow({ course }: { course: CourseSearchHit }) {
   const lessonCount = course.lessons.length;
   return (
     <Link
-      href={`/courses/${course.slug}`}
+      href={courseUrl(course)}
       className="group flex items-start gap-3 rounded-[14px] px-4 py-3 transition hover:border-[color:var(--line-3)]"
       style={{ background: "var(--bg-1)", border: "1px solid var(--line-1)" }}
     >
