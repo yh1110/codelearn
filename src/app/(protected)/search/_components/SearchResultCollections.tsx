@@ -1,22 +1,27 @@
 import { BookText } from "lucide-react";
 import Link from "next/link";
-import { courseUrl } from "@/lib/routes";
-import type { CourseSearchHit } from "@/repositories";
+import { collectionUrl } from "@/lib/routes";
+import type { CollectionSearchHit } from "@/repositories";
+import { authorLabel } from "./authorLabel";
 import { SectionHeading } from "./SectionHeading";
 
-type SearchResultCoursesProps = {
-  courses: CourseSearchHit[];
+type SearchResultCollectionsProps = {
+  collections: CollectionSearchHit[];
 };
 
-export function SearchResultCourses({ courses }: SearchResultCoursesProps) {
-  if (courses.length === 0) return null;
+export function SearchResultCollections({ collections }: SearchResultCollectionsProps) {
+  if (collections.length === 0) return null;
   return (
-    <section aria-labelledby="search-courses-heading">
-      <SectionHeading id="search-courses-heading" label="公式コース" count={courses.length} />
+    <section aria-labelledby="search-collections-heading">
+      <SectionHeading
+        id="search-collections-heading"
+        label="コレクション"
+        count={collections.length}
+      />
       <ul className="mt-3 flex flex-col gap-2">
-        {courses.map((course) => (
-          <li key={course.id}>
-            <CourseResultRow course={course} />
+        {collections.map((collection) => (
+          <li key={collection.id}>
+            <CollectionResultRow collection={collection} />
           </li>
         ))}
       </ul>
@@ -24,11 +29,11 @@ export function SearchResultCourses({ courses }: SearchResultCoursesProps) {
   );
 }
 
-function CourseResultRow({ course }: { course: CourseSearchHit }) {
-  const lessonCount = course.lessons.length;
+function CollectionResultRow({ collection }: { collection: CollectionSearchHit }) {
+  const problemCount = collection.problems.length;
   return (
     <Link
-      href={courseUrl(course)}
+      href={collectionUrl(collection)}
       className="group flex items-start gap-3 rounded-[14px] px-4 py-3 transition hover:border-[color:var(--line-3)]"
       style={{ background: "var(--bg-1)", border: "1px solid var(--line-1)" }}
     >
@@ -44,21 +49,21 @@ function CourseResultRow({ course }: { course: CourseSearchHit }) {
           className="truncate font-semibold text-[14px] tracking-tight"
           style={{ color: "var(--text-1)" }}
         >
-          {course.title}
+          {collection.title}
         </span>
-        {course.description ? (
+        {collection.description ? (
           <span className="line-clamp-2 text-[12.5px]" style={{ color: "var(--text-3)" }}>
-            {course.description}
+            {collection.description}
           </span>
         ) : null}
         <span
           className="flex items-center gap-3 pt-0.5 text-[11.5px]"
           style={{ color: "var(--text-4)" }}
         >
-          <span>公式</span>
+          <span>{authorLabel(collection.author.name)}</span>
           <span aria-hidden="true">・</span>
           <span>
-            <b style={{ color: "var(--text-2)" }}>{lessonCount}</b> レッスン
+            <b style={{ color: "var(--text-2)" }}>{problemCount}</b> 問題
           </span>
         </span>
       </span>

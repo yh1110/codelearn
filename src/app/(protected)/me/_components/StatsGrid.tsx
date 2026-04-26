@@ -24,13 +24,13 @@ export function StatsGrid({
     >
       <Stat
         icon={<CheckCircle2 className="size-3.5" aria-hidden="true" />}
-        label="クリア済みレッスン"
+        label="クリア済み"
         value={String(acCount)}
-        sub={totalLessonsAvailable > 0 ? `${totalLessonsAvailable} 中` : undefined}
+        sub={totalLessonsAvailable > 0 ? `公式 ${totalLessonsAvailable} レッスン中` : undefined}
       />
       <Stat
         icon={<Sparkles className="size-3.5" aria-hidden="true" />}
-        label="作成したコース"
+        label="作成したコレクション"
         value={String(createdCount)}
         sub={`${publishedCount} 公開中`}
       />

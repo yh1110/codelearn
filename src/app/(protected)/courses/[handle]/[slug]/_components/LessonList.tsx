@@ -2,7 +2,7 @@ import { BookText } from "lucide-react";
 import Link from "next/link";
 import { type CourseLinkable, lessonUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
-import type { CourseDetailWithAuthor } from "@/repositories";
+import type { CourseDetail } from "@/repositories";
 
 function statusClass(state: "ac" | "try" | "none") {
   if (state === "ac") return "cm-status-ac";
@@ -12,7 +12,7 @@ function statusClass(state: "ac" | "try" | "none") {
 
 type LessonListProps = {
   course: CourseLinkable;
-  lessons: CourseDetailWithAuthor["lessons"];
+  lessons: CourseDetail["lessons"];
   completedIds: Set<string>;
 };
 

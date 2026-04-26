@@ -2,16 +2,18 @@ import { Star } from "lucide-react";
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
 import { getUserBookmarks } from "@/services/bookmarkService";
+import { BookmarkCollectionList } from "./_components/BookmarkCollectionList";
 import { BookmarkCourseList } from "./_components/BookmarkCourseList";
 import { BookmarkLessonList } from "./_components/BookmarkLessonList";
+import { BookmarkProblemList } from "./_components/BookmarkProblemList";
 
 export const dynamic = "force-dynamic";
 
 export default async function BookmarksPage() {
   const session = await requireAuth();
-  const { courses, lessons } = await getUserBookmarks(session.userId);
+  const { courses, lessons, collections, problems } = await getUserBookmarks(session.userId);
 
-  const total = courses.length + lessons.length;
+  const total = courses.length + lessons.length + collections.length + problems.length;
 
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "1280px" }}>
@@ -21,7 +23,7 @@ export default async function BookmarksPage() {
           <h1 className="m-0 font-bold text-[26px] tracking-tight">お気に入り</h1>
         </div>
         <p className="mt-1.5 text-[13px]" style={{ color: "var(--text-3)" }}>
-          コースとレッスンの Star を集めた一覧
+          コース・レッスン・コレクション・問題の Star を集めた一覧
         </p>
       </header>
 
@@ -40,13 +42,15 @@ export default async function BookmarksPage() {
             className="ml-1 text-[13px]"
             style={{ color: "var(--accent-solid)" }}
           >
-            コースを探す →
+            コレクションを探す →
           </Link>
         </div>
       ) : null}
 
       <BookmarkCourseList courses={courses} />
       <BookmarkLessonList lessons={lessons} />
+      <BookmarkCollectionList collections={collections} />
+      <BookmarkProblemList problems={problems} />
     </div>
   );
 }

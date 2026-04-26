@@ -1,25 +1,25 @@
 import Link from "next/link";
-import type { CourseWithLessonIds } from "@/repositories";
+import type { CollectionWithProblemIds } from "@/repositories";
 
-type MyCoursesSectionProps = {
-  myCourses: CourseWithLessonIds[];
+type MyCollectionsSectionProps = {
+  myCollections: CollectionWithProblemIds[];
 };
 
-export function MyCoursesSection({ myCourses }: MyCoursesSectionProps) {
+export function MyCollectionsSection({ myCollections }: MyCollectionsSectionProps) {
   return (
     <section>
       <div className="mb-4 flex items-baseline justify-between">
         <div>
-          <h2 className="m-0 font-semibold text-[18px] tracking-tight">作成したコース</h2>
+          <h2 className="m-0 font-semibold text-[18px] tracking-tight">作成したコレクション</h2>
           <span className="text-xs" style={{ color: "var(--text-3)" }}>
-            あなたが作者として公開 / 管理しているコース
+            あなたが作者として公開 / 管理しているコレクション
           </span>
         </div>
         <Link href="/dashboard" className="text-[13px]" style={{ color: "var(--accent-solid)" }}>
           管理する →
         </Link>
       </div>
-      {myCourses.length === 0 ? (
+      {myCollections.length === 0 ? (
         <div
           className="rounded-[14px] px-6 py-10 text-center text-[13px]"
           style={{
@@ -28,13 +28,13 @@ export function MyCoursesSection({ myCourses }: MyCoursesSectionProps) {
             color: "var(--text-3)",
           }}
         >
-          まだコースを作成していません。
+          まだコレクションを作成していません。
           <Link
-            href="/dashboard/courses/new"
+            href="/dashboard/collections/new"
             className="ml-1 text-[13px]"
             style={{ color: "var(--accent-solid)" }}
           >
-            最初のコースを作る
+            最初のコレクションを作る
           </Link>
         </div>
       ) : (
@@ -42,10 +42,10 @@ export function MyCoursesSection({ myCourses }: MyCoursesSectionProps) {
           className="grid gap-4"
           style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}
         >
-          {myCourses.map((c) => (
+          {myCollections.map((c) => (
             <li key={c.id}>
               <Link
-                href={`/dashboard/courses/${c.id}`}
+                href={`/dashboard/collections/${c.id}`}
                 className="flex h-full flex-col gap-2 rounded-[14px] p-4 transition hover:-translate-y-0.5 hover:border-[color:var(--line-3)]"
                 style={{
                   background: "var(--bg-1)",
@@ -81,7 +81,7 @@ export function MyCoursesSection({ myCourses }: MyCoursesSectionProps) {
                   }}
                 >
                   <span>
-                    レッスン <b style={{ color: "var(--text-1)" }}>{c.lessons.length}</b>
+                    問題 <b style={{ color: "var(--text-1)" }}>{c.problems.length}</b>
                   </span>
                 </div>
               </Link>

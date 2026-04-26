@@ -1,22 +1,26 @@
 import { requireAuth } from "@/lib/auth";
+import { getPublishedCollectionsByNewest } from "@/services/collectionService";
+import { getPublishedCourses } from "@/services/courseService";
 import {
-  getCommunityPublishedCoursesByNewest,
-  getOfficialPublishedCourses,
-} from "@/services/courseService";
-import { getCompletedLessonIdsByUser } from "@/services/progressService";
+  getCompletedLessonIdsByUser,
+  getCompletedProblemIdsByUser,
+} from "@/services/progressService";
+import { CollectionCard } from "./_components/CollectionCard";
 import { CourseCard } from "./_components/CourseCard";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const session = await requireAuth();
-  const [official, community, completed] = await Promise.all([
-    getOfficialPublishedCourses(),
-    getCommunityPublishedCoursesByNewest(),
+  const [official, community, completedLessons, completedProblems] = await Promise.all([
+    getPublishedCourses(),
+    getPublishedCollectionsByNewest(),
     getCompletedLessonIdsByUser(session.userId),
+    getCompletedProblemIdsByUser(session.userId),
   ]);
 
-  const completedIds = new Set(completed);
+  const completedLessonIds = new Set(completedLessons);
+  const completedProblemIds = new Set(completedProblems);
 
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "1280px" }}>
@@ -29,43 +33,43 @@ export default async function Home() {
         </div>
 
         {official.length === 0 ? (
-          <EmptyCourses variant="official" />
+          <EmptyState variant="official" />
         ) : (
-          <CourseGrid>
+          <CardGrid>
             {official.map((c, idx) => (
               <li key={c.id}>
-                <CourseCard course={c} index={idx} completedIds={completedIds} />
+                <CourseCard course={c} index={idx} completedIds={completedLessonIds} />
               </li>
             ))}
-          </CourseGrid>
+          </CardGrid>
         )}
       </section>
 
       <section className="mt-12">
         <div className="mb-4">
-          <h2 className="m-0 font-semibold text-[22px] tracking-tight">コミュニティコース</h2>
+          <h2 className="m-0 font-semibold text-[22px] tracking-tight">コミュニティコレクション</h2>
           <span className="text-xs" style={{ color: "var(--text-3)" }}>
-            ユーザーが投稿した新着コース
+            ユーザーが投稿した新着の問題集
           </span>
         </div>
 
         {community.length === 0 ? (
-          <EmptyCourses variant="community" />
+          <EmptyState variant="community" />
         ) : (
-          <CourseGrid>
+          <CardGrid>
             {community.map((c, idx) => (
               <li key={c.id}>
-                <CourseCard course={c} index={idx} completedIds={completedIds} />
+                <CollectionCard collection={c} index={idx} completedIds={completedProblemIds} />
               </li>
             ))}
-          </CourseGrid>
+          </CardGrid>
         )}
       </section>
     </div>
   );
 }
 
-function CourseGrid({ children }: { children: React.ReactNode }) {
+function CardGrid({ children }: { children: React.ReactNode }) {
   return (
     <ul
       className="grid gap-4"
@@ -76,7 +80,7 @@ function CourseGrid({ children }: { children: React.ReactNode }) {
   );
 }
 
-function EmptyCourses({ variant }: { variant: "official" | "community" }) {
+function EmptyState({ variant }: { variant: "official" | "community" }) {
   if (variant === "official") {
     return (
       <div
@@ -107,7 +111,7 @@ function EmptyCourses({ variant }: { variant: "official" | "community" }) {
         color: "var(--text-3)",
       }}
     >
-      コミュニティコースはまだ投稿されていません。
+      コミュニティコレクションはまだ投稿されていません。
     </div>
   );
 }

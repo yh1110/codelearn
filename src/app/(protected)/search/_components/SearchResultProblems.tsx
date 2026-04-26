@@ -1,22 +1,23 @@
 import { FileText } from "lucide-react";
 import Link from "next/link";
-import { lessonUrl } from "@/lib/routes";
-import type { LessonSearchHit } from "@/repositories";
+import { problemUrl } from "@/lib/routes";
+import type { ProblemSearchHit } from "@/repositories";
+import { authorLabel } from "./authorLabel";
 import { SectionHeading } from "./SectionHeading";
 
-type SearchResultLessonsProps = {
-  lessons: LessonSearchHit[];
+type SearchResultProblemsProps = {
+  problems: ProblemSearchHit[];
 };
 
-export function SearchResultLessons({ lessons }: SearchResultLessonsProps) {
-  if (lessons.length === 0) return null;
+export function SearchResultProblems({ problems }: SearchResultProblemsProps) {
+  if (problems.length === 0) return null;
   return (
-    <section aria-labelledby="search-lessons-heading">
-      <SectionHeading id="search-lessons-heading" label="公式レッスン" count={lessons.length} />
+    <section aria-labelledby="search-problems-heading">
+      <SectionHeading id="search-problems-heading" label="問題" count={problems.length} />
       <ul className="mt-3 flex flex-col gap-2">
-        {lessons.map((lesson) => (
-          <li key={lesson.id}>
-            <LessonResultRow lesson={lesson} />
+        {problems.map((problem) => (
+          <li key={problem.id}>
+            <ProblemResultRow problem={problem} />
           </li>
         ))}
       </ul>
@@ -24,10 +25,10 @@ export function SearchResultLessons({ lessons }: SearchResultLessonsProps) {
   );
 }
 
-function LessonResultRow({ lesson }: { lesson: LessonSearchHit }) {
+function ProblemResultRow({ problem }: { problem: ProblemSearchHit }) {
   return (
     <Link
-      href={lessonUrl(lesson.course, lesson.slug)}
+      href={problemUrl(problem.collection, problem.slug)}
       className="group flex items-start gap-3 rounded-[14px] px-4 py-3 transition hover:border-[color:var(--line-3)]"
       style={{ background: "var(--bg-1)", border: "1px solid var(--line-1)" }}
     >
@@ -43,14 +44,14 @@ function LessonResultRow({ lesson }: { lesson: LessonSearchHit }) {
           className="truncate font-semibold text-[14px] tracking-tight"
           style={{ color: "var(--text-1)" }}
         >
-          {lesson.title}
+          {problem.title}
         </span>
         <span className="flex items-center gap-3 text-[11.5px]" style={{ color: "var(--text-4)" }}>
           <span className="truncate" style={{ color: "var(--text-3)" }}>
-            {lesson.course.title}
+            {problem.collection.title}
           </span>
           <span aria-hidden="true">・</span>
-          <span>公式</span>
+          <span>{authorLabel(problem.collection.author.name)}</span>
         </span>
       </span>
     </Link>

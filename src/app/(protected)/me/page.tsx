@@ -1,9 +1,13 @@
 import { requireAuth } from "@/lib/auth";
 import { getUserBookmarks } from "@/services/bookmarkService";
-import { getCoursesWithLessons, getMyCourses } from "@/services/courseService";
-import { getCompletedLessonIdsByUser } from "@/services/progressService";
+import { getMyCollections } from "@/services/collectionService";
+import { getPublishedCourses } from "@/services/courseService";
+import {
+  getCompletedLessonIdsByUser,
+  getCompletedProblemIdsByUser,
+} from "@/services/progressService";
 import { Heatmap } from "./_components/Heatmap";
-import { MyCoursesSection } from "./_components/MyCoursesSection";
+import { MyCollectionsSection } from "./_components/MyCollectionsSection";
 import { ProfileHero } from "./_components/ProfileHero";
 import { StatsGrid } from "./_components/StatsGrid";
 
@@ -15,18 +19,24 @@ export default async function MePage() {
   const handle = session.profile.handle;
   const initial = (displayName.trim()[0] ?? "?").toUpperCase();
 
-  const [myCourses, allCourses, completedIds, bookmarks] = await Promise.all([
-    getMyCourses(session.userId),
-    getCoursesWithLessons(),
-    getCompletedLessonIdsByUser(session.userId),
-    getUserBookmarks(session.userId),
-  ]);
+  const [myCollections, allCourses, completedLessons, completedProblems, bookmarks] =
+    await Promise.all([
+      getMyCollections(session.userId),
+      getPublishedCourses(),
+      getCompletedLessonIdsByUser(session.userId),
+      getCompletedProblemIdsByUser(session.userId),
+      getUserBookmarks(session.userId),
+    ]);
 
-  const acCount = completedIds.length;
+  const acCount = completedLessons.length + completedProblems.length;
   const totalLessonsAvailable = allCourses.reduce((acc, c) => acc + c.lessons.length, 0);
-  const createdCount = myCourses.length;
-  const publishedCount = myCourses.filter((c) => c.isPublished).length;
-  const bookmarkCount = bookmarks.courses.length + bookmarks.lessons.length;
+  const createdCount = myCollections.length;
+  const publishedCount = myCollections.filter((c) => c.isPublished).length;
+  const bookmarkCount =
+    bookmarks.courses.length +
+    bookmarks.lessons.length +
+    bookmarks.collections.length +
+    bookmarks.problems.length;
 
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "1280px" }}>
@@ -55,7 +65,7 @@ export default async function MePage() {
         <Heatmap />
       </section>
 
-      <MyCoursesSection myCourses={myCourses} />
+      <MyCollectionsSection myCollections={myCollections} />
     </div>
   );
 }

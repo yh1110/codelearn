@@ -1,22 +1,22 @@
 import Link from "next/link";
 import { coverFor, glyphFor } from "@/app/(protected)/_components/courseCover";
-import { courseUrl } from "@/lib/routes";
+import { collectionUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
-import type { CourseBookmarkWithCourse } from "@/repositories";
+import type { CollectionBookmarkWithCollection } from "@/repositories";
 
-type BookmarkCourseListProps = {
-  courses: CourseBookmarkWithCourse[];
+type BookmarkCollectionListProps = {
+  collections: CollectionBookmarkWithCollection[];
 };
 
-export function BookmarkCourseList({ courses }: BookmarkCourseListProps) {
-  if (courses.length === 0) return null;
+export function BookmarkCollectionList({ collections }: BookmarkCollectionListProps) {
+  if (collections.length === 0) return null;
   return (
     <section className="mb-9">
       <div className="mb-4 flex items-baseline justify-between">
         <div>
-          <h2 className="m-0 font-semibold text-[18px] tracking-tight">公式コース</h2>
+          <h2 className="m-0 font-semibold text-[18px] tracking-tight">コレクション</h2>
           <span className="text-xs" style={{ color: "var(--text-3)" }}>
-            {courses.length} 件
+            {collections.length} 件
           </span>
         </div>
       </div>
@@ -24,9 +24,9 @@ export function BookmarkCourseList({ courses }: BookmarkCourseListProps) {
         className="grid gap-4"
         style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}
       >
-        {courses.map((b, idx) => (
+        {collections.map((b, idx) => (
           <li key={b.id}>
-            <CourseBookmarkCard course={b.course} index={idx} />
+            <CollectionBookmarkCard collection={b.collection} index={idx} />
           </li>
         ))}
       </ul>
@@ -34,16 +34,16 @@ export function BookmarkCourseList({ courses }: BookmarkCourseListProps) {
   );
 }
 
-function CourseBookmarkCard({
-  course,
+function CollectionBookmarkCard({
+  collection,
   index,
 }: {
-  course: CourseBookmarkWithCourse["course"];
+  collection: CollectionBookmarkWithCollection["collection"];
   index: number;
 }) {
   return (
     <Link
-      href={courseUrl(course)}
+      href={collectionUrl(collection)}
       className={cn(
         "group flex h-full flex-col overflow-hidden rounded-[14px] transition",
         "hover:-translate-y-0.5 hover:border-[color:var(--line-3)]",
@@ -52,7 +52,7 @@ function CourseBookmarkCard({
     >
       <div className={cn("cm-cover", coverFor(index))}>
         <span className="cm-cover-glyph" aria-hidden="true">
-          {glyphFor(course.title)}
+          {glyphFor(collection.title)}
         </span>
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
@@ -60,11 +60,11 @@ function CourseBookmarkCard({
           className="m-0 line-clamp-2 font-semibold text-[15px] leading-snug tracking-tight"
           style={{ color: "var(--text-1)" }}
         >
-          {course.title}
+          {collection.title}
         </h3>
-        {course.description ? (
+        {collection.description ? (
           <p className="m-0 line-clamp-2 text-[12.5px]" style={{ color: "var(--text-3)" }}>
-            {course.description}
+            {collection.description}
           </p>
         ) : null}
       </div>

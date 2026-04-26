@@ -1,24 +1,35 @@
 import { BookText } from "lucide-react";
 import Link from "next/link";
-import { courseUrl } from "@/lib/routes";
+import { collectionUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
-import type { CourseWithLessons } from "@/repositories";
+import type { CollectionAuthor, CollectionWithProblemsAndAuthor } from "@/repositories";
 import { coverFor, glyphFor } from "./courseCover";
 
+function authorLabel(author: CollectionAuthor): string {
+  // Fall back to "Anonymous" when the author didn't set a display name —
+  // do NOT derive a handle from any auth identifier (privacy).
+  return author.name ?? "Anonymous";
+}
+
+function authorInitial(author: CollectionAuthor): string {
+  const label = authorLabel(author);
+  return (Array.from(label.trim())[0] ?? "?").toUpperCase();
+}
+
 type Props = {
-  course: CourseWithLessons;
+  collection: CollectionWithProblemsAndAuthor;
   index: number;
   completedIds: Set<string>;
 };
 
-export function CourseCard({ course, index, completedIds }: Props) {
-  const total = course.lessons.length;
-  const done = course.lessons.filter((l) => completedIds.has(l.id)).length;
+export function CollectionCard({ collection, index, completedIds }: Props) {
+  const total = collection.problems.length;
+  const done = collection.problems.filter((p) => completedIds.has(p.id)).length;
   const pct = total === 0 ? 0 : Math.round((done / total) * 100);
 
   return (
     <Link
-      href={courseUrl(course)}
+      href={collectionUrl(collection)}
       className={cn(
         "group flex h-full flex-col overflow-hidden rounded-[14px] transition",
         "hover:-translate-y-0.5 hover:border-[color:var(--line-3)]",
@@ -30,7 +41,7 @@ export function CourseCard({ course, index, completedIds }: Props) {
           <span className="cm-diff-badge cm-diff-1">初級</span>
         </div>
         <span className="cm-cover-glyph" aria-hidden="true">
-          {glyphFor(course.title)}
+          {glyphFor(collection.title)}
         </span>
       </div>
       <div className="flex flex-1 flex-col gap-2.5 p-4">
@@ -38,27 +49,26 @@ export function CourseCard({ course, index, completedIds }: Props) {
           className="m-0 line-clamp-2 font-semibold text-[15px] leading-snug tracking-tight"
           style={{ color: "var(--text-1)" }}
         >
-          {course.title}
+          {collection.title}
         </h3>
 
         <div className="flex items-center gap-1.5">
           <span className="cm-avatar cm-avatar-sm" aria-hidden="true">
-            ✓
+            {authorInitial(collection.author)}
           </span>
           <span className="text-[12px]" style={{ color: "var(--text-3)" }}>
-            公式
+            {authorLabel(collection.author)}
           </span>
         </div>
 
-        {course.description ? (
+        {collection.description ? (
           <p className="m-0 line-clamp-2 text-[12.5px]" style={{ color: "var(--text-3)" }}>
-            {course.description}
+            {collection.description}
           </p>
         ) : null}
 
         <div className="flex flex-wrap gap-1.5">
-          <span className="cm-chip">#TypeScript</span>
-          <span className="cm-chip">#基礎</span>
+          <span className="cm-chip">#コミュニティ</span>
         </div>
 
         <div className="mt-auto flex items-center gap-3">
@@ -75,7 +85,7 @@ export function CourseCard({ course, index, completedIds }: Props) {
         >
           <span className="inline-flex items-center gap-1">
             <BookText className="size-3" aria-hidden="true" />
-            <b style={{ color: "var(--text-1)" }}>{total}</b> レッスン
+            <b style={{ color: "var(--text-1)" }}>{total}</b> 問題
           </span>
         </div>
       </div>
