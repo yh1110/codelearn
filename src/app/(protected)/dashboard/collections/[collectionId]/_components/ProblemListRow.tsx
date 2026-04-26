@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
-import { togglePublishLessonAction } from "@/actions/dashboard/lesson";
+import { togglePublishProblemAction } from "@/actions/dashboard/problem";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { DeleteLessonButton } from "../../../_components/DeleteLessonButton";
+import { DeleteProblemButton } from "../../../_components/DeleteProblemButton";
 import { PublishBadge } from "../../../_components/PublishBadge";
 
 type Props = {
-  courseId: string;
-  lesson: {
+  collectionId: string;
+  problem: {
     id: string;
     slug: string;
     title: string;
@@ -19,14 +19,14 @@ type Props = {
   };
 };
 
-export function LessonListRow({ courseId, lesson }: Props) {
+export function ProblemListRow({ collectionId, problem }: Props) {
   const [isPending, startTransition] = useTransition();
 
   const onToggle = () => {
     startTransition(async () => {
-      await togglePublishLessonAction({
-        id: lesson.id,
-        isPublished: !lesson.isPublished,
+      await togglePublishProblemAction({
+        id: problem.id,
+        isPublished: !problem.isPublished,
       });
     });
   };
@@ -35,19 +35,19 @@ export function LessonListRow({ courseId, lesson }: Props) {
     <Card size="sm">
       <CardContent className="flex items-center gap-4">
         <span className="w-10 shrink-0 font-mono text-xs text-muted-foreground">
-          #{lesson.order}
+          #{problem.order}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <Link
-              href={`/dashboard/courses/${courseId}/lessons/${lesson.id}`}
+              href={`/dashboard/collections/${collectionId}/problems/${problem.id}`}
               className="truncate font-medium hover:underline"
             >
-              {lesson.title}
+              {problem.title}
             </Link>
-            <PublishBadge isPublished={lesson.isPublished} />
+            <PublishBadge isPublished={problem.isPublished} />
           </div>
-          <p className="mt-1 truncate text-xs text-muted-foreground">/{lesson.slug}</p>
+          <p className="mt-1 truncate text-xs text-muted-foreground">/{problem.slug}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Button
@@ -55,11 +55,11 @@ export function LessonListRow({ courseId, lesson }: Props) {
             onClick={onToggle}
             size="sm"
             type="button"
-            variant={lesson.isPublished ? "outline" : "default"}
+            variant={problem.isPublished ? "outline" : "default"}
           >
-            {lesson.isPublished ? "非公開にする" : "公開する"}
+            {problem.isPublished ? "非公開にする" : "公開する"}
           </Button>
-          <DeleteLessonButton lessonId={lesson.id} title={lesson.title} />
+          <DeleteProblemButton problemId={problem.id} title={problem.title} />
         </div>
       </CardContent>
     </Card>

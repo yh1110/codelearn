@@ -3,29 +3,29 @@
 import { FileText, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useTransition } from "react";
-import { togglePublishCourseAction } from "@/actions/dashboard/course";
-import { DeleteCourseButton } from "./DeleteCourseButton";
+import { togglePublishCollectionAction } from "@/actions/dashboard/collection";
+import { DeleteCollectionButton } from "./DeleteCollectionButton";
 import { PublishBadge } from "./PublishBadge";
 
 type Props = {
-  course: {
+  collection: {
     id: string;
     slug: string;
     title: string;
     description: string;
     isPublished: boolean;
-    lessonCount: number;
+    problemCount: number;
   };
 };
 
-export function CourseListItem({ course }: Props) {
+export function CollectionListItem({ collection }: Props) {
   const [isPending, startTransition] = useTransition();
 
   const onToggle = () => {
     startTransition(async () => {
-      await togglePublishCourseAction({
-        id: course.id,
-        isPublished: !course.isPublished,
+      await togglePublishCollectionAction({
+        id: collection.id,
+        isPublished: !collection.isPublished,
       });
     });
   };
@@ -41,28 +41,28 @@ export function CourseListItem({ course }: Props) {
     >
       <div className="flex items-start justify-between gap-2">
         <Link
-          href={`/dashboard/courses/${course.id}`}
+          href={`/dashboard/collections/${collection.id}`}
           className="min-w-0 flex-1 font-semibold text-[15px] leading-snug tracking-tight hover:underline"
           style={{ color: "var(--text-1)" }}
         >
-          {course.title}
+          {collection.title}
         </Link>
-        <PublishBadge isPublished={course.isPublished} />
+        <PublishBadge isPublished={collection.isPublished} />
       </div>
 
-      {course.description ? (
+      {collection.description ? (
         <p className="m-0 line-clamp-2 text-[12.5px]" style={{ color: "var(--text-3)" }}>
-          {course.description}
+          {collection.description}
         </p>
       ) : null}
 
       <div className="flex items-center gap-3 text-[12px]" style={{ color: "var(--text-3)" }}>
         <span className="inline-flex items-center gap-1.5">
           <FileText className="size-3" aria-hidden="true" />
-          <b style={{ color: "var(--text-1)" }}>{course.lessonCount}</b> レッスン
+          <b style={{ color: "var(--text-1)" }}>{collection.problemCount}</b> 問題
         </span>
         <span className="font-mono text-[11px]" style={{ color: "var(--text-4)" }}>
-          /{course.slug}
+          /{collection.slug}
         </span>
       </div>
 
@@ -71,7 +71,7 @@ export function CourseListItem({ course }: Props) {
         style={{ borderColor: "var(--line-1)" }}
       >
         <Link
-          href={`/dashboard/courses/${course.id}`}
+          href={`/dashboard/collections/${collection.id}`}
           className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1 text-[12px] transition"
           style={{
             background: "var(--bg-2)",
@@ -87,16 +87,16 @@ export function CourseListItem({ course }: Props) {
           disabled={isPending}
           className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1 text-[12px] transition disabled:opacity-50"
           style={{
-            background: course.isPublished ? "var(--bg-2)" : "var(--accent-solid)",
-            border: `1px solid ${course.isPublished ? "var(--line-2)" : "transparent"}`,
-            color: course.isPublished ? "var(--text-1)" : "var(--accent-ink)",
-            fontWeight: course.isPublished ? 500 : 600,
+            background: collection.isPublished ? "var(--bg-2)" : "var(--accent-solid)",
+            border: `1px solid ${collection.isPublished ? "var(--line-2)" : "transparent"}`,
+            color: collection.isPublished ? "var(--text-1)" : "var(--accent-ink)",
+            fontWeight: collection.isPublished ? 500 : 600,
           }}
         >
-          {course.isPublished ? "非公開にする" : "公開する"}
+          {collection.isPublished ? "非公開にする" : "公開する"}
         </button>
         <div className="ml-auto">
-          <DeleteCourseButton courseId={course.id} title={course.title} />
+          <DeleteCollectionButton collectionId={collection.id} title={collection.title} />
         </div>
       </div>
     </article>

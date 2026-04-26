@@ -2,7 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
-import { deleteCourseAction } from "@/actions/dashboard/course";
+import { deleteProblemAction } from "@/actions/dashboard/problem";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,17 +17,17 @@ import {
 import { Button } from "@/components/ui/button";
 
 type Props = {
-  courseId: string;
+  problemId: string;
   title: string;
 };
 
-export function DeleteCourseButton({ courseId, title }: Props) {
+export function DeleteProblemButton({ problemId, title }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const onConfirm = () => {
     startTransition(async () => {
-      await deleteCourseAction({ id: courseId });
+      await deleteProblemAction({ id: problemId });
       setOpen(false);
     });
   };
@@ -37,7 +37,7 @@ export function DeleteCourseButton({ courseId, title }: Props) {
       <AlertDialogTrigger
         render={
           <Button
-            aria-label={`コース「${title}」を削除`}
+            aria-label={`問題「${title}」を削除`}
             size="icon-sm"
             type="button"
             variant="destructive"
@@ -48,9 +48,9 @@ export function DeleteCourseButton({ courseId, title }: Props) {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>コースを削除しますか？</AlertDialogTitle>
+          <AlertDialogTitle>問題を削除しますか？</AlertDialogTitle>
           <AlertDialogDescription>
-            コース「{title}」と紐づくレッスンがすべて削除されます。この操作は取り消せません。
+            問題「{title}」が削除されます。この操作は取り消せません。
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

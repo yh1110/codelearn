@@ -2,7 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
-import { deleteLessonAction } from "@/actions/dashboard/lesson";
+import { deleteCollectionAction } from "@/actions/dashboard/collection";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,17 +17,17 @@ import {
 import { Button } from "@/components/ui/button";
 
 type Props = {
-  lessonId: string;
+  collectionId: string;
   title: string;
 };
 
-export function DeleteLessonButton({ lessonId, title }: Props) {
+export function DeleteCollectionButton({ collectionId, title }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const onConfirm = () => {
     startTransition(async () => {
-      await deleteLessonAction({ id: lessonId });
+      await deleteCollectionAction({ id: collectionId });
       setOpen(false);
     });
   };
@@ -37,7 +37,7 @@ export function DeleteLessonButton({ lessonId, title }: Props) {
       <AlertDialogTrigger
         render={
           <Button
-            aria-label={`レッスン「${title}」を削除`}
+            aria-label={`コレクション「${title}」を削除`}
             size="icon-sm"
             type="button"
             variant="destructive"
@@ -48,9 +48,9 @@ export function DeleteLessonButton({ lessonId, title }: Props) {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>レッスンを削除しますか？</AlertDialogTitle>
+          <AlertDialogTitle>コレクションを削除しますか？</AlertDialogTitle>
           <AlertDialogDescription>
-            レッスン「{title}」が削除されます。この操作は取り消せません。
+            コレクション「{title}」と紐づく問題がすべて削除されます。この操作は取り消せません。
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

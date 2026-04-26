@@ -3,61 +3,38 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { z } from "zod";
-import { createLessonAction, updateLessonAction } from "@/actions/dashboard/lesson";
-import { MonacoCodeInput } from "@/components/editor/MonacoCodeInput";
+import { createCollectionAction, updateCollectionAction } from "@/actions/dashboard/collection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CreateLessonSchema, UpdateLessonSchema } from "@/types/lesson";
+import { CreateCollectionSchema, UpdateCollectionSchema } from "@/types/collection";
 
 type Values = {
   slug: string;
   title: string;
-  contentMd: string;
-  starterCode: string;
-  expectedOutput: string;
+  description: string;
   order: string;
 };
 
 type Props =
   | {
       mode: "create";
-      courseId: string;
       initial?: Partial<Values>;
     }
   | {
       mode: "edit";
-      courseId: string;
-      lessonId: string;
+      collectionId: string;
       initial: Values;
     };
 
-type FieldKey = "slug" | "title" | "contentMd" | "starterCode" | "expectedOutput" | "order";
+const emptyValues: Values = { slug: "", title: "", description: "", order: "0" };
 
-const FIELD_KEYS: readonly FieldKey[] = [
-  "slug",
-  "title",
-  "contentMd",
-  "starterCode",
-  "expectedOutput",
-  "order",
-] as const;
-
-const emptyValues: Values = {
-  slug: "",
-  title: "",
-  contentMd: "",
-  starterCode: "",
-  expectedOutput: "",
-  order: "0",
-};
-
-export function LessonForm(props: Props) {
+export function CollectionForm(props: Props) {
   const router = useRouter();
   const initial = props.mode === "create" ? { ...emptyValues, ...props.initial } : props.initial;
   const [values, setValues] = useState<Values>(initial);
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>({});
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof Values, string>>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -72,19 +49,17 @@ export function LessonForm(props: Props) {
 
     const orderNum = Number(values.order);
 
-    const payload = {
+    const baseInput = {
       slug: values.slug,
       title: values.title,
-      contentMd: values.contentMd,
-      starterCode: values.starterCode,
-      expectedOutput: values.expectedOutput.length === 0 ? null : values.expectedOutput,
+      description: values.description,
       order: Number.isFinite(orderNum) ? orderNum : Number.NaN,
     };
 
     const parsed =
       props.mode === "create"
-        ? CreateLessonSchema.safeParse({ courseId: props.courseId, ...payload })
-        : UpdateLessonSchema.safeParse({ id: props.lessonId, ...payload });
+        ? CreateCollectionSchema.safeParse(baseInput)
+        : UpdateCollectionSchema.safeParse({ id: props.collectionId, ...baseInput });
 
     if (!parsed.success) {
       setFieldErrors(mapZodError(parsed.error));
@@ -94,8 +69,8 @@ export function LessonForm(props: Props) {
     startTransition(async () => {
       const result =
         props.mode === "create"
-          ? await createLessonAction(parsed.data as z.infer<typeof CreateLessonSchema>)
-          : await updateLessonAction(parsed.data as z.infer<typeof UpdateLessonSchema>);
+          ? await createCollectionAction(parsed.data as z.infer<typeof CreateCollectionSchema>)
+          : await updateCollectionAction(parsed.data as z.infer<typeof UpdateCollectionSchema>);
 
       if (result?.serverError) {
         setFormError(result.serverError);
@@ -105,7 +80,7 @@ export function LessonForm(props: Props) {
         setFieldErrors(extractFieldErrors(result.validationErrors));
         return;
       }
-      router.push(`/dashboard/courses/${props.courseId}`);
+      router.push("/dashboard");
       router.refresh();
     });
   };
@@ -113,9 +88,9 @@ export function LessonForm(props: Props) {
   return (
     <form className="space-y-5" onSubmit={onSubmit}>
       <div className="space-y-1.5">
-        <Label htmlFor="lesson-title">タイトル</Label>
+        <Label htmlFor="collection-title">タイトル</Label>
         <Input
-          id="lesson-title"
+          id="collection-title"
           value={values.title}
           onChange={(e) => setValue("title", e.target.value)}
           aria-invalid={!!fieldErrors.title}
@@ -128,14 +103,17 @@ export function LessonForm(props: Props) {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="lesson-slug">slug</Label>
+        <Label htmlFor="collection-slug">slug</Label>
         <Input
-          id="lesson-slug"
+          id="collection-slug"
           value={values.slug}
           onChange={(e) => setValue("slug", e.target.value)}
-          placeholder="hello-world"
+          placeholder="my-collection"
           aria-invalid={!!fieldErrors.slug}
         />
+        <p className="text-xs text-muted-foreground">
+          URL に使われます。小文字英数字とハイフンのみ。あなたのプロフィール内で重複不可。
+        </p>
         {fieldErrors.slug && (
           <p className="text-xs text-destructive" role="alert">
             {fieldErrors.slug}
@@ -144,57 +122,25 @@ export function LessonForm(props: Props) {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="lesson-content">説明 (Markdown)</Label>
+        <Label htmlFor="collection-description">説明</Label>
         <Textarea
-          id="lesson-content"
-          rows={10}
-          value={values.contentMd}
-          onChange={(e) => setValue("contentMd", e.target.value)}
-          aria-invalid={!!fieldErrors.contentMd}
+          id="collection-description"
+          rows={4}
+          value={values.description}
+          onChange={(e) => setValue("description", e.target.value)}
+          aria-invalid={!!fieldErrors.description}
         />
-        {fieldErrors.contentMd && (
+        {fieldErrors.description && (
           <p className="text-xs text-destructive" role="alert">
-            {fieldErrors.contentMd}
+            {fieldErrors.description}
           </p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <Label id="lesson-starter-label">スターターコード</Label>
-        <MonacoCodeInput
-          ariaLabelledBy="lesson-starter-label"
-          height="300px"
-          id="lesson-starter"
-          value={values.starterCode}
-          onChange={(v) => setValue("starterCode", v)}
-        />
-        {fieldErrors.starterCode && (
-          <p className="text-xs text-destructive" role="alert">
-            {fieldErrors.starterCode}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="lesson-expected">期待出力 (空欄なら判定なし)</Label>
-        <Textarea
-          id="lesson-expected"
-          rows={3}
-          value={values.expectedOutput}
-          onChange={(e) => setValue("expectedOutput", e.target.value)}
-          aria-invalid={!!fieldErrors.expectedOutput}
-        />
-        {fieldErrors.expectedOutput && (
-          <p className="text-xs text-destructive" role="alert">
-            {fieldErrors.expectedOutput}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="lesson-order">表示順</Label>
+        <Label htmlFor="collection-order">表示順</Label>
         <Input
-          id="lesson-order"
+          id="collection-order"
           type="number"
           min={0}
           value={values.order}
@@ -226,24 +172,32 @@ export function LessonForm(props: Props) {
   );
 }
 
-function mapZodError(error: z.ZodError): Partial<Record<FieldKey, string>> {
-  const result: Partial<Record<FieldKey, string>> = {};
+function mapZodError(error: z.ZodError): Partial<Record<keyof Values, string>> {
+  const result: Partial<Record<keyof Values, string>> = {};
   for (const issue of error.issues) {
     const key = issue.path[0];
-    if (typeof key === "string" && (FIELD_KEYS as readonly string[]).includes(key)) {
-      const k = key as FieldKey;
-      if (!result[k]) result[k] = issue.message;
+    if (
+      typeof key === "string" &&
+      (key === "slug" || key === "title" || key === "description" || key === "order")
+    ) {
+      if (!result[key]) result[key] = issue.message;
     }
   }
   return result;
 }
 
-function extractFieldErrors(errors: unknown): Partial<Record<FieldKey, string>> {
-  const result: Partial<Record<FieldKey, string>> = {};
+type FormattedErrors = {
+  _errors?: string[];
+  [key: string]: { _errors?: string[] } | string[] | undefined;
+};
+
+function extractFieldErrors(errors: unknown): Partial<Record<keyof Values, string>> {
+  const result: Partial<Record<keyof Values, string>> = {};
   if (typeof errors !== "object" || errors === null) return result;
-  const ve = errors as Record<string, { _errors?: string[] } | undefined>;
-  for (const key of FIELD_KEYS) {
-    const msg = ve[key]?._errors?.[0];
+  const ve = errors as FormattedErrors;
+  for (const key of ["slug", "title", "description", "order"] as const) {
+    const entry = ve[key] as { _errors?: string[] } | undefined;
+    const msg = entry?._errors?.[0];
     if (msg) result[key] = msg;
   }
   return result;
