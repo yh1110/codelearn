@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function MePage() {
   const session = await requireAuth();
-  const displayName = session.profile.name ?? session.email ?? session.userId;
+  const displayName = session.profile.name ?? session.profile.handle;
   const handle = session.profile.handle;
   const initial = (displayName.trim()[0] ?? "?").toUpperCase();
 
@@ -33,7 +33,6 @@ export default async function MePage() {
       <ProfileHero
         displayName={displayName}
         handle={handle}
-        email={session.email}
         initial={initial}
         bio={session.profile.bio}
       />

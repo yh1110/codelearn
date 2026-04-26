@@ -9,7 +9,6 @@ export type Role = "ADMIN" | "USER";
 
 export type Session = {
   userId: string;
-  email: string | null;
   role: Role;
   profile: Profile;
 };
@@ -46,7 +45,6 @@ export async function requireAuth(): Promise<Session> {
       // userId is the cuid Profile.id, not the auth UUID. Downstream code
       // (services, repositories, FKs) only ever sees the application id.
       userId: profile.id,
-      email: user.email ?? null,
       role: "USER",
       profile,
     };

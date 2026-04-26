@@ -4,12 +4,11 @@ import Link from "next/link";
 type ProfileHeroProps = {
   displayName: string;
   handle: string;
-  email: string | null;
   initial: string;
   bio: string | null;
 };
 
-export function ProfileHero({ displayName, handle, email, initial, bio }: ProfileHeroProps) {
+export function ProfileHero({ displayName, handle, initial, bio }: ProfileHeroProps) {
   return (
     <section
       className="relative mb-7 overflow-hidden rounded-[20px] p-7"
@@ -45,11 +44,6 @@ export function ProfileHero({ displayName, handle, email, initial, bio }: Profil
           <div className="mt-1 font-mono text-[13px]" style={{ color: "var(--text-3)" }}>
             @{handle}
           </div>
-          {email ? (
-            <div className="mt-1 text-[12.5px]" style={{ color: "var(--text-3)" }}>
-              {email}
-            </div>
-          ) : null}
           {bio ? (
             <p
               className="mt-2 max-w-prose whitespace-pre-wrap text-[13px] leading-relaxed"
