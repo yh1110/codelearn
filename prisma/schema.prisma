@@ -6,53 +6,47 @@ datasource db {
   provider = "postgresql"
 }
 
+// Official curriculum container. Authoring/admin gating is not yet enforced
+// in code (see TODO in courseService write paths) — when admin UI lands the
+// write surface will be wrapped with `requireRole('ADMIN')`.
 model Course {
-  id           String             @id @default(cuid())
-  slug         String
-  title        String
-  description  String
-  order        Int
-  authorId     String?            @map("author_id")
-  author       Profile?           @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  isPublished  Boolean            @default(false) @map("is_published")
-  providerType CourseProviderType @default(COMMUNITY) @map("provider_type")
-  lessons      Lesson[]
-  bookmarks    Bookmark[]
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt @map("updated_at")
+  id          String           @id @default(cuid())
+  slug        String           @unique
+  title       String
+  description String
+  order       Int
+  isPublished Boolean          @default(false) @map("is_published")
+  lessons     Lesson[]
+  bookmarks   BookmarkCourse[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt      @map("updated_at")
 
-  @@unique([authorId, slug])
-  @@index([authorId])
   @@index([isPublished])
-  @@index([providerType])
-}
-
-enum CourseProviderType {
-  OFFICIAL
-  COMMUNITY
 }
 
 model Lesson {
-  id             String     @id @default(cuid())
+  id             String           @id @default(cuid())
   courseId       String
-  course         Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
   slug           String
   title          String
   contentMd      String
   starterCode    String
   expectedOutput String?
   order          Int
-  isPublished    Boolean    @default(false) @map("is_published")
-  progress       Progress[]
-  bookmarks      Bookmark[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt @map("updated_at")
+  isPublished    Boolean          @default(false) @map("is_published")
+  progress       LessonProgress[]
+  bookmarks      BookmarkLesson[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt    @map("updated_at")
 
   @@unique([courseId, slug])
   @@index([courseId, isPublished])
 }
 
-model Progress {
+// Renamed from `Progress` to make the official-vs-UGC split explicit; the
+// table name (`progress`) is preserved to avoid an SQL rename.
+model LessonProgress {
   id          String   @id @default(cuid())
   userId      String   @map("user_id")
   lessonId    String
@@ -65,18 +59,22 @@ model Progress {
 }
 
 model Profile {
-  id            String         @id @default(cuid())
-  authUserId    String         @unique @db.Uuid @map("auth_user_id")
-  handle        String         @unique
-  name          String?
-  bio           String?
-  avatarUrl     String?        @map("avatar_url")
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt      @map("updated_at")
-  progress      Progress[]
-  courses       Course[]
-  notifications Notification[]
-  bookmarks     Bookmark[]
+  id                  String               @id @default(cuid())
+  authUserId          String               @unique @db.Uuid @map("auth_user_id")
+  handle              String               @unique
+  name                String?
+  bio                 String?
+  avatarUrl           String?              @map("avatar_url")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt      @map("updated_at")
+  notifications       Notification[]
+  collections         Collection[]
+  lessonProgress      LessonProgress[]
+  problemProgress     ProblemProgress[]
+  bookmarkCourses     BookmarkCourse[]
+  bookmarkLessons     BookmarkLesson[]
+  bookmarkCollections BookmarkCollection[]
+  bookmarkProblems    BookmarkProblem[]
 
   @@index([authUserId])
   @@map("profiles")
@@ -105,20 +103,117 @@ model Notification {
   @@map("notifications")
 }
 
-model Bookmark {
+// UGC counterpart of Course. Owned by a single Profile; cascade-deleted when
+// the profile goes away.
+model Collection {
+  id          String               @id @default(cuid())
+  authorId    String               @map("author_id")
+  author      Profile              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  slug        String
+  title       String
+  description String
+  order       Int                  @default(0)
+  isPublished Boolean              @default(false) @map("is_published")
+  problems    Problem[]
+  bookmarks   BookmarkCollection[]
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt      @map("updated_at")
+
+  @@unique([authorId, slug])
+  @@index([authorId])
+  @@index([isPublished])
+  @@map("collections")
+}
+
+// UGC counterpart of Lesson.
+model Problem {
+  id             String            @id @default(cuid())
+  collectionId   String            @map("collection_id")
+  collection     Collection        @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  slug           String
+  title          String
+  contentMd      String            @map("content_md")
+  starterCode    String            @map("starter_code")
+  expectedOutput String?           @map("expected_output")
+  order          Int               @default(0)
+  isPublished    Boolean           @default(false) @map("is_published")
+  progress       ProblemProgress[]
+  bookmarks      BookmarkProblem[]
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt      @map("updated_at")
+
+  @@unique([collectionId, slug])
+  @@index([collectionId, isPublished])
+  @@map("problems")
+}
+
+// Bookmarks are split per target table instead of a polymorphic FK because
+// codelearn does not need a unified "all bookmarks" list; per-table FKs give
+// us proper cascade and unique constraints with no application-level XOR
+// check. (See issue #71 discussion.)
+model BookmarkCourse {
   id        String   @id @default(cuid())
   userId    String   @map("user_id")
+  courseId  String   @map("course_id")
   user      Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId  String?  @map("course_id")
-  course    Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lessonId  String?  @map("lesson_id")
-  lesson    Lesson?  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now()) @map("created_at")
 
-  @@unique([userId, courseId], name: "user_course_bookmark")
-  @@unique([userId, lessonId], name: "user_lesson_bookmark")
+  @@unique([userId, courseId])
   @@index([userId])
-  @@map("bookmarks")
+  @@map("bookmark_courses")
+}
+
+model BookmarkLesson {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  lessonId  String   @map("lesson_id")
+  user      Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@map("bookmark_lessons")
+}
+
+model BookmarkCollection {
+  id           String     @id @default(cuid())
+  userId       String     @map("user_id")
+  collectionId String     @map("collection_id")
+  user         Profile    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@unique([userId, collectionId])
+  @@index([userId])
+  @@map("bookmark_collections")
+}
+
+model BookmarkProblem {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  problemId String   @map("problem_id")
+  user      Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, problemId])
+  @@index([userId])
+  @@map("bookmark_problems")
+}
+
+model ProblemProgress {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  problemId   String   @map("problem_id")
+  user        Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem     Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  completedAt DateTime @default(now()) @map("completed_at")
+
+  @@unique([userId, problemId])
+  @@index([userId])
+  @@map("problem_progress")
 }
 
 model HandleReservation {
