@@ -1,6 +1,8 @@
 import { Star } from "lucide-react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
+import { profileRepository } from "@/repositories";
 import { getUserBookmarks } from "@/services/bookmarkService";
 import { BookmarkCollectionList } from "./_components/BookmarkCollectionList";
 import { BookmarkCourseList } from "./_components/BookmarkCourseList";
@@ -9,10 +11,23 @@ import { BookmarkProblemList } from "./_components/BookmarkProblemList";
 
 export const dynamic = "force-dynamic";
 
-export default async function BookmarksPage() {
+export default async function BookmarksPage({ params }: PageProps<"/[handle]/bookmarks">) {
   const session = await requireAuth();
-  const { courses, lessons, collections, problems } = await getUserBookmarks(session.userId);
+  const { handle } = await params;
 
+  const viewedProfile = await profileRepository.findByHandle(handle);
+  if (!viewedProfile) notFound();
+
+  // Bookmarks are private until a public/private toggle ships. Reject any
+  // viewer that is not the owner with a 404 (rather than 403) so the existence
+  // of the list does not leak — Layer A guard from the issue #72 spec.
+  const isOwner = session.profile.id === viewedProfile.id;
+  if (!isOwner) notFound();
+
+  // The bookmark service queries WHERE userId = viewedProfile.id, so even if
+  // a future change loosened the isOwner gate above, the data fetch itself
+  // would still be scoped to one user — Layer C defence in depth.
+  const { courses, lessons, collections, problems } = await getUserBookmarks(viewedProfile.id);
   const total = courses.length + lessons.length + collections.length + problems.length;
 
   return (
@@ -37,11 +52,7 @@ export default async function BookmarksPage() {
           }}
         >
           まだお気に入りはありません。
-          <Link
-            href="/explore"
-            className="ml-1 text-[13px]"
-            style={{ color: "var(--accent-solid)" }}
-          >
+          <Link href="/" className="ml-1 text-[13px]" style={{ color: "var(--accent-solid)" }}>
             コレクションを探す →
           </Link>
         </div>
