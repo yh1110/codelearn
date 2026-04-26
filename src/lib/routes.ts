@@ -2,18 +2,16 @@
  * Centralised URL builders for Course / Lesson / Collection / Problem
  * learner pages.
  *
- * Official content uses a flat `/courses/{slug}` namespace (no handle is
- * needed because Course is now official-only — issue #71).
+ * Official content keeps the `/courses/{official}/{slug}` URL shape from
+ * before the schema split (issue #71); the `[handle]` segment in
+ * `src/app/(protected)/courses/[handle]/[slug]` is preserved and pinned to
+ * the reserved `OFFICIAL_HANDLE` literal so that flattening to `/courses/{slug}`
+ * can ship together with the broader URL redesign in issue #72.
  *
  * UGC content uses handle-scoped `/collections/{handle}/{slug}` URLs. The
- * actual route handlers under that path land in issue #72; the helpers here
- * build the URLs so that link sites (`MyCollections`, search results, etc.)
- * can be wired up without churning when the routes ship.
- *
- * `OFFICIAL_HANDLE` continues to live here as the reserved profile handle —
- * the schema split removed `Course.authorId` but `RESERVED_HANDLES` in
- * `types/profile.ts` still needs the literal so the value can't be claimed
- * as a user handle.
+ * actual route handlers under that path also land in issue #72; the helpers
+ * here build the URLs so that link sites (`MyCollections`, search results,
+ * etc.) can be wired up without churning when the routes ship.
  */
 
 export const OFFICIAL_HANDLE = "official";
@@ -30,7 +28,7 @@ export type CollectionLinkable = {
 };
 
 export function courseUrl(course: CourseLinkable): string {
-  return `/courses/${course.slug}`;
+  return `/courses/${OFFICIAL_HANDLE}/${course.slug}`;
 }
 
 export function lessonUrl(course: CourseLinkable, lessonSlug: string): string {
