@@ -2,8 +2,8 @@ import { Star } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
-import { profileRepository } from "@/repositories";
 import { getUserBookmarks } from "@/services/bookmarkService";
+import { getProfileByHandle } from "@/services/profileService";
 import { BookmarkCollectionList } from "./_components/BookmarkCollectionList";
 import { BookmarkCourseList } from "./_components/BookmarkCourseList";
 import { BookmarkLessonList } from "./_components/BookmarkLessonList";
@@ -15,7 +15,7 @@ export default async function BookmarksPage({ params }: PageProps<"/[handle]/boo
   const session = await requireAuth();
   const { handle } = await params;
 
-  const viewedProfile = await profileRepository.findByHandle(handle);
+  const viewedProfile = await getProfileByHandle(handle);
   if (!viewedProfile) notFound();
 
   // Bookmarks are private until a public/private toggle ships. Reject any

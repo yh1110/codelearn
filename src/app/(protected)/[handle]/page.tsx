@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { bookmarksUrl } from "@/lib/routes";
-import { profileRepository } from "@/repositories";
 import { getUserBookmarks } from "@/services/bookmarkService";
 import { getMyCollections } from "@/services/collectionService";
 import { getPublishedCourses } from "@/services/courseService";
+import { getProfileByHandle } from "@/services/profileService";
 import {
   getCompletedLessonIdsByUser,
   getCompletedProblemIdsByUser,
@@ -21,7 +21,7 @@ export default async function ProfilePage({ params }: PageProps<"/[handle]">) {
   const session = await requireAuth();
   const { handle } = await params;
 
-  const viewedProfile = await profileRepository.findByHandle(handle);
+  const viewedProfile = await getProfileByHandle(handle);
   if (!viewedProfile) notFound();
 
   const isOwner = session.profile.id === viewedProfile.id;
