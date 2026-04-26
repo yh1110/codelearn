@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
-import { isOfficialHandle } from "@/lib/routes";
 import { isCourseBookmarked } from "@/services/bookmarkService";
 import { getCourseBySlug } from "@/services/courseService";
 import { getCompletedLessonIdsByUser } from "@/services/progressService";
@@ -12,18 +11,13 @@ import { LessonList } from "./_components/LessonList";
 
 export const dynamic = "force-dynamic";
 
-export default async function CoursePage({ params }: PageProps<"/courses/[handle]/[slug]">) {
+export default async function CoursePage({ params }: PageProps<"/learn/[course]">) {
   const session = await requireAuth();
-  const { handle, slug } = await params;
-
-  // After issue #71 the Course model is official-only and lives at
-  // /courses/{official}/{slug}. UGC routes (/collections/{handle}/{slug})
-  // land in issue #72; until then any non-official handle resolves to 404.
-  if (!isOfficialHandle(handle)) notFound();
+  const { course: courseSlug } = await params;
 
   let course: Awaited<ReturnType<typeof getCourseBySlug>>;
   try {
-    course = await getCourseBySlug(slug);
+    course = await getCourseBySlug(courseSlug);
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
     throw error;
@@ -44,11 +38,11 @@ export default async function CoursePage({ params }: PageProps<"/courses/[handle
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "1280px" }}>
       <Link
-        href="/"
+        href="/learn"
         className="mb-4 inline-flex items-center gap-1 text-[13px]"
         style={{ color: "var(--text-3)" }}
       >
-        <ArrowLeft className="size-3.5" aria-hidden="true" /> コース一覧
+        <ArrowLeft className="size-3.5" aria-hidden="true" /> 公式コース一覧
       </Link>
 
       <CourseHero course={course} done={done} total={total} pct={pct} bookmarked={bookmarked} />

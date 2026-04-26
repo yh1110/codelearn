@@ -17,7 +17,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { BookmarkButton } from "@/components/bookmarks/BookmarkButton";
 import { KEY_NUDGE_PX, MAX_LEFT_RATIO, MIN_LEFT_PX } from "@/config/editor";
-import { type CourseLinkable, courseUrl, lessonUrl } from "@/lib/routes";
+import { type CourseLinkable, learnUrl, lessonUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useLessonRunner } from "../_hooks/useLessonRunner";
 
@@ -153,7 +153,7 @@ export default function LessonClient({
       >
         <div className="flex items-center gap-3">
           <Link
-            href={courseUrl(course)}
+            href={learnUrl(course)}
             className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[12px]"
             style={{ color: "var(--text-2)" }}
           >
