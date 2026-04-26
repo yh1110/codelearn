@@ -1,10 +1,12 @@
 import { z } from "zod";
+import { isReservedCollectionSlug } from "@/lib/reservedNames";
 
 export const CollectionSlugSchema = z
   .string()
   .min(1)
   .max(64)
-  .regex(/^[a-z0-9][a-z0-9-]*$/, "slug は小文字英数字とハイフンのみ");
+  .regex(/^[a-z0-9][a-z0-9-]*$/, "slug は小文字英数字とハイフンのみ")
+  .refine((v) => !isReservedCollectionSlug(v), "この slug は予約されています");
 
 export const CreateCollectionSchema = z.object({
   slug: CollectionSlugSchema,

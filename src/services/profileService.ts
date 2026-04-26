@@ -3,7 +3,7 @@ import "server-only";
 import type { Profile } from "@prisma/client";
 import { handleUnknownError, ValidationError } from "@/lib/errors";
 import { logError, logInfo } from "@/lib/logging";
-import { OFFICIAL_HANDLE } from "@/lib/routes";
+import { isReservedHandle } from "@/lib/reservedNames";
 import {
   type HandleReservationRepository,
   handleReservationRepository,
@@ -24,8 +24,8 @@ export type UpdateProfileDeps = {
  * When the handle changes we (1) reject reserved namespaces, (2) reject
  * handles parked by an earlier rename whose cooldown has not elapsed,
  * (3) write the update (the unique constraint catches concurrent races),
- * and (4) park the previous handle so old `/courses/{handle}/...` URLs
- * do not silently start resolving to a different person.
+ * and (4) park the previous handle so old `/{handle}/...` URLs do not
+ * silently start resolving to a different person.
  */
 export async function updateProfile(
   userId: string,
@@ -74,7 +74,7 @@ async function assertHandleAvailable(
   reservationRepo: HandleReservationRepository,
   now: Date,
 ): Promise<void> {
-  if (handle === OFFICIAL_HANDLE) {
+  if (isReservedHandle(handle)) {
     throw new ValidationError("このハンドルは使用できません");
   }
   const reservation = await reservationRepo.findByHandle(handle);
