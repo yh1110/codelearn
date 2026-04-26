@@ -1,57 +1,57 @@
 import "server-only";
 
-import type { Course, Lesson } from "@prisma/client";
+import type { Collection, Problem } from "@prisma/client";
 import { ForbiddenError, handleUnknownError, NotFoundError } from "@/lib/errors";
 import { logError, logWarn } from "@/lib/logging";
 import {
-  type CourseRepository,
-  courseRepository,
-  type LessonRepository,
-  lessonRepository,
+  type CollectionRepository,
+  collectionRepository,
+  type ProblemRepository,
+  problemRepository,
 } from "@/repositories";
 
-export async function ensureAuthorOwnsCourse(
-  courseId: string,
+export async function ensureAuthorOwnsCollection(
+  collectionId: string,
   authorId: string,
-  repository: CourseRepository = courseRepository,
-): Promise<Course> {
+  repository: CollectionRepository = collectionRepository,
+): Promise<Collection> {
   try {
-    const course = await repository.findById(courseId);
-    if (!course) {
-      logWarn("authorGuard.ensureAuthorOwnsCourse.notFound", { courseId });
-      throw new NotFoundError(`Course not found: ${courseId}`);
+    const collection = await repository.findById(collectionId);
+    if (!collection) {
+      logWarn("authorGuard.ensureAuthorOwnsCollection.notFound", { collectionId });
+      throw new NotFoundError(`Collection not found: ${collectionId}`);
     }
-    if (course.authorId !== authorId) {
-      logWarn("authorGuard.ensureAuthorOwnsCourse.forbidden", { courseId, authorId });
-      throw new ForbiddenError(`Not the author of course: ${courseId}`);
+    if (collection.authorId !== authorId) {
+      logWarn("authorGuard.ensureAuthorOwnsCollection.forbidden", { collectionId, authorId });
+      throw new ForbiddenError(`Not the author of collection: ${collectionId}`);
     }
-    return course;
+    return collection;
   } catch (error) {
     if (error instanceof NotFoundError || error instanceof ForbiddenError) throw error;
-    logError("authorGuard.ensureAuthorOwnsCourse.error", { courseId, authorId }, error);
+    logError("authorGuard.ensureAuthorOwnsCollection.error", { collectionId, authorId }, error);
     throw handleUnknownError(error);
   }
 }
 
-export async function ensureAuthorOwnsLesson(
-  lessonId: string,
+export async function ensureAuthorOwnsProblem(
+  problemId: string,
   authorId: string,
-  lessonRepo: LessonRepository = lessonRepository,
-  courseRepo: CourseRepository = courseRepository,
-): Promise<Lesson> {
+  problemRepo: ProblemRepository = problemRepository,
+  collectionRepo: CollectionRepository = collectionRepository,
+): Promise<Problem> {
   try {
-    const lesson = await lessonRepo.findById(lessonId);
-    if (!lesson) {
-      logWarn("authorGuard.ensureAuthorOwnsLesson.notFound", { lessonId });
-      throw new NotFoundError(`Lesson not found: ${lessonId}`);
+    const problem = await problemRepo.findById(problemId);
+    if (!problem) {
+      logWarn("authorGuard.ensureAuthorOwnsProblem.notFound", { problemId });
+      throw new NotFoundError(`Problem not found: ${problemId}`);
     }
-    // ensureAuthorOwnsCourse already logs its own NotFoundError / ForbiddenError
-    // warnings; rethrow as-is here to avoid duplicate log lines.
-    await ensureAuthorOwnsCourse(lesson.courseId, authorId, courseRepo);
-    return lesson;
+    // ensureAuthorOwnsCollection already logs its own NotFoundError /
+    // ForbiddenError warnings; rethrow as-is here to avoid duplicate log lines.
+    await ensureAuthorOwnsCollection(problem.collectionId, authorId, collectionRepo);
+    return problem;
   } catch (error) {
     if (error instanceof NotFoundError || error instanceof ForbiddenError) throw error;
-    logError("authorGuard.ensureAuthorOwnsLesson.error", { lessonId, authorId }, error);
+    logError("authorGuard.ensureAuthorOwnsProblem.error", { problemId, authorId }, error);
     throw handleUnknownError(error);
   }
 }
