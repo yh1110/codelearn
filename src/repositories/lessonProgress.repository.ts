@@ -1,11 +1,14 @@
 import "server-only";
 
-import type { Progress } from "@prisma/client";
+import type { LessonProgress } from "@prisma/client";
 import { BaseRepository } from "./base.repository";
 
-export class ProgressRepository extends BaseRepository {
-  async upsertCompleted(userId: string, lessonId: string): Promise<Progress> {
-    return this.client.progress.upsert({
+// Renamed from ProgressRepository (issue #71). The underlying table is still
+// `progress` — only the Prisma model name changed to make official-vs-UGC
+// progress tracking discoverable.
+export class LessonProgressRepository extends BaseRepository {
+  async upsertCompleted(userId: string, lessonId: string): Promise<LessonProgress> {
+    return this.client.lessonProgress.upsert({
       where: { userId_lessonId: { userId, lessonId } },
       update: {},
       create: { userId, lessonId },
@@ -13,7 +16,7 @@ export class ProgressRepository extends BaseRepository {
   }
 
   async findCompletedLessonIdsByUser(userId: string, lessonIds?: string[]): Promise<string[]> {
-    const rows = await this.client.progress.findMany({
+    const rows = await this.client.lessonProgress.findMany({
       where: {
         userId,
         ...(lessonIds ? { lessonId: { in: lessonIds } } : {}),
@@ -24,7 +27,7 @@ export class ProgressRepository extends BaseRepository {
   }
 
   async isLessonCompleted(userId: string, lessonId: string): Promise<boolean> {
-    const row = await this.client.progress.findUnique({
+    const row = await this.client.lessonProgress.findUnique({
       where: { userId_lessonId: { userId, lessonId } },
       select: { id: true },
     });
