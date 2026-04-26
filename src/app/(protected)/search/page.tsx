@@ -2,10 +2,8 @@ import { MIN_QUERY_LENGTH } from "@/config/search";
 import { requireAuth } from "@/lib/auth";
 import { search } from "@/services/searchService";
 import { EmptyState } from "./_components/EmptyState";
-import { SearchResultCollections } from "./_components/SearchResultCollections";
-import { SearchResultCourses } from "./_components/SearchResultCourses";
-import { SearchResultLessons } from "./_components/SearchResultLessons";
-import { SearchResultProblems } from "./_components/SearchResultProblems";
+import { SearchSectionCommunity } from "./_components/SearchSectionCommunity";
+import { SearchSectionOfficial } from "./_components/SearchSectionOfficial";
 
 export const dynamic = "force-dynamic";
 
@@ -42,11 +40,9 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
           description="別のキーワードで検索してみてください。"
         />
       ) : (
-        <div className="flex flex-col gap-10">
-          <SearchResultCourses courses={courses} />
-          <SearchResultLessons lessons={lessons} />
-          <SearchResultCollections collections={collections} />
-          <SearchResultProblems problems={problems} />
+        <div className="flex flex-col gap-12">
+          <SearchSectionOfficial courses={courses} lessons={lessons} />
+          <SearchSectionCommunity collections={collections} problems={problems} />
         </div>
       )}
     </div>
