@@ -1,34 +1,34 @@
 import { z } from "zod";
 
-export const CourseSlugSchema = z
+export const CollectionSlugSchema = z
   .string()
   .min(1)
   .max(64)
   .regex(/^[a-z0-9][a-z0-9-]*$/, "slug は小文字英数字とハイフンのみ");
 
-export const CreateCourseSchema = z.object({
-  slug: CourseSlugSchema,
+export const CreateCollectionSchema = z.object({
+  slug: CollectionSlugSchema,
   title: z.string().min(1).max(120),
   description: z.string().min(1).max(2000),
   order: z.number().int().min(0).max(10_000),
 });
 
-export const UpdateCourseSchema = z.object({
+export const UpdateCollectionSchema = z.object({
   id: z.cuid(),
-  slug: CourseSlugSchema,
+  slug: CollectionSlugSchema,
   title: z.string().min(1).max(120),
   description: z.string().min(1).max(2000),
   order: z.number().int().min(0).max(10_000),
 });
 
-export const DeleteCourseSchema = z.object({
+export const DeleteCollectionSchema = z.object({
   id: z.cuid(),
 });
 
-export const TogglePublishCourseSchema = z.object({
+export const TogglePublishCollectionSchema = z.object({
   id: z.cuid(),
   isPublished: z.boolean(),
 });
 
-export type CreateCourseInput = z.infer<typeof CreateCourseSchema>;
-export type UpdateCourseInput = z.infer<typeof UpdateCourseSchema>;
+export type CreateCollectionInput = z.infer<typeof CreateCollectionSchema>;
+export type UpdateCollectionInput = z.infer<typeof UpdateCollectionSchema>;
