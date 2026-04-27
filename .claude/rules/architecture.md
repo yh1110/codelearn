@@ -4,7 +4,7 @@ alwaysApply: true
 
 # Architecture
 
-codelearn のアーキテクチャ方針。**新規コードは必ずこの構造に従う**。既存コード（`src/app/page.tsx` 等が Prisma を直叩きしている箇所）は別 issue で段階的に寄せる。踏襲しない。
+codelearn のアーキテクチャ方針。**新規コードは必ずこの構造に従う**。MVP までに過去の Prisma 直叩き等は概ね修正済み。新規ディレクトリ / モデルを増やすときは下記の規約 (5 層 / 11 ディレクトリ / URL 名前空間 3 区分 / 認可 4 層) に必ず従う。
 
 ---
 
@@ -86,66 +86,132 @@ src/
 
 複数ページで共有するようになった時点で、`src/components/` / `src/hooks/` へ昇格させる。グローバル hooks / UI プリミティブを `_hooks` / `_components` に置かない。
 
-### 2.2 現状（2026-04 時点）
+### 2.2 現状（MVP 時点）
 
 ```
 src/
 ├── app/
-│   ├── (protected)/
-│   │   ├── page.tsx                              # learner view (isPublished=true コースのみ)
-│   │   ├── courses/[slug]/page.tsx
-│   │   ├── courses/[slug]/lessons/[lessonSlug]/
+│   ├── (protected)/                              # 要 Supabase Auth ルートグループ
+│   │   ├── page.tsx                              # / : UGC explore (Collection 一覧)
+│   │   ├── learn/                                # 公式 (Course / Lesson)
+│   │   │   ├── page.tsx                          #   /learn 公式コース一覧
+│   │   │   └── [course]/[lesson]/page.tsx        #   /learn/{course}/{lesson}
+│   │   ├── search/page.tsx
+│   │   ├── notifications/page.tsx
+│   │   ├── settings/profile/page.tsx             # プロフィール編集 (旧 /me/edit を移行)
+│   │   ├── dashboard/                            # UGC クリエイターダッシュボード
+│   │   │   ├── page.tsx                          #   自分の Collection 一覧 (author 認可)
+│   │   │   └── collections/{new,[collectionId]}/ #   Collection / Problem 作成・編集
+│   │   ├── [handle]/                             # ★ /{handle} : プロフィール (自他統一、isOwner で UI 分岐)
 │   │   │   ├── page.tsx
-│   │   │   ├── _components/LessonClient.tsx       # ページ固有 (private folder)
-│   │   │   └── _hooks/useLessonRunner.ts          # ページ固有 (private folder)
-│   │   └── dashboard/                             # UGC クリエイターダッシュボード
-│   │       ├── layout.tsx
-│   │       ├── page.tsx                          # 自分のコース一覧 (author 認可)
-│   │       ├── _components/                      # dashboard 共有 UI
-│   │       └── courses/
-│   │           ├── new/                          # Course 作成フォーム
-│   │           └── [courseId]/                   # Course 編集 + レッスン一覧
-│   │               └── lessons/{new,[lessonId]}/ # Lesson 作成 / 編集
+│   │   │   ├── bookmarks/page.tsx                #   /{handle}/bookmarks (旧 /bookmarks を移行)
+│   │   │   └── [collection]/[problem]/page.tsx   #   /{handle}/{collection}/{problem} (UGC)
+│   │   └── _components/                          # (protected) 共有 UI (TopBar 等)
+│   ├── auth/{callback,signout}/route.ts
+│   ├── login/page.tsx
+│   ├── api/                                      # GET 専用 (mutation は Server Action)
 │   ├── layout.tsx
-│   ├── globals.css
-│   └── api/
-│       ├── run/route.ts                          # POST、Server Action 移行予定
-│       └── progress/route.ts                     # POST、Server Action 移行予定
-└── lib/
-    └── prisma.ts
+│   ├── error.tsx / global-error.tsx / not-found.tsx
+│   └── globals.css
+├── actions/                                      # Server Actions (next-safe-action)
+├── components/
+│   ├── ui/                                       # shadcn/ui プリミティブ
+│   ├── content/{ContentCard,OfficialBadge}.tsx   # 公式 / UGC 両方の card 土台
+│   ├── profile/HandleLink.tsx                    # @handle 表示なしのプロフィールリンク
+│   └── problem-solver/{ProblemSolver,useProblemRunner}.tsx
+│                                                 # 公式 Lesson と UGC Problem の共通エディタ
+├── config/                                       # 集約定数 (constants / heatmap / search 等)
+├── hooks/                                        # SWR + zustand 合成 hook (将来用)
+├── lib/                                          # prisma / supabase / auth / errors / logging / routes / safe-action / fetcher / reservedNames
+├── repositories/                                 # BaseRepository 継承、唯一の Prisma 直触り層
+├── services/                                     # 純関数 + authorGuard (ensureAuthorOwns*)
+├── stores/                                       # (zustand 未導入)
+├── types/
+└── utils/
 prisma/
-├── schema.prisma
+├── schema.prisma                                 # Profile / Course / Lesson / Collection / Problem / Bookmark{Course,Lesson,Collection,Problem} / Progress / ProblemProgress / Notification / HandleReservation
 ├── migrations/                                   # prisma migrate dev で生成、commit 対象
-└── seed.ts
-docker-compose.yml
+├── seed.ts
+└── sql/001_profiles_trigger.sql                  # auth.users → profiles trigger (migrate 管理外、手動 apply)
+prisma.config.ts
+docker-compose.yml                                # shadow DB のみ
 ```
 
-現状は Pages / Components が Prisma を直叩きしている暫定状態。新規コードは踏襲せず、必ず Repository → Service → (Action or Server Component) の経路を通す。
+ルーティングの考え方は **§ 3.2 URL 名前空間** を参照。
 
 ---
 
-## 3. 認証方針
+## 3. 認証 / 認可方針
 
-- **認証チェックは `middleware.ts`（Next.js Middleware）で行う**。
-- 保護したいルートは **`src/app/(protected)/` ルートグループ** に配置する（URL には `(protected)` が出ない）。
-- 認証 BaaS は **Supabase**。Supabase session を middleware で検証し、未認証なら `/login` 等にリダイレクト。
-- **Server Action / Route Handler 内でも二重チェック** する:
-  - `requireAuth()` — ログイン必須のアクション
-  - `requireRole('ADMIN' | 'USER' | ...)` — ロール必須のアクション
-  - いずれも `src/lib/auth.ts`（`import 'server-only';`）に実装する。
-- middleware 認証だけに頼らない理由: Route Handler が middleware の matcher から漏れる設計ミスが起きやすく、Server Action も `Next-Action` header 付き POST で発火しうるため。Defense in depth。
+### 3.1 認証 (Authentication)
 
-### 3.1 UGC の authorId ベース認可
+- **保護したいルートは `src/app/(protected)/` ルートグループ** に配置する（URL には `(protected)` が出ない）。
+- 認証 BaaS は **Supabase**。Next.js 16 の `proxy` (旧 middleware、`src/proxy.ts`) で Supabase session の cookie refresh を行う。
+- **Server Component / Server Action / Route Handler の各レベルで `requireAuth()` を呼んで再検証** する。proxy だけに頼らない (Defense in depth)。
+- `src/lib/auth.ts` に `requireAuth()` / `requireRole(role)` を実装。`requireAuth()` は `Session { userId, role, profile }` を返す (※ `email` は持たない、auth.users 側にしか置かない)。
+- `Profile.id` は **cuid** で auth UUID とは別 (auth UUID は `Profile.authUserId` 列で保持)。アプリ層の FK / API レスポンス / Session.userId は全て cuid を使う。
+- `Session.userId === Session.profile.id` (cuid)。
 
-UGC (ユーザー投稿コース・レッスン) の所有権チェックは、`src/services/authorGuard.ts` の 2 つの関数で **必ず** 行う。Service 層で直接 `authorId` を比較しない。
+### 3.2 URL 名前空間 (3 区分)
+
+URL は意味的に 3 つの名前空間に分かれる:
+
+| 名前空間 | 例 | 性質 |
+|---|---|---|
+| **app 全体共有** | `/`, `/learn`, `/learn/{course}`, `/learn/{course}/{lesson}`, `/search` | 誰でも見えるコンテンツ。Authentication は必要 (`(protected)` 内)、ただし権限は public |
+| **ユーザー所有** | `/{handle}`, `/{handle}/bookmarks`, `/{handle}/{collection}`, `/{handle}/{collection}/{problem}` | そのユーザーに紐づく resource。Server Component で `isOwner = session.profile.id === viewedProfile.id` を計算し、UI を分岐 |
+| **session 私有** | `/settings`, `/settings/profile`, `/notifications`, `/dashboard` | sign-in 中のユーザー固有、handle 不問。常に `requireAuth()` の session を直接使う |
+
+`/{handle}` は最低優先の動的ルートなので、静的ルート (`/me`, `/learn`, `/settings`, `/dashboard`, etc.) より後にマッチする。Profile.handle 取得時の **予約語 blocklist** を `src/lib/reservedNames.ts` に集中させ、Profile.handle と Collection.slug 両方のバリデーションで参照する。
+
+### 3.3 認可の 4 層 (★ 重要)
+
+UI 上の `isOwner` 切替は **見た目だけ**。実際のリソース変更は Server Action / Service / Route Handler 各レベルで **独立に** 認可チェックする。クライアントを一切信用しない:
+
+#### Layer A: Page Server Component
+- `requireAuth()` で session 取得
+- viewedProfile / target resource 取得後、`isOwner` 計算
+- UI に `isOwner` 渡して overlay
+- **データ閲覧の認可** が必要なら `if (!isOwner) notFound()` (or 公開・非公開判定)
+
+#### Layer B: Server Action (`actionClient` middleware)
+全 mutation は `src/lib/safe-action.ts` の `actionClient` を経由する。middleware で:
+
+1. `requireAuth()` を呼んで `ctx.session` を提供 (UnauthorizedError は `error.tsx` に伝播)
+2. `inputSchema` (zod) で input を `parse` (ValidationError)
+3. action 関数で `(parsedInput, ctx)` を受ける
+
+action 関数本体で:
+
+4. **所有権チェック**: target resource の owner と `ctx.session.profile.id` を比較
+   - Profile 編集系 → `ctx.session.profile.id` だけで動かし、target id を入力に含めない (経路自体を遮断)
+   - Collection / Problem 編集 → `ensureAuthorOwnsCollection()` / `ensureAuthorOwnsProblem()` (`src/services/authorGuard.ts`)
+   - Bookmark 削除 → `bookmark.userId === ctx.session.profile.id`
+
+5. service に委譲
+
+#### Layer C: Service
+- action から渡された `userId` (= `ctx.session.profile.id`) を必ずクエリの WHERE 条件に含める
+  - 例: `bookmarkRepository.delete({ id, userId })` のように **id だけで削除しない**
+- `ensureAuthorOwns*` 系 guard 関数で `ForbiddenError` を集中的に throw
+
+#### Layer D: GET Route Handler (`src/app/api/`)
+- `try` 内で `requireAuth()` → `isKnownAppError` で 401/403 にレスポンス変換
+- write は Route Handler では受けない (Server Action に集中)
+
+UI 経路を bypass されてもサーバ側で 403 になることを **mutation 実装時に必ず確認** (curl / fetch で他人の resource を狙った request → 403 を期待)。
+
+### 3.4 UGC 所有権ガード
+
+`src/services/authorGuard.ts` の guard 関数で **必ず** チェックする。Service 内で直接 `authorId` 比較しない:
 
 ```typescript
 // 違ったら ForbiddenError / NotFoundError を throw
-ensureAuthorOwnsCourse(courseId: string, authorId: string): Promise<Course>;
-ensureAuthorOwnsLesson(lessonId: string, authorId: string): Promise<Lesson>;
+ensureAuthorOwnsCollection(collectionId: string, authorId: string): Promise<Collection>;
+ensureAuthorOwnsProblem(problemId: string, authorId: string): Promise<Problem>;
 ```
 
-`ensureAuthorOwnsLesson` は経由する Course の authorId も検証する。認可 error は safe-action middleware を通じて `error.tsx` に伝播する。Service 側は `ctx.userId` を service 関数に渡すだけ（Action で分岐しない）。
+`ensureAuthorOwnsProblem` は経由する Collection の authorId も検証する。Service / Action 側は `ctx.session.profile.id` を渡すだけ。
 
 ---
 
