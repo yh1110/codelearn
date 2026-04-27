@@ -38,13 +38,13 @@ export default async function CollectionPage({ params }: PageProps<"/[handle]/[c
         className="mb-4 inline-flex items-center gap-1 text-[13px]"
         style={{ color: "var(--text-3)" }}
       >
-        <ArrowLeft className="size-3.5" aria-hidden="true" /> @{handle}
+        <ArrowLeft className="size-3.5" aria-hidden="true" /> {handle}
       </Link>
 
       <header className="mb-7">
         <h1 className="m-0 font-bold text-[26px] tracking-tight">{collection.title}</h1>
         <div className="mt-1.5 text-[13px]" style={{ color: "var(--text-3)" }}>
-          @{author.handle} · 問題 {collection.problems.length}
+          {author.handle} · 問題 {collection.problems.length}
         </div>
         <p
           className="mt-3 max-w-prose whitespace-pre-wrap text-[14px]"

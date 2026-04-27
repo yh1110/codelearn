@@ -28,7 +28,7 @@ export function MyCollectionsSection({ author, collections, isOwner }: MyCollect
           <span className="text-xs" style={{ color: "var(--text-3)" }}>
             {isOwner
               ? "あなたが作者として公開 / 管理しているコレクション"
-              : `@${author.handle} が公開しているコレクション`}
+              : `${author.handle} が公開しているコレクション`}
           </span>
         </div>
         {isOwner ? (

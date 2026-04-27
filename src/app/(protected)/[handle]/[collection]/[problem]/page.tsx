@@ -1,3 +1,4 @@
+import type { Problem } from "@prisma/client";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -24,7 +25,7 @@ export default async function ProblemPage({
     throw error;
   }
 
-  const problem = collection.problems.find((p) => p.slug === problemSlug);
+  const problem = collection.problems.find((p: Problem) => p.slug === problemSlug);
   if (!problem) notFound();
 
   const collectionLinkable = {
@@ -45,7 +46,7 @@ export default async function ProblemPage({
       <header className="mb-7">
         <h1 className="m-0 font-bold text-[26px] tracking-tight">{problem.title}</h1>
         <div className="mt-1.5 font-mono text-[12px]" style={{ color: "var(--text-3)" }}>
-          @{collection.author.handle} / {collection.slug} / {problem.slug}
+          {collection.author.handle} / {collection.slug} / {problem.slug}
         </div>
       </header>
 

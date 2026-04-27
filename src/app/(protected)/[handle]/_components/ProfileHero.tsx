@@ -43,7 +43,7 @@ export function ProfileHero({ displayName, handle, initial, bio, actions }: Prof
         <div className="min-w-0 flex-1">
           <h1 className="m-0 font-bold text-[26px] tracking-tight">{displayName}</h1>
           <div className="mt-1 font-mono text-[13px]" style={{ color: "var(--text-3)" }}>
-            @{handle}
+            {handle}
           </div>
           {bio ? (
             <p

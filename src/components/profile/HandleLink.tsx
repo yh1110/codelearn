@@ -57,7 +57,7 @@ export function HandleLink({ author, size = "sm", showHandle = false, className 
         className={cn(textSize, "truncate group-hover/handle:underline")}
         style={{ color: "var(--text-2)" }}
       >
-        {showHandle ? `@${author.handle}` : displayName}
+        {showHandle ? author.handle : displayName}
       </span>
     </Link>
   );

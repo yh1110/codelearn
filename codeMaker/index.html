@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>codeMaker — モノづくりで学ぶ競プロ学習プラットフォーム</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" />
+
+  <link rel="stylesheet" href="styles/tokens.css" />
+  <link rel="stylesheet" href="styles/app.css" />
+
+  <!-- React + Babel — MUST load before Monaco AMD loader, which hijacks window.define and breaks UMD -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Monaco loader (AMD) — loaded AFTER React so its define() doesn't eat React's UMD registration -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- tweakable defaults (host can rewrite this block on disk) -->
+  <script>
+    window.__TWEAKS = /*EDITMODE-BEGIN*/{
+      "accentHue": 265
+    }/*EDITMODE-END*/;
+  </script>
+
+  <!-- Components, in dependency order -->
+  <script type="text/babel" src="src/icons.jsx"></script>
+  <script type="text/babel" src="src/data.jsx"></script>
+  <script type="text/babel" src="src/shell.jsx"></script>
+  <script type="text/babel" src="src/page_home.jsx"></script>
+  <script type="text/babel" src="src/page_explore.jsx"></script>
+  <script type="text/babel" src="src/page_collection.jsx"></script>
+  <script type="text/babel" src="src/page_problem.jsx"></script>
+  <script type="text/babel" src="src/page_create.jsx"></script>
+  <script type="text/babel" src="src/page_me.jsx"></script>
+  <script type="text/babel" src="src/page_profile.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="src/app.jsx"></script>
+</body>
+</html>
