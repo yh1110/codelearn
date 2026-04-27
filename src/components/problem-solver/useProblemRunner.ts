@@ -1,26 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { completeLessonAction } from "@/actions/progress";
 import { type RunResult, runCodeInBrowser } from "@/lib/run-code";
 
-type Args = {
-  lessonId: string;
-  starterCode: string;
-  expectedOutput: string | null;
-  initiallyCompleted: boolean;
+export type ProblemStatus = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
+
+export type ProblemSubmitResult = {
+  passed: boolean;
+  output: string;
+  code: string;
 };
 
-export function useLessonRunner({
-  lessonId,
-  starterCode,
-  expectedOutput,
-  initiallyCompleted,
-}: Args) {
+type Args = {
+  starterCode: string;
+  expectedOutput: string | null;
+  initialStatus: ProblemStatus;
+  onSubmit?: (result: ProblemSubmitResult) => Promise<void>;
+};
+
+export function useProblemRunner({ starterCode, expectedOutput, initialStatus, onSubmit }: Args) {
   const [code, setCode] = useState(starterCode);
   const [output, setOutput] = useState<RunResult | null>(null);
   const [running, setRunning] = useState(false);
-  const [completed, setCompleted] = useState(initiallyCompleted);
+  const [completed, setCompleted] = useState(initialStatus === "COMPLETED");
 
   async function run() {
     setRunning(true);
@@ -36,19 +38,15 @@ export function useLessonRunner({
         expectedOutput !== null &&
         data.stdout.trim() === expectedOutput.trim();
 
-      if (passed && !completed) {
+      if (passed && !completed && onSubmit) {
         // Optimistic update: flip the badge immediately, roll back if the
-        // server action fails so the UI stays consistent with the DB.
+        // server callback fails so the UI stays consistent with the DB.
         setCompleted(true);
         try {
-          const result = await completeLessonAction({ lessonId });
-          if (result?.serverError || result?.validationErrors) {
-            setCompleted(false);
-            console.error("[useLessonRunner] completeLessonAction failed:", result);
-          }
+          await onSubmit({ passed, output: data.stdout, code });
         } catch (err) {
           setCompleted(false);
-          console.error("[useLessonRunner] completeLessonAction threw:", err);
+          console.error("[useProblemRunner] onSubmit threw:", err);
         }
       }
     } finally {
