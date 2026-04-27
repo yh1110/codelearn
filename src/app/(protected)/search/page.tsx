@@ -2,8 +2,10 @@ import { MIN_QUERY_LENGTH } from "@/config/search";
 import { requireAuth } from "@/lib/auth";
 import { search } from "@/services/searchService";
 import { EmptyState } from "./_components/EmptyState";
+import { SearchResultCollections } from "./_components/SearchResultCollections";
 import { SearchResultCourses } from "./_components/SearchResultCourses";
 import { SearchResultLessons } from "./_components/SearchResultLessons";
+import { SearchResultProblems } from "./_components/SearchResultProblems";
 
 export const dynamic = "force-dynamic";
 
@@ -16,9 +18,9 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   await requireAuth();
   const sp = await searchParams;
   const rawQuery = firstParam(sp?.q);
-  const { query, tooShort, courses, lessons } = await search(rawQuery);
+  const { query, tooShort, courses, lessons, collections, problems } = await search(rawQuery);
   const hasQuery = query.length > 0;
-  const totalHits = courses.length + lessons.length;
+  const totalHits = courses.length + lessons.length + collections.length + problems.length;
 
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "1280px" }}>
@@ -43,6 +45,8 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
         <div className="flex flex-col gap-10">
           <SearchResultCourses courses={courses} />
           <SearchResultLessons lessons={lessons} />
+          <SearchResultCollections collections={collections} />
+          <SearchResultProblems problems={problems} />
         </div>
       )}
     </div>

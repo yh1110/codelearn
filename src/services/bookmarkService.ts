@@ -3,22 +3,30 @@ import "server-only";
 import { handleUnknownError } from "@/lib/errors";
 import { logError, logInfo } from "@/lib/logging";
 import {
-  type BookmarkRepository,
-  bookmarkRepository,
+  type BookmarkCollectionRepository,
+  type BookmarkCourseRepository,
+  type BookmarkLessonRepository,
+  type BookmarkProblemRepository,
+  bookmarkCollectionRepository,
+  bookmarkCourseRepository,
+  bookmarkLessonRepository,
+  bookmarkProblemRepository,
+  type CollectionBookmarkWithCollection,
   type CourseBookmarkWithCourse,
   type LessonBookmarkWithLesson,
+  type ProblemBookmarkWithProblem,
 } from "@/repositories";
 
 export async function toggleCourseBookmark(
   params: { userId: string; courseId: string },
-  repository: BookmarkRepository = bookmarkRepository,
+  repository: BookmarkCourseRepository = bookmarkCourseRepository,
 ): Promise<{ bookmarked: boolean }> {
   const { userId, courseId } = params;
   logInfo("bookmarkService.toggleCourseBookmark.start", { userId, courseId });
   try {
-    const existing = await repository.findCourseBookmark(userId, courseId);
+    const existing = await repository.find(userId, courseId);
     if (existing) {
-      await repository.deleteCourseBookmark(userId, courseId);
+      await repository.delete(userId, courseId);
       logInfo("bookmarkService.toggleCourseBookmark.success", {
         userId,
         courseId,
@@ -26,7 +34,7 @@ export async function toggleCourseBookmark(
       });
       return { bookmarked: false };
     }
-    await repository.createCourseBookmark(userId, courseId);
+    await repository.create(userId, courseId);
     logInfo("bookmarkService.toggleCourseBookmark.success", {
       userId,
       courseId,
@@ -41,14 +49,14 @@ export async function toggleCourseBookmark(
 
 export async function toggleLessonBookmark(
   params: { userId: string; lessonId: string },
-  repository: BookmarkRepository = bookmarkRepository,
+  repository: BookmarkLessonRepository = bookmarkLessonRepository,
 ): Promise<{ bookmarked: boolean }> {
   const { userId, lessonId } = params;
   logInfo("bookmarkService.toggleLessonBookmark.start", { userId, lessonId });
   try {
-    const existing = await repository.findLessonBookmark(userId, lessonId);
+    const existing = await repository.find(userId, lessonId);
     if (existing) {
-      await repository.deleteLessonBookmark(userId, lessonId);
+      await repository.delete(userId, lessonId);
       logInfo("bookmarkService.toggleLessonBookmark.success", {
         userId,
         lessonId,
@@ -56,7 +64,7 @@ export async function toggleLessonBookmark(
       });
       return { bookmarked: false };
     }
-    await repository.createLessonBookmark(userId, lessonId);
+    await repository.create(userId, lessonId);
     logInfo("bookmarkService.toggleLessonBookmark.success", {
       userId,
       lessonId,
@@ -69,14 +77,73 @@ export async function toggleLessonBookmark(
   }
 }
 
+export async function toggleCollectionBookmark(
+  params: { userId: string; collectionId: string },
+  repository: BookmarkCollectionRepository = bookmarkCollectionRepository,
+): Promise<{ bookmarked: boolean }> {
+  const { userId, collectionId } = params;
+  logInfo("bookmarkService.toggleCollectionBookmark.start", { userId, collectionId });
+  try {
+    const existing = await repository.find(userId, collectionId);
+    if (existing) {
+      await repository.delete(userId, collectionId);
+      logInfo("bookmarkService.toggleCollectionBookmark.success", {
+        userId,
+        collectionId,
+        bookmarked: false,
+      });
+      return { bookmarked: false };
+    }
+    await repository.create(userId, collectionId);
+    logInfo("bookmarkService.toggleCollectionBookmark.success", {
+      userId,
+      collectionId,
+      bookmarked: true,
+    });
+    return { bookmarked: true };
+  } catch (error) {
+    logError("bookmarkService.toggleCollectionBookmark.error", { userId, collectionId }, error);
+    throw handleUnknownError(error);
+  }
+}
+
+export async function toggleProblemBookmark(
+  params: { userId: string; problemId: string },
+  repository: BookmarkProblemRepository = bookmarkProblemRepository,
+): Promise<{ bookmarked: boolean }> {
+  const { userId, problemId } = params;
+  logInfo("bookmarkService.toggleProblemBookmark.start", { userId, problemId });
+  try {
+    const existing = await repository.find(userId, problemId);
+    if (existing) {
+      await repository.delete(userId, problemId);
+      logInfo("bookmarkService.toggleProblemBookmark.success", {
+        userId,
+        problemId,
+        bookmarked: false,
+      });
+      return { bookmarked: false };
+    }
+    await repository.create(userId, problemId);
+    logInfo("bookmarkService.toggleProblemBookmark.success", {
+      userId,
+      problemId,
+      bookmarked: true,
+    });
+    return { bookmarked: true };
+  } catch (error) {
+    logError("bookmarkService.toggleProblemBookmark.error", { userId, problemId }, error);
+    throw handleUnknownError(error);
+  }
+}
+
 export async function isCourseBookmarked(
   params: { userId: string; courseId: string },
-  repository: BookmarkRepository = bookmarkRepository,
+  repository: BookmarkCourseRepository = bookmarkCourseRepository,
 ): Promise<boolean> {
   const { userId, courseId } = params;
   try {
-    const existing = await repository.findCourseBookmark(userId, courseId);
-    return existing !== null;
+    return (await repository.find(userId, courseId)) !== null;
   } catch (error) {
     logError("bookmarkService.isCourseBookmarked.error", { userId, courseId }, error);
     throw handleUnknownError(error);
@@ -85,14 +152,39 @@ export async function isCourseBookmarked(
 
 export async function isLessonBookmarked(
   params: { userId: string; lessonId: string },
-  repository: BookmarkRepository = bookmarkRepository,
+  repository: BookmarkLessonRepository = bookmarkLessonRepository,
 ): Promise<boolean> {
   const { userId, lessonId } = params;
   try {
-    const existing = await repository.findLessonBookmark(userId, lessonId);
-    return existing !== null;
+    return (await repository.find(userId, lessonId)) !== null;
   } catch (error) {
     logError("bookmarkService.isLessonBookmarked.error", { userId, lessonId }, error);
+    throw handleUnknownError(error);
+  }
+}
+
+export async function isCollectionBookmarked(
+  params: { userId: string; collectionId: string },
+  repository: BookmarkCollectionRepository = bookmarkCollectionRepository,
+): Promise<boolean> {
+  const { userId, collectionId } = params;
+  try {
+    return (await repository.find(userId, collectionId)) !== null;
+  } catch (error) {
+    logError("bookmarkService.isCollectionBookmarked.error", { userId, collectionId }, error);
+    throw handleUnknownError(error);
+  }
+}
+
+export async function isProblemBookmarked(
+  params: { userId: string; problemId: string },
+  repository: BookmarkProblemRepository = bookmarkProblemRepository,
+): Promise<boolean> {
+  const { userId, problemId } = params;
+  try {
+    return (await repository.find(userId, problemId)) !== null;
+  } catch (error) {
+    logError("bookmarkService.isProblemBookmarked.error", { userId, problemId }, error);
     throw handleUnknownError(error);
   }
 }
@@ -100,24 +192,40 @@ export async function isLessonBookmarked(
 export type UserBookmarks = {
   courses: CourseBookmarkWithCourse[];
   lessons: LessonBookmarkWithLesson[];
+  collections: CollectionBookmarkWithCollection[];
+  problems: ProblemBookmarkWithProblem[];
 };
 
 export async function getUserBookmarks(
   userId: string,
-  repository: BookmarkRepository = bookmarkRepository,
+  repos: {
+    course?: BookmarkCourseRepository;
+    lesson?: BookmarkLessonRepository;
+    collection?: BookmarkCollectionRepository;
+    problem?: BookmarkProblemRepository;
+  } = {},
 ): Promise<UserBookmarks> {
+  const courseRepo = repos.course ?? bookmarkCourseRepository;
+  const lessonRepo = repos.lesson ?? bookmarkLessonRepository;
+  const collectionRepo = repos.collection ?? bookmarkCollectionRepository;
+  const problemRepo = repos.problem ?? bookmarkProblemRepository;
+
   logInfo("bookmarkService.getUserBookmarks.start", { userId });
   try {
-    const [courses, lessons] = await Promise.all([
-      repository.findCourseBookmarksByUser(userId),
-      repository.findLessonBookmarksByUser(userId),
+    const [courses, lessons, collections, problems] = await Promise.all([
+      courseRepo.findByUser(userId),
+      lessonRepo.findByUser(userId),
+      collectionRepo.findByUser(userId),
+      problemRepo.findByUser(userId),
     ]);
     logInfo("bookmarkService.getUserBookmarks.success", {
       userId,
       courseCount: courses.length,
       lessonCount: lessons.length,
+      collectionCount: collections.length,
+      problemCount: problems.length,
     });
-    return { courses, lessons };
+    return { courses, lessons, collections, problems };
   } catch (error) {
     logError("bookmarkService.getUserBookmarks.error", { userId }, error);
     throw handleUnknownError(error);

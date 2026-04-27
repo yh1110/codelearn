@@ -2,7 +2,6 @@ import { FileText } from "lucide-react";
 import Link from "next/link";
 import { lessonUrl } from "@/lib/routes";
 import type { LessonSearchHit } from "@/repositories";
-import { authorLabel } from "./authorLabel";
 import { SectionHeading } from "./SectionHeading";
 
 type SearchResultLessonsProps = {
@@ -13,7 +12,7 @@ export function SearchResultLessons({ lessons }: SearchResultLessonsProps) {
   if (lessons.length === 0) return null;
   return (
     <section aria-labelledby="search-lessons-heading">
-      <SectionHeading id="search-lessons-heading" label="レッスン" count={lessons.length} />
+      <SectionHeading id="search-lessons-heading" label="公式レッスン" count={lessons.length} />
       <ul className="mt-3 flex flex-col gap-2">
         {lessons.map((lesson) => (
           <li key={lesson.id}>
@@ -51,7 +50,7 @@ function LessonResultRow({ lesson }: { lesson: LessonSearchHit }) {
             {lesson.course.title}
           </span>
           <span aria-hidden="true">・</span>
-          <span>{authorLabel(lesson.course.author?.name)}</span>
+          <span>公式</span>
         </span>
       </span>
     </Link>

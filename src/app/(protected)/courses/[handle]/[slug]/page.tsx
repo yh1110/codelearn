@@ -3,8 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
+import { isOfficialHandle } from "@/lib/routes";
 import { isCourseBookmarked } from "@/services/bookmarkService";
-import { getCourseByHandleAndSlug } from "@/services/courseService";
+import { getCourseBySlug } from "@/services/courseService";
 import { getCompletedLessonIdsByUser } from "@/services/progressService";
 import { CourseHero } from "./_components/CourseHero";
 import { LessonList } from "./_components/LessonList";
@@ -15,9 +16,14 @@ export default async function CoursePage({ params }: PageProps<"/courses/[handle
   const session = await requireAuth();
   const { handle, slug } = await params;
 
-  let course: Awaited<ReturnType<typeof getCourseByHandleAndSlug>>;
+  // After issue #71 the Course model is official-only and lives at
+  // /courses/{official}/{slug}. UGC routes (/collections/{handle}/{slug})
+  // land in issue #72; until then any non-official handle resolves to 404.
+  if (!isOfficialHandle(handle)) notFound();
+
+  let course: Awaited<ReturnType<typeof getCourseBySlug>>;
   try {
-    course = await getCourseByHandleAndSlug({ handle, slug });
+    course = await getCourseBySlug(slug);
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
     throw error;

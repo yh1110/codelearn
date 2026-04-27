@@ -14,7 +14,7 @@ export function BookmarkCourseList({ courses }: BookmarkCourseListProps) {
     <section className="mb-9">
       <div className="mb-4 flex items-baseline justify-between">
         <div>
-          <h2 className="m-0 font-semibold text-[18px] tracking-tight">コース</h2>
+          <h2 className="m-0 font-semibold text-[18px] tracking-tight">公式コース</h2>
           <span className="text-xs" style={{ color: "var(--text-3)" }}>
             {courses.length} 件
           </span>

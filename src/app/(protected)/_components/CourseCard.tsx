@@ -2,22 +2,11 @@ import { BookText } from "lucide-react";
 import Link from "next/link";
 import { courseUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
-import type { CourseAuthor, CourseWithLessonsAndAuthor } from "@/repositories";
+import type { CourseWithLessons } from "@/repositories";
 import { coverFor, glyphFor } from "./courseCover";
 
-function authorLabel(author: CourseAuthor | null): string {
-  // Fall back to "Anonymous" when the author didn't set a display name —
-  // do NOT derive a handle from the email address (privacy).
-  return author?.name ?? "Anonymous";
-}
-
-function authorInitial(author: CourseAuthor | null): string {
-  const label = authorLabel(author);
-  return (Array.from(label.trim())[0] ?? "?").toUpperCase();
-}
-
 type Props = {
-  course: CourseWithLessonsAndAuthor;
+  course: CourseWithLessons;
   index: number;
   completedIds: Set<string>;
 };
@@ -54,10 +43,10 @@ export function CourseCard({ course, index, completedIds }: Props) {
 
         <div className="flex items-center gap-1.5">
           <span className="cm-avatar cm-avatar-sm" aria-hidden="true">
-            {authorInitial(course.author)}
+            ✓
           </span>
           <span className="text-[12px]" style={{ color: "var(--text-3)" }}>
-            {authorLabel(course.author)}
+            公式
           </span>
         </div>
 

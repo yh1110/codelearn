@@ -1,32 +1,46 @@
 /**
- * Centralised URL builders for Course / Lesson learner pages.
+ * Centralised URL builders for Course / Lesson / Collection / Problem
+ * learner pages.
  *
- * Course pages live under `/courses/{handle}/{slug}` where:
- *   - `handle` is the author's `Profile.handle` for UGC courses
- *   - `handle` is the reserved literal `OFFICIAL_HANDLE` for official courses
- *     whose `authorId` is NULL
+ * Official content keeps the `/courses/{official}/{slug}` URL shape from
+ * before the schema split (issue #71); the `[handle]` segment in
+ * `src/app/(protected)/courses/[handle]/[slug]` is preserved and pinned to
+ * the reserved `OFFICIAL_HANDLE` literal so that flattening to `/courses/{slug}`
+ * can ship together with the broader URL redesign in issue #72.
  *
- * Keep all `/courses/...` href construction here so the URL scheme has a single
- * source of truth.
+ * UGC content uses handle-scoped `/collections/{handle}/{slug}` URLs. The
+ * actual route handlers under that path also land in issue #72; the helpers
+ * here build the URLs so that link sites (`MyCollections`, search results,
+ * etc.) can be wired up without churning when the routes ship.
  */
 
 export const OFFICIAL_HANDLE = "official";
 
 export type CourseLinkable = {
   slug: string;
-  author: { handle: string } | null;
 };
 
-export function authorHandle(author: { handle: string } | null): string {
-  return author?.handle ?? OFFICIAL_HANDLE;
-}
+export type LessonLinkable = CourseLinkable;
+
+export type CollectionLinkable = {
+  slug: string;
+  author: { handle: string };
+};
 
 export function courseUrl(course: CourseLinkable): string {
-  return `/courses/${authorHandle(course.author)}/${course.slug}`;
+  return `/courses/${OFFICIAL_HANDLE}/${course.slug}`;
 }
 
 export function lessonUrl(course: CourseLinkable, lessonSlug: string): string {
   return `${courseUrl(course)}/lessons/${lessonSlug}`;
+}
+
+export function collectionUrl(collection: CollectionLinkable): string {
+  return `/collections/${collection.author.handle}/${collection.slug}`;
+}
+
+export function problemUrl(collection: CollectionLinkable, problemSlug: string): string {
+  return `${collectionUrl(collection)}/problems/${problemSlug}`;
 }
 
 export function isOfficialHandle(handle: string): boolean {

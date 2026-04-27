@@ -2,7 +2,6 @@ import { BookText } from "lucide-react";
 import Link from "next/link";
 import { courseUrl } from "@/lib/routes";
 import type { CourseSearchHit } from "@/repositories";
-import { authorLabel } from "./authorLabel";
 import { SectionHeading } from "./SectionHeading";
 
 type SearchResultCoursesProps = {
@@ -13,7 +12,7 @@ export function SearchResultCourses({ courses }: SearchResultCoursesProps) {
   if (courses.length === 0) return null;
   return (
     <section aria-labelledby="search-courses-heading">
-      <SectionHeading id="search-courses-heading" label="コース" count={courses.length} />
+      <SectionHeading id="search-courses-heading" label="公式コース" count={courses.length} />
       <ul className="mt-3 flex flex-col gap-2">
         {courses.map((course) => (
           <li key={course.id}>
@@ -56,7 +55,7 @@ function CourseResultRow({ course }: { course: CourseSearchHit }) {
           className="flex items-center gap-3 pt-0.5 text-[11.5px]"
           style={{ color: "var(--text-4)" }}
         >
-          <span>{authorLabel(course.author?.name)}</span>
+          <span>公式</span>
           <span aria-hidden="true">・</span>
           <span>
             <b style={{ color: "var(--text-2)" }}>{lessonCount}</b> レッスン

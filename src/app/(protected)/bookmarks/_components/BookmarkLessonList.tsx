@@ -10,10 +10,10 @@ type BookmarkLessonListProps = {
 export function BookmarkLessonList({ lessons }: BookmarkLessonListProps) {
   if (lessons.length === 0) return null;
   return (
-    <section>
+    <section className="mb-9">
       <div className="mb-4 flex items-baseline justify-between">
         <div>
-          <h2 className="m-0 font-semibold text-[18px] tracking-tight">レッスン</h2>
+          <h2 className="m-0 font-semibold text-[18px] tracking-tight">公式レッスン</h2>
           <span className="text-xs" style={{ color: "var(--text-3)" }}>
             {lessons.length} 件
           </span>

@@ -2,10 +2,10 @@ import { Play } from "lucide-react";
 import Link from "next/link";
 import { BookmarkButton } from "@/components/bookmarks/BookmarkButton";
 import { lessonUrl } from "@/lib/routes";
-import type { CourseDetailWithAuthor } from "@/repositories";
+import type { CourseDetail } from "@/repositories";
 
 type CourseHeroProps = {
-  course: CourseDetailWithAuthor;
+  course: CourseDetail;
   done: number;
   total: number;
   pct: number;

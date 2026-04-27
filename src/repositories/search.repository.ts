@@ -6,7 +6,6 @@ import { BaseRepository } from "./base.repository";
 
 export type CourseSearchHit = Prisma.CourseGetPayload<{
   include: {
-    author: { select: { id: true; name: true; handle: true; avatarUrl: true } };
     lessons: { where: { isPublished: true }; select: { id: true } };
   };
 }>;
@@ -14,6 +13,25 @@ export type CourseSearchHit = Prisma.CourseGetPayload<{
 export type LessonSearchHit = Prisma.LessonGetPayload<{
   include: {
     course: {
+      select: {
+        id: true;
+        slug: true;
+        title: true;
+      };
+    };
+  };
+}>;
+
+export type CollectionSearchHit = Prisma.CollectionGetPayload<{
+  include: {
+    author: { select: { id: true; name: true; handle: true; avatarUrl: true } };
+    problems: { where: { isPublished: true }; select: { id: true } };
+  };
+}>;
+
+export type ProblemSearchHit = Prisma.ProblemGetPayload<{
+  include: {
+    collection: {
       select: {
         id: true;
         slug: true;
@@ -37,7 +55,6 @@ export class SearchRepository extends BaseRepository {
       orderBy: { createdAt: "desc" },
       take: SEARCH_LIMIT,
       include: {
-        author: { select: { id: true, name: true, handle: true, avatarUrl: true } },
         lessons: {
           where: { isPublished: true },
           select: { id: true },
@@ -61,6 +78,48 @@ export class SearchRepository extends BaseRepository {
       take: SEARCH_LIMIT,
       include: {
         course: {
+          select: { id: true, slug: true, title: true },
+        },
+      },
+    });
+  }
+
+  async searchCollections(query: string): Promise<CollectionSearchHit[]> {
+    return this.client.collection.findMany({
+      where: {
+        isPublished: true,
+        OR: [
+          { title: { contains: query, mode: "insensitive" } },
+          { description: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      take: SEARCH_LIMIT,
+      include: {
+        author: { select: { id: true, name: true, handle: true, avatarUrl: true } },
+        problems: {
+          where: { isPublished: true },
+          select: { id: true },
+          orderBy: { order: "asc" },
+        },
+      },
+    });
+  }
+
+  async searchProblems(query: string): Promise<ProblemSearchHit[]> {
+    return this.client.problem.findMany({
+      where: {
+        isPublished: true,
+        collection: { isPublished: true },
+        OR: [
+          { title: { contains: query, mode: "insensitive" } },
+          { contentMd: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      take: SEARCH_LIMIT,
+      include: {
+        collection: {
           select: {
             id: true,
             slug: true,
