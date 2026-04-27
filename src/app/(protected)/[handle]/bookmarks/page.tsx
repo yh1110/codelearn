@@ -8,12 +8,18 @@ import { BookmarkCollectionList } from "./_components/BookmarkCollectionList";
 import { BookmarkCourseList } from "./_components/BookmarkCourseList";
 import { BookmarkLessonList } from "./_components/BookmarkLessonList";
 import { BookmarkProblemList } from "./_components/BookmarkProblemList";
+import { BookmarksTabs, parseBookmarkTab } from "./_components/BookmarksTabs";
 
 export const dynamic = "force-dynamic";
 
-export default async function BookmarksPage({ params }: PageProps<"/[handle]/bookmarks">) {
+export default async function BookmarksPage({
+  params,
+  searchParams,
+}: PageProps<"/[handle]/bookmarks">) {
   const session = await requireAuth();
   const { handle } = await params;
+  const sp = await searchParams;
+  const activeTab = parseBookmarkTab(sp?.tab);
 
   const viewedProfile = await getProfileByHandle(handle);
   if (!viewedProfile) notFound();
@@ -28,7 +34,9 @@ export default async function BookmarksPage({ params }: PageProps<"/[handle]/boo
   // a future change loosened the isOwner gate above, the data fetch itself
   // would still be scoped to one user — Layer C defence in depth.
   const { courses, lessons, collections, problems } = await getUserBookmarks(viewedProfile.id);
-  const total = courses.length + lessons.length + collections.length + problems.length;
+  const officialCount = courses.length + lessons.length;
+  const communityCount = collections.length + problems.length;
+  const total = officialCount + communityCount;
 
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "1280px" }}>
@@ -38,7 +46,7 @@ export default async function BookmarksPage({ params }: PageProps<"/[handle]/boo
           <h1 className="m-0 font-bold text-[26px] tracking-tight">お気に入り</h1>
         </div>
         <p className="mt-1.5 text-[13px]" style={{ color: "var(--text-3)" }}>
-          コース・レッスン・コレクション・問題の Star を集めた一覧
+          公式コンテンツとコミュニティの Star を分けて表示します
         </p>
       </header>
 
@@ -56,12 +64,48 @@ export default async function BookmarksPage({ params }: PageProps<"/[handle]/boo
             コレクションを探す →
           </Link>
         </div>
-      ) : null}
+      ) : (
+        <>
+          <BookmarksTabs
+            handle={viewedProfile.handle}
+            active={activeTab}
+            officialCount={officialCount}
+            communityCount={communityCount}
+          />
+          {activeTab === "official" ? (
+            officialCount === 0 ? (
+              <EmptyTab message="公式コンテンツのお気に入りはまだありません。" />
+            ) : (
+              <>
+                <BookmarkCourseList courses={courses} />
+                <BookmarkLessonList lessons={lessons} />
+              </>
+            )
+          ) : communityCount === 0 ? (
+            <EmptyTab message="コミュニティのお気に入りはまだありません。" />
+          ) : (
+            <>
+              <BookmarkCollectionList collections={collections} />
+              <BookmarkProblemList problems={problems} />
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
-      <BookmarkCourseList courses={courses} />
-      <BookmarkLessonList lessons={lessons} />
-      <BookmarkCollectionList collections={collections} />
-      <BookmarkProblemList problems={problems} />
+function EmptyTab({ message }: { message: string }) {
+  return (
+    <div
+      className="rounded-[14px] px-8 py-12 text-center text-[13px]"
+      style={{
+        background: "var(--bg-1)",
+        border: "1px dashed var(--line-3)",
+        color: "var(--text-3)",
+      }}
+    >
+      {message}
     </div>
   );
 }
