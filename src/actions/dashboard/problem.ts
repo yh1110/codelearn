@@ -17,7 +17,8 @@ import {
 
 function revalidateDashboardAndExplore(): void {
   revalidatePath("/dashboard", "layout");
-  revalidatePath("/explore");
+  // After issue #72 the UGC explore lives at "/" (not /explore) and profile
+  // pages at "/{handle}/..." — both reachable from the layout-level revalidate.
   revalidatePath("/", "layout");
 }
 

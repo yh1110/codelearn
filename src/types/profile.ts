@@ -1,15 +1,10 @@
 import { z } from "zod";
-import { OFFICIAL_HANDLE } from "@/lib/routes";
+import { isReservedHandle } from "@/lib/reservedNames";
 
-// Lower-case only: course URLs of the form /courses/{handle}/{slug} resolve
-// the handle via a case-sensitive Postgres unique on Profile.handle, so a
-// mixed-case handle would silently 404 when the URL is shared lower-cased.
+// Lower-case only: profile URLs of the form /{handle}/... resolve via a
+// case-sensitive Postgres unique on Profile.handle, so a mixed-case handle
+// would silently 404 when the URL is shared lower-cased.
 const HANDLE_REGEX = /^[a-z0-9_-]+$/;
-
-// Reserved handles that own dedicated /courses/{handle}/... namespaces and so
-// must never be claimed by an end user. `official` is the public alias for
-// authorId IS NULL courses; expand this list as more reserved namespaces appear.
-const RESERVED_HANDLES: readonly string[] = [OFFICIAL_HANDLE];
 
 // Empty strings from the edit form mean "clear this optional field". Normalise
 // them to null up-front so the rest of the schema can stay tight.
@@ -24,7 +19,7 @@ export const UpdateProfileSchema = z.object({
     .min(2, "2 文字以上で入力してください")
     .max(30, "30 文字以内で入力してください")
     .regex(HANDLE_REGEX, "小文字英数字、_、- のみ使用できます")
-    .refine((v) => !RESERVED_HANDLES.includes(v.toLowerCase()), "このハンドルは使用できません"),
+    .refine((v) => !isReservedHandle(v), "このハンドルは使用できません"),
   bio: optionalText(z.string().trim().max(200, "200 文字以内で入力してください")),
   avatarUrl: optionalText(
     z

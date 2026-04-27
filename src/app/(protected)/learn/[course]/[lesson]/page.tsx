@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
-import { isOfficialHandle } from "@/lib/routes";
 import { isLessonBookmarked } from "@/services/bookmarkService";
 import { getCourseBySlug } from "@/services/courseService";
 import { isLessonCompleted } from "@/services/progressService";
@@ -9,19 +8,13 @@ import LessonClient from "./_components/LessonClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function LessonPage({
-  params,
-}: PageProps<"/courses/[handle]/[slug]/lessons/[lessonSlug]">) {
+export default async function LessonPage({ params }: PageProps<"/learn/[course]/[lesson]">) {
   const session = await requireAuth();
-  const { handle, slug, lessonSlug } = await params;
-
-  // Official-only after the schema split (issue #71); UGC problem pages live
-  // under /collections/... starting with issue #72.
-  if (!isOfficialHandle(handle)) notFound();
+  const { course: courseSlug, lesson: lessonSlug } = await params;
 
   let course: Awaited<ReturnType<typeof getCourseBySlug>>;
   try {
-    course = await getCourseBySlug(slug);
+    course = await getCourseBySlug(courseSlug);
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
     throw error;

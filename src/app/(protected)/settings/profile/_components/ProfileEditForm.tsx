@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { profileUrl } from "@/lib/routes";
 import { UpdateProfileSchema } from "@/types/profile";
 
 type FormValues = {
@@ -22,6 +23,10 @@ type FormValues = {
 type Props = {
   initial: FormValues;
 };
+
+// Cancel preserves the URL the user typed in: edits navigate back to that
+// existing handle's profile, not to a stale value the user may have started
+// typing into the form.
 
 export function ProfileEditForm({ initial }: Props) {
   const router = useRouter();
@@ -49,7 +54,10 @@ export function ProfileEditForm({ initial }: Props) {
       return;
     }
 
-    router.push("/me");
+    // The handle may have changed; navigate using the freshly returned handle
+    // so we land on the renamed profile URL rather than the prior one.
+    const nextHandle = result?.data?.handle ?? values.handle;
+    router.push(profileUrl(nextHandle));
     router.refresh();
   });
 
@@ -80,8 +88,8 @@ export function ProfileEditForm({ initial }: Props) {
           autoComplete="username"
         />
         <p className="text-xs text-muted-foreground">
-          小文字英数字 / アンダースコア / ハイフン、2〜30 文字。コース URL (/courses/{"{"}ハンドル
-          {"}"}) に使われます。
+          小文字英数字 / アンダースコア / ハイフン、2〜30 文字。プロフィール URL (/{"{"}ハンドル
+          {"}"}) と作成したコレクションの URL に使われます。
         </p>
         <p className="text-xs text-muted-foreground">
           変更すると 90 日間は他のユーザーが取得できなくなります。旧 URL は無効になります。
@@ -138,7 +146,7 @@ export function ProfileEditForm({ initial }: Props) {
       <div className="flex justify-end gap-2">
         <Button
           disabled={isSubmitting}
-          onClick={() => router.push("/me")}
+          onClick={() => router.push(profileUrl(initial.handle))}
           type="button"
           variant="outline"
         >

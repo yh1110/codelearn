@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
+import { profileUrl } from "@/lib/routes";
 import { ProfileEditForm } from "./_components/ProfileEditForm";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export default async function ProfileEditPage() {
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "720px" }}>
       <div className="mb-6">
         <Link
-          href="/me"
+          href={profileUrl(profile.handle)}
           className="inline-flex items-center gap-1.5 text-[13px]"
           style={{ color: "var(--text-3)" }}
         >

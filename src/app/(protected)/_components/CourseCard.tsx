@@ -1,6 +1,6 @@
 import { BookText } from "lucide-react";
 import Link from "next/link";
-import { courseUrl } from "@/lib/routes";
+import { learnUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import type { CourseWithLessons } from "@/repositories";
 import { coverFor, glyphFor } from "./courseCover";
@@ -18,7 +18,7 @@ export function CourseCard({ course, index, completedIds }: Props) {
 
   return (
     <Link
-      href={courseUrl(course)}
+      href={learnUrl(course)}
       className={cn(
         "group flex h-full flex-col overflow-hidden rounded-[14px] transition",
         "hover:-translate-y-0.5 hover:border-[color:var(--line-3)]",

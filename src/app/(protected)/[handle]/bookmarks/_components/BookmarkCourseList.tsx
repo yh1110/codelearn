@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { coverFor, glyphFor } from "@/app/(protected)/_components/courseCover";
-import { courseUrl } from "@/lib/routes";
+import { learnUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import type { CourseBookmarkWithCourse } from "@/repositories";
 
@@ -43,7 +43,7 @@ function CourseBookmarkCard({
 }) {
   return (
     <Link
-      href={courseUrl(course)}
+      href={learnUrl(course)}
       className={cn(
         "group flex h-full flex-col overflow-hidden rounded-[14px] transition",
         "hover:-translate-y-0.5 hover:border-[color:var(--line-3)]",

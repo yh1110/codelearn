@@ -3,7 +3,7 @@ import "server-only";
 import type { Profile } from "@prisma/client";
 import { handleUnknownError, ValidationError } from "@/lib/errors";
 import { logError, logInfo } from "@/lib/logging";
-import { OFFICIAL_HANDLE } from "@/lib/routes";
+import { isReservedHandle } from "@/lib/reservedNames";
 import {
   type HandleReservationRepository,
   handleReservationRepository,
@@ -19,13 +19,34 @@ export type UpdateProfileDeps = {
 };
 
 /**
+ * Look up a Profile by its handle. Returns null when no Profile exists for
+ * the handle so callers can choose between notFound() and a richer 404 page.
+ *
+ * Server Components must reach Profile data through this helper rather than
+ * touching profileRepository directly (architecture.md Layer 1 rule), so the
+ * service layer remains the single seam for cross-cutting concerns like
+ * logging, soft-delete filters, or future caching.
+ */
+export async function getProfileByHandle(
+  handle: string,
+  repository: ProfileRepository = profileRepository,
+): Promise<Profile | null> {
+  try {
+    return await repository.findByHandle(handle);
+  } catch (error) {
+    logError("profileService.getProfileByHandle.error", { handle }, error);
+    throw handleUnknownError(error);
+  }
+}
+
+/**
  * Update a Profile, enforcing the 90-day handle reservation rule.
  *
  * When the handle changes we (1) reject reserved namespaces, (2) reject
  * handles parked by an earlier rename whose cooldown has not elapsed,
  * (3) write the update (the unique constraint catches concurrent races),
- * and (4) park the previous handle so old `/courses/{handle}/...` URLs
- * do not silently start resolving to a different person.
+ * and (4) park the previous handle so old `/{handle}/...` URLs do not
+ * silently start resolving to a different person.
  */
 export async function updateProfile(
   userId: string,
@@ -74,7 +95,7 @@ async function assertHandleAvailable(
   reservationRepo: HandleReservationRepository,
   now: Date,
 ): Promise<void> {
-  if (handle === OFFICIAL_HANDLE) {
+  if (isReservedHandle(handle)) {
     throw new ValidationError("このハンドルは使用できません");
   }
   const reservation = await reservationRepo.findByHandle(handle);

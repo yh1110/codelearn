@@ -1,14 +1,15 @@
-import { LogOut, Pencil } from "lucide-react";
-import Link from "next/link";
+import type { ReactNode } from "react";
 
 type ProfileHeroProps = {
   displayName: string;
   handle: string;
   initial: string;
   bio: string | null;
+  /** Owner-only action buttons (edit / sign out). Hidden when viewing others. */
+  actions?: ReactNode;
 };
 
-export function ProfileHero({ displayName, handle, initial, bio }: ProfileHeroProps) {
+export function ProfileHero({ displayName, handle, initial, bio, actions }: ProfileHeroProps) {
   return (
     <section
       className="relative mb-7 overflow-hidden rounded-[20px] p-7"
@@ -53,32 +54,7 @@ export function ProfileHero({ displayName, handle, initial, bio }: ProfileHeroPr
             </p>
           ) : null}
         </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/me/edit"
-            className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-[13px] transition hover:bg-[var(--bg-3)]"
-            style={{
-              background: "var(--bg-2)",
-              border: "1px solid var(--line-2)",
-              color: "var(--text-1)",
-            }}
-          >
-            <Pencil className="size-3.5" aria-hidden="true" /> プロフィールを編集
-          </Link>
-          <form action="/auth/signout" method="post">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-[13px] transition hover:bg-[var(--bg-3)]"
-              style={{
-                background: "var(--bg-2)",
-                border: "1px solid var(--line-2)",
-                color: "var(--text-1)",
-              }}
-            >
-              <LogOut className="size-3.5" aria-hidden="true" /> サインアウト
-            </button>
-          </form>
-        </div>
+        {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
       </div>
     </section>
   );

@@ -3,10 +3,12 @@
 import { Bell, BookOpen, Compass, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { bookmarksUrl, profileUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
 type Props = {
   displayName: string;
+  handle: string;
   avatarInitial: string;
   unreadCount: number;
 };
@@ -15,14 +17,12 @@ type NavGroup = "learn" | "explore" | "create" | null;
 
 function resolveNavGroup(pathname: string): NavGroup {
   if (pathname.startsWith("/dashboard")) return "create";
-  if (pathname.startsWith("/explore")) return "explore";
-  if (pathname === "/" || pathname.startsWith("/courses") || pathname.startsWith("/me")) {
-    return "learn";
-  }
+  if (pathname.startsWith("/learn")) return "learn";
+  if (pathname === "/") return "explore";
   return null;
 }
 
-export function TopBar({ displayName, avatarInitial, unreadCount }: Props) {
+export function TopBar({ displayName, handle, avatarInitial, unreadCount }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const group = resolveNavGroup(pathname);
@@ -30,6 +30,8 @@ export function TopBar({ displayName, avatarInitial, unreadCount }: Props) {
   const hasUnread = unreadCount > 0;
   const badgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const bellAriaLabel = hasUnread ? `通知 (${unreadCount} 件の未読)` : "通知";
+  const myProfileHref = profileUrl(handle);
+  const myBookmarksHref = bookmarksUrl(handle);
 
   return (
     <header
@@ -41,7 +43,7 @@ export function TopBar({ displayName, avatarInitial, unreadCount }: Props) {
       }}
     >
       <Link
-        href="/explore"
+        href="/"
         className="flex items-center gap-2.5 font-bold text-[15px] tracking-tight"
         aria-label="codeMaker ホーム"
       >
@@ -70,8 +72,8 @@ export function TopBar({ displayName, avatarInitial, unreadCount }: Props) {
           type="search"
           name="q"
           defaultValue={initialQuery}
-          placeholder="コース・レッスンを検索"
-          aria-label="コース・レッスンを検索"
+          placeholder="コース・コレクションを検索"
+          aria-label="コース・コレクションを検索"
           autoComplete="off"
           className="w-full rounded-[10px] py-[9px] pr-10 pl-10 text-[13px] outline-none transition focus:border-[color:var(--accent-solid)]"
           style={{
@@ -88,14 +90,10 @@ export function TopBar({ displayName, avatarInitial, unreadCount }: Props) {
           className="flex gap-0.5 rounded-[10px] p-[3px]"
           style={{ background: "var(--bg-1)", border: "1px solid var(--line-1)" }}
         >
-          <NavTab
-            href="/explore"
-            active={group === "explore"}
-            icon={<Compass className="size-3.5" />}
-          >
+          <NavTab href="/" active={group === "explore"} icon={<Compass className="size-3.5" />}>
             探す
           </NavTab>
-          <NavTab href="/" active={group === "learn"} icon={<BookOpen className="size-3.5" />}>
+          <NavTab href="/learn" active={group === "learn"} icon={<BookOpen className="size-3.5" />}>
             学ぶ
           </NavTab>
           <NavTab
@@ -106,6 +104,15 @@ export function TopBar({ displayName, avatarInitial, unreadCount }: Props) {
             作る
           </NavTab>
         </nav>
+        <Link
+          href={myBookmarksHref}
+          aria-label="お気に入り"
+          aria-current={pathname === myBookmarksHref ? "page" : undefined}
+          className="hidden items-center gap-1.5 rounded-[10px] px-3 py-2 text-[13px] transition hover:bg-[var(--bg-2)] sm:inline-flex"
+          style={{ color: "var(--text-2)" }}
+        >
+          ブックマーク
+        </Link>
         <Link
           href="/notifications"
           aria-label={bellAriaLabel}
@@ -129,7 +136,7 @@ export function TopBar({ displayName, avatarInitial, unreadCount }: Props) {
           ) : null}
         </Link>
         <Link
-          href="/me"
+          href={myProfileHref}
           className="cm-avatar"
           aria-label={`${displayName} のプロフィール`}
           title={displayName}

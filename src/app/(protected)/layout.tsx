@@ -12,6 +12,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     <>
       <TopBarSwitcher
         displayName={displayName}
+        handle={session.profile.handle}
         avatarInitial={avatarInitial}
         unreadCount={unreadCount}
       />
