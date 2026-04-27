@@ -174,22 +174,23 @@ export function ProblemSolver({
       {/*
         md+ : horizontal split — left pane stacks problem above editor (with the
         Run button on top of the editor), right pane shows execution results.
-        < md : single scrollable column where each section keeps its own
-        bounded height so the Run button stays inside the viewport.
+        < md : the body itself becomes the scroll container so the three panes
+        can stack with relaxed min-heights without being clipped, and a
+        floating Run button is rendered below for one-tap reach.
       */}
       <div
         ref={splitRef}
-        className="flex min-h-0 flex-1 flex-col overflow-hidden md:grid"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto md:grid md:overflow-hidden"
         style={splitStyle}
       >
         {/* LEFT pane: problem (top) + editor with Run toolbar (bottom) */}
         <div
-          className="flex min-h-0 flex-col overflow-hidden border-b md:border-b-0"
+          className="flex min-h-0 flex-col overflow-visible border-b md:overflow-hidden md:border-b-0"
           style={{ borderColor: "var(--line-1)", minWidth: 0 }}
         >
           {/* Problem statement */}
           <div
-            className="flex min-h-[180px] flex-[1.1] flex-col overflow-hidden border-b md:flex-1"
+            className="flex min-h-[140px] flex-[1.1] flex-col overflow-visible border-b md:min-h-[180px] md:flex-1 md:overflow-hidden"
             style={{ borderColor: "var(--line-1)" }}
           >
             <div
@@ -203,7 +204,7 @@ export function ProblemSolver({
                 <FileText className="size-3.5" aria-hidden="true" /> 問題
               </div>
             </div>
-            <div className="flex-1 overflow-auto px-6 py-5">
+            <div className="flex-1 overflow-visible px-6 py-5 md:overflow-auto">
               <div className="mx-auto max-w-[720px]" style={{ color: "var(--text-2)" }}>
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
@@ -335,7 +336,7 @@ export function ProblemSolver({
 
           {/* Editor */}
           <div
-            className="flex min-h-[260px] flex-[1.4] flex-col overflow-hidden md:flex-1"
+            className="flex min-h-[220px] flex-[1.4] flex-col overflow-hidden md:min-h-[260px] md:flex-1"
             style={{ background: "var(--bg-code)" }}
           >
             <div
@@ -428,7 +429,7 @@ export function ProblemSolver({
 
         {/* RIGHT pane: results */}
         <div
-          className="flex min-h-[180px] flex-[0.9] flex-col overflow-hidden md:flex-1"
+          className="flex min-h-[140px] flex-[0.9] flex-col overflow-visible md:min-h-[180px] md:flex-1 md:overflow-hidden"
           style={{ background: "var(--bg-0)", minWidth: 0 }}
         >
           <div
@@ -448,13 +449,30 @@ export function ProblemSolver({
             ) : null}
           </div>
           <div
-            className="flex-1 overflow-auto p-4 font-mono text-[12px]"
+            className="flex-1 overflow-visible p-4 font-mono text-[12px] md:overflow-auto"
             style={{ color: "var(--text-1)" }}
           >
             <ResultBody output={output} expected={expectedOutput} passed={passed} />
           </div>
         </div>
       </div>
+
+      {/* Mobile-only floating Run button — keeps the primary action one tap away
+          regardless of how far the user has scrolled the body on small screens. */}
+      <button
+        type="button"
+        disabled={running}
+        onClick={run}
+        aria-label="コードを実行"
+        className={cn(
+          "fixed right-4 bottom-16 z-30 inline-flex items-center gap-1.5 rounded-full px-5 py-3 font-semibold text-[13px] shadow-lg transition md:hidden",
+          running ? "cursor-not-allowed opacity-60" : "hover:opacity-90",
+        )}
+        style={{ background: "var(--accent-solid)", color: "var(--accent-ink)" }}
+      >
+        <Play className="size-4" aria-hidden="true" />
+        {running ? "実行中…" : "実行"}
+      </button>
 
       {/* Bottom bar — navigation and hint only; the Run button now lives inside the editor toolbar */}
       <footer
