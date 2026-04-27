@@ -4,7 +4,7 @@ import { NotFoundError } from "@/lib/errors";
 import { isLessonBookmarked } from "@/services/bookmarkService";
 import { getCourseBySlug } from "@/services/courseService";
 import { isLessonCompleted } from "@/services/progressService";
-import LessonClient from "./_components/LessonClient";
+import { LessonSolver } from "./_components/LessonSolver";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +33,7 @@ export default async function LessonPage({ params }: PageProps<"/learn/[course]/
   ]);
 
   return (
-    <LessonClient
+    <LessonSolver
       course={course}
       courseTitle={course.title}
       lesson={{
