@@ -1,5 +1,4 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { BackLink } from "@/components/navigation/BackLink";
 import { requireAuth } from "@/lib/auth";
 import { profileUrl } from "@/lib/routes";
 import { ProfileEditForm } from "./_components/ProfileEditForm";
@@ -13,14 +12,7 @@ export default async function ProfileEditPage() {
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "720px" }}>
       <div className="mb-6">
-        <Link
-          href={profileUrl(profile.handle)}
-          className="inline-flex items-center gap-1.5 text-[13px]"
-          style={{ color: "var(--text-3)" }}
-        >
-          <ArrowLeft className="size-3.5" aria-hidden="true" />
-          プロフィールに戻る
-        </Link>
+        <BackLink fallbackHref={profileUrl(profile.handle)}>プロフィールに戻る</BackLink>
       </div>
 
       <header className="mb-7">

@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { completeLessonAction } from "@/actions/progress";
 import { BookmarkButton } from "@/components/bookmarks/BookmarkButton";
+import { BackLink } from "@/components/navigation/BackLink";
 import { ProblemSolver } from "@/components/problem-solver/ProblemSolver";
 import { type CourseLinkable, learnUrl, lessonUrl } from "@/lib/routes";
 
@@ -51,13 +52,9 @@ export function LessonSolver({
       }}
       headerLeft={
         <>
-          <Link
-            href={learnUrl(course)}
-            className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[12px]"
-            style={{ color: "var(--text-2)" }}
-          >
-            <ArrowLeft className="size-3.5" aria-hidden="true" /> コース
-          </Link>
+          <BackLink fallbackHref={learnUrl(course)} className="text-[12px]">
+            コース
+          </BackLink>
           <div className="flex items-center gap-1.5 text-[12px]" style={{ color: "var(--text-3)" }}>
             <span>{courseTitle}</span>
             <ChevronRight className="size-3" aria-hidden="true" />
