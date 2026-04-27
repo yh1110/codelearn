@@ -22,9 +22,11 @@ export type ContentCardProps = {
 
 /**
  * Shared card primitive for /learn (CourseCard) and / (CollectionCard).
- * The card itself is *not* an anchor so children like <HandleLink> can be
- * real anchors without nesting (which is invalid HTML). The destination
- * link is placed on the cover + title only.
+ * Uses the "stretched link" pattern: the title is the canonical anchor and
+ * its `::before` pseudo-element covers the whole card so the entire surface
+ * is clickable. Nested interactive children (HandleLink, BookmarkButton…)
+ * sit on a higher stacking context (`relative z-10`) so they remain
+ * independently clickable instead of nesting inside another anchor.
  */
 export function ContentCard({
   href,
@@ -43,26 +45,35 @@ export function ContentCard({
   return (
     <article
       className={cn(
-        "group flex h-full flex-col overflow-hidden rounded-[14px] transition",
+        "group relative flex h-full flex-col overflow-hidden rounded-[14px] transition",
         "hover:-translate-y-0.5 hover:border-[color:var(--line-3)]",
       )}
       style={{ background: "var(--bg-1)", border: "1px solid var(--line-1)" }}
     >
-      <Link href={href} className="relative block">
+      <div className="relative block">
         {cover}
         {topBadge ? <span className="absolute top-2.5 right-2.5 z-10">{topBadge}</span> : null}
-      </Link>
+      </div>
       <div className="flex flex-1 flex-col gap-2.5 p-4">
-        <Link href={href} className="block">
-          <h3
-            className="m-0 line-clamp-2 font-semibold text-[15px] leading-snug tracking-tight transition group-hover:opacity-90"
-            style={{ color: "var(--text-1)" }}
+        <h3
+          className="m-0 line-clamp-2 font-semibold text-[15px] leading-snug tracking-tight"
+          style={{ color: "var(--text-1)" }}
+        >
+          <Link
+            href={href}
+            className={cn(
+              "block transition group-hover:opacity-90",
+              "before:absolute before:inset-0 before:z-0 before:content-['']",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-solid)] focus-visible:rounded-[14px]",
+            )}
           >
             {title}
-          </h3>
-        </Link>
+          </Link>
+        </h3>
 
-        {byline ? <div className="flex items-center gap-1.5">{byline}</div> : null}
+        {byline ? (
+          <div className="relative z-10 flex w-fit items-center gap-1.5">{byline}</div>
+        ) : null}
 
         {description ? (
           <p className="m-0 line-clamp-2 text-[12.5px]" style={{ color: "var(--text-3)" }}>
