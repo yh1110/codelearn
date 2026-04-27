@@ -1,8 +1,8 @@
-# codeMaker (codelearn)
+# Arcode
 
-**codeMaker** (internal repo 名: `codelearn`) は Progate 風の TypeScript 学習プラットフォーム。ブラウザ上のエディタで TypeScript を書き、**そのままブラウザ内で transpile / 実行**して結果を期待出力と突き合わせる。
+**Arcode** は TypeScript 学習プラットフォーム。公式 curated コース (Course / Lesson) と、ユーザー作成の問題集 (Collection / Problem) の両方を持ち、ブラウザ上のエディタで TypeScript を書き **そのままブラウザ内で transpile / 実行** して結果を期待出力と突き合わせる。
 
-> UI 上のブランド名は **codeMaker**。リポジトリ名・npm package 名は歴史的経緯で `codelearn` のまま。
+> 旧ブランド名は **codeMaker / codelearn**。GitHub リポジトリ名は引き続き `codelearn` (歴史的経緯)。
 
 ## 技術スタック
 

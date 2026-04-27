@@ -45,12 +45,12 @@ export function TopBar({ displayName, handle, avatarInitial, unreadCount }: Prop
       <Link
         href="/"
         className="flex items-center gap-2.5 font-bold text-[15px] tracking-tight"
-        aria-label="codeMaker ホーム"
+        aria-label="Arcode ホーム"
       >
         <span className="cm-brand-mark" aria-hidden="true">
           {"</>"}
         </span>
-        <span>codeMaker</span>
+        <span>Arcode</span>
         <span
           className="ml-0.5 font-mono font-normal text-[11px]"
           style={{ color: "var(--text-3)" }}

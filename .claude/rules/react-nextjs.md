@@ -4,7 +4,7 @@ alwaysApply: true
 
 # React & Next.js Conventions
 
-Next.js 16 + React 19 で codelearn を書くときの規約。**アーキテクチャ層の規約は `architecture.md`、ライブラリの使い分けは `tech-stack.md` に分離**。本ファイルは「React / Next.js の書き方そのもの」に関するルールに絞る。
+Next.js 16 + React 19 で Arcode を書くときの規約。**アーキテクチャ層の規約は `architecture.md`、ライブラリの使い分けは `tech-stack.md` に分離**。本ファイルは「React / Next.js の書き方そのもの」に関するルールに絞る。
 
 ---
 

@@ -16,7 +16,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <span className="cm-brand-mark" aria-hidden="true">
             {"</>"}
           </span>
-          <h1 className="m-0 font-bold text-[26px] tracking-tight">codeMaker</h1>
+          <h1 className="m-0 font-bold text-[26px] tracking-tight">Arcode</h1>
           <span
             className="ml-0.5 font-mono font-normal text-[11px]"
             style={{ color: "var(--text-3)" }}

@@ -18,7 +18,7 @@ export default async function LearnPage() {
       <header className="mb-7">
         <h1 className="m-0 font-bold text-[26px] tracking-tight">学ぶ — 公式コース</h1>
         <p className="mt-1.5 text-[13px]" style={{ color: "var(--text-3)" }}>
-          codelearn が提供する TypeScript の学習路線
+          Arcode が提供する TypeScript の学習路線
         </p>
       </header>
 

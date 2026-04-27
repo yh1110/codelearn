@@ -4,7 +4,7 @@ alwaysApply: true
 
 # Tech Stack
 
-codelearn が採用する技術スタックと使い分けルール。MVP フェーズで主要ライブラリは導入済み。残りの未導入ライブラリ (zustand / playwright / vitest / nuqs) は必要になった時点で別 issue で導入する。新規コードは下記方針に従う。
+Arcode が採用する技術スタックと使い分けルール。MVP フェーズで主要ライブラリは導入済み。残りの未導入ライブラリ (zustand / playwright / vitest / nuqs) は必要になった時点で別 issue で導入する。新規コードは下記方針に従う。
 
 ---
 
@@ -131,7 +131,7 @@ codelearn が採用する技術スタックと使い分けルール。MVP フェ
 
 ## 3. 導入状況
 
-codelearn は **MVP フェーズ**:
+Arcode は **MVP フェーズ**:
 
 - **導入済み**: Next.js 16 / React 19 / Tailwind v4 / shadcn/ui / Prisma 7 (driver adapter: `@prisma/adapter-pg`) / zod / Monaco Editor / esbuild-wasm / biome / SWR / next-safe-action / supabase (`@supabase/ssr` + `@supabase/supabase-js`) / server-only / lucide-react / pino (+ pino-pretty) / react-hook-form (+ `@hookform/resolvers`)
 - **未導入**: zustand / playwright / vitest / nuqs

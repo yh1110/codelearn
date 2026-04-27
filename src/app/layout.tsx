@@ -23,7 +23,7 @@ const notoSansJp = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "codeMaker — ブラウザで TypeScript を学ぶ",
+  title: "Arcode — ブラウザで TypeScript を学ぶ",
   description: "モノづくりで学ぶ TypeScript 学習プラットフォーム",
 };
 

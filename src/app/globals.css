@@ -49,7 +49,7 @@
 }
 
 /* =======================================================
-   codeMaker tokens — dark-only, warm neutrals + violet accent
+   Arcode tokens — dark-only, warm neutrals + violet accent
    ======================================================= */
 :root {
   /* --- Neutrals (slight warm tint, very low chroma) --- */
@@ -117,7 +117,7 @@
   --font-mono-family:
     var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-  /* --- shadcn variable remapping (so existing shadcn components pick up codeMaker palette) --- */
+  /* --- shadcn variable remapping (so existing shadcn components pick up Arcode palette) --- */
   --background: var(--bg-0);
   --foreground: var(--text-1);
   --card: var(--bg-1);
@@ -229,7 +229,7 @@
 }
 
 /* =======================================================
-   codeMaker utility atoms (consumed by bespoke layout pieces —
+   Arcode utility atoms (consumed by bespoke layout pieces —
    shadcn primitives are still preferred for buttons / cards).
    ======================================================= */
 @layer components {

@@ -10,15 +10,17 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ---
 
-# codelearn — AI エージェント向け Index
+# Arcode — AI エージェント向け Index
 
 このファイルは **AI コーディングエージェント（Claude / Cursor 等）向けの入口** である。人間のための README ではない。詳細なルールは `.claude/rules/` 配下に分割されている。本ファイルはプロジェクトの概要と、どのルールをどの順で読むかの案内に徹する。
+
+(GitHub リポ名は `codelearn`、npm name は `arcode`。UI / プロダクトのブランド名は **Arcode**。)
 
 ---
 
 ## 1. プロジェクト概要
 
-- **codelearn** (UI 上のブランド名は **codeMaker**) は TypeScript 学習プラットフォーム。**公式 curated コース** と **ユーザー作成 (UGC) コレクション** の両方を持つ。
+- **Arcode** (リポ名 `codelearn`) は TypeScript 学習プラットフォーム。**公式 curated コース** と **ユーザー作成 (UGC) コレクション** の両方を持つ。
 - ブラウザ上の Monaco Editor で TS を書き、`esbuild-wasm` で transpile → Web Worker / iframe sandbox で実行 → 期待出力と突き合わせて自動判定する (サーバ側実行ではない)。
 - フェーズは **MVP**。Supabase Auth (GitHub / Google OAuth) 経由でサインイン、UGC 作成 / プロフィール / ブックマーク / 通知 / 検索 / 公式・コミュニティ分離まで稼働。
 - ドメイン分離:
