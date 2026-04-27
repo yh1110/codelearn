@@ -1,61 +1,60 @@
 "use client";
 
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  ChevronRight,
-  FileText,
-  Play,
-  RotateCcw,
-  X,
-} from "lucide-react";
+import { Check, FileText, Play, RotateCcw, X } from "lucide-react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
-import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { BookmarkButton } from "@/components/bookmarks/BookmarkButton";
 import { KEY_NUDGE_PX, MAX_LEFT_RATIO, MIN_LEFT_PX } from "@/config/editor";
-import { type CourseLinkable, learnUrl, lessonUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
-import { useLessonRunner } from "../_hooks/useLessonRunner";
+import { type ProblemStatus, type ProblemSubmitResult, useProblemRunner } from "./useProblemRunner";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
-type Lesson = {
-  id: string;
-  slug: string;
+export type ProblemSolverProps = {
   title: string;
   contentMd: string;
   starterCode: string;
   expectedOutput: string | null;
+  onSubmit?: (result: ProblemSubmitResult) => Promise<void>;
+  initialStatus?: ProblemStatus;
+  /** Header chrome — left side (breadcrumb / back link). */
+  headerLeft?: ReactNode;
+  /** Small line displayed under the title. */
+  subtitle?: ReactNode;
+  /** Header chrome — right side, appended after the auto-rendered "クリア済み" badge. */
+  headerRight?: ReactNode;
+  /** Footer chrome — left side (e.g. prev / next nav). */
+  footerLeft?: ReactNode;
+  /** Footer chrome — center hint text (overrides the default). */
+  footerHint?: ReactNode;
 };
 
-type Props = {
-  course: CourseLinkable;
-  courseTitle: string;
-  lesson: Lesson;
-  prevSlug: string | null;
-  nextSlug: string | null;
-  initiallyCompleted: boolean;
-  initiallyBookmarked: boolean;
-};
-
-export default function LessonClient({
-  course,
-  courseTitle,
-  lesson,
-  prevSlug,
-  nextSlug,
-  initiallyCompleted,
-  initiallyBookmarked,
-}: Props) {
-  const { code, setCode, output, running, completed, run, reset } = useLessonRunner({
-    lessonId: lesson.id,
-    starterCode: lesson.starterCode,
-    expectedOutput: lesson.expectedOutput,
-    initiallyCompleted,
+export function ProblemSolver({
+  title,
+  contentMd,
+  starterCode,
+  expectedOutput,
+  onSubmit,
+  initialStatus = "NOT_STARTED",
+  headerLeft,
+  subtitle,
+  headerRight,
+  footerLeft,
+  footerHint,
+}: ProblemSolverProps) {
+  const { code, setCode, output, running, completed, run, reset } = useProblemRunner({
+    starterCode,
+    expectedOutput,
+    initialStatus,
+    onSubmit,
   });
 
   const passed =
@@ -64,8 +63,8 @@ export default function LessonClient({
       !output.stderr &&
       !output.timedOut &&
       output.exitCode === 0 &&
-      lesson.expectedOutput !== null &&
-      output.stdout.trim() === lesson.expectedOutput.trim());
+      expectedOutput !== null &&
+      output.stdout.trim() === expectedOutput.trim());
 
   const splitRef = useRef<HTMLDivElement>(null);
   const [leftWidth, setLeftWidth] = useState<number | null>(null);
@@ -151,25 +150,14 @@ export default function LessonClient({
           background: "var(--bg-0)",
         }}
       >
-        <div className="flex items-center gap-3">
-          <Link
-            href={learnUrl(course)}
-            className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[12px]"
-            style={{ color: "var(--text-2)" }}
-          >
-            <ArrowLeft className="size-3.5" aria-hidden="true" /> コース
-          </Link>
-          <div className="flex items-center gap-1.5 text-[12px]" style={{ color: "var(--text-3)" }}>
-            <span>{courseTitle}</span>
-            <ChevronRight className="size-3" aria-hidden="true" />
-            <b style={{ color: "var(--text-1)", fontWeight: 500 }}>レッスン</b>
-          </div>
-        </div>
+        <div className="flex items-center gap-3">{headerLeft}</div>
         <div className="text-center">
-          <h1 className="m-0 font-semibold text-[15px] tracking-tight">{lesson.title}</h1>
-          <div className="mt-0.5 font-mono text-[11px]" style={{ color: "var(--text-4)" }}>
-            #{lesson.slug} · <span className="cm-diff-badge cm-diff-1 align-middle">初級</span>
-          </div>
+          <h1 className="m-0 font-semibold text-[15px] tracking-tight">{title}</h1>
+          {subtitle ? (
+            <div className="mt-0.5 font-mono text-[11px]" style={{ color: "var(--text-4)" }}>
+              {subtitle}
+            </div>
+          ) : null}
         </div>
         <div className="flex items-center justify-end gap-2">
           {passed ? (
@@ -180,12 +168,7 @@ export default function LessonClient({
               <Check className="size-3" aria-hidden="true" /> クリア済み
             </span>
           ) : null}
-          <BookmarkButton
-            target="lesson"
-            lessonId={lesson.id}
-            bookmarked={initiallyBookmarked}
-            variant="compact"
-          />
+          {headerRight}
         </div>
       </header>
 
@@ -299,10 +282,10 @@ export default function LessonClient({
                   ),
                 }}
               >
-                {lesson.contentMd}
+                {contentMd}
               </ReactMarkdown>
 
-              {lesson.expectedOutput ? (
+              {expectedOutput ? (
                 <section className="mt-6">
                   <h2
                     className="mt-6 mb-2 font-semibold text-[15px] tracking-tight"
@@ -331,7 +314,7 @@ export default function LessonClient({
                       className="m-0 p-3 font-mono text-[12.5px] leading-relaxed"
                       style={{ background: "var(--bg-code)", color: "var(--text-1)" }}
                     >
-                      {lesson.expectedOutput}
+                      {expectedOutput}
                     </pre>
                   </div>
                 </section>
@@ -455,7 +438,7 @@ export default function LessonClient({
               className="flex-1 overflow-auto p-4 font-mono text-[12px]"
               style={{ color: "var(--text-1)" }}
             >
-              <ResultBody output={output} expected={lesson.expectedOutput} passed={passed} />
+              <ResultBody output={output} expected={expectedOutput} passed={passed} />
             </div>
           </div>
         </div>
@@ -466,41 +449,13 @@ export default function LessonClient({
         className="grid items-center gap-4 border-t px-5 py-2.5"
         style={{ gridTemplateColumns: "1fr auto 1fr", borderColor: "var(--line-1)" }}
       >
-        <div className="flex gap-2">
-          {prevSlug ? (
-            <Link
-              href={lessonUrl(course, prevSlug)}
-              className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[12px]"
-              style={{
-                background: "var(--bg-2)",
-                border: "1px solid var(--line-2)",
-                color: "var(--text-1)",
-              }}
-            >
-              <ArrowLeft className="size-3.5" aria-hidden="true" /> 前のレッスン
-            </Link>
-          ) : (
-            <span />
-          )}
-          {nextSlug ? (
-            <Link
-              href={lessonUrl(course, nextSlug)}
-              className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[12px]"
-              style={{
-                background: "var(--bg-2)",
-                border: "1px solid var(--line-2)",
-                color: "var(--text-1)",
-              }}
-            >
-              次のレッスン <ArrowRight className="size-3.5" aria-hidden="true" />
-            </Link>
-          ) : null}
-        </div>
+        <div className="flex gap-2">{footerLeft ?? <span />}</div>
         <div
           className="flex items-center gap-1.5 font-mono text-[11px]"
           style={{ color: "var(--text-3)" }}
         >
-          {lesson.expectedOutput ? "期待出力と一致すればクリア" : "実行して動作を確認しよう"}
+          {footerHint ??
+            (expectedOutput ? "期待出力と一致すればクリア" : "実行して動作を確認しよう")}
         </div>
         <div className="flex items-center justify-end gap-2">
           <button
@@ -527,7 +482,7 @@ function ResultBody({
   expected,
   passed,
 }: {
-  output: ReturnType<typeof useLessonRunner>["output"];
+  output: ReturnType<typeof useProblemRunner>["output"];
   expected: string | null;
   passed: boolean;
 }) {
