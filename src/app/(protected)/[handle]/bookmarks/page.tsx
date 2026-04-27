@@ -4,6 +4,10 @@ import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { getUserBookmarks } from "@/services/bookmarkService";
 import { getProfileByHandle } from "@/services/profileService";
+import {
+  getCompletedLessonIdsByUser,
+  getCompletedProblemIdsByUser,
+} from "@/services/progressService";
 import { BookmarkCollectionList } from "./_components/BookmarkCollectionList";
 import { BookmarkCourseList } from "./_components/BookmarkCourseList";
 import { BookmarkLessonList } from "./_components/BookmarkLessonList";
@@ -33,7 +37,14 @@ export default async function BookmarksPage({
   // The bookmark service queries WHERE userId = viewedProfile.id, so even if
   // a future change loosened the isOwner gate above, the data fetch itself
   // would still be scoped to one user — Layer C defence in depth.
-  const { courses, lessons, collections, problems } = await getUserBookmarks(viewedProfile.id);
+  const [bookmarks, completedLessonIds, completedProblemIds] = await Promise.all([
+    getUserBookmarks(viewedProfile.id),
+    getCompletedLessonIdsByUser(viewedProfile.id),
+    getCompletedProblemIdsByUser(viewedProfile.id),
+  ]);
+  const { courses, lessons, collections, problems } = bookmarks;
+  const completedLessonIdSet = new Set(completedLessonIds);
+  const completedProblemIdSet = new Set(completedProblemIds);
   const officialCount = courses.length + lessons.length;
   const communityCount = collections.length + problems.length;
   const total = officialCount + communityCount;
@@ -77,7 +88,7 @@ export default async function BookmarksPage({
               <EmptyTab message="公式コンテンツのお気に入りはまだありません。" />
             ) : (
               <>
-                <BookmarkCourseList courses={courses} />
+                <BookmarkCourseList courses={courses} completedLessonIds={completedLessonIdSet} />
                 <BookmarkLessonList lessons={lessons} />
               </>
             )
@@ -85,7 +96,10 @@ export default async function BookmarksPage({
             <EmptyTab message="コミュニティのお気に入りはまだありません。" />
           ) : (
             <>
-              <BookmarkCollectionList collections={collections} />
+              <BookmarkCollectionList
+                collections={collections}
+                completedProblemIds={completedProblemIdSet}
+              />
               <BookmarkProblemList problems={problems} />
             </>
           )}
