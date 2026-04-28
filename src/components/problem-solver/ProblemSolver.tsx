@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, FileText, Play, RotateCcw, X } from "lucide-react";
+import { Check, ChevronDown, FileText, Play, RotateCcw, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import {
   type CSSProperties,
@@ -69,6 +69,18 @@ export function ProblemSolver({
   const splitRef = useRef<HTMLDivElement>(null);
   const [leftWidth, setLeftWidth] = useState<number | null>(null);
   const draggingRef = useRef(false);
+
+  // Result panel auto-opens after a successful run, but stays collapsible so
+  // the editor can use the full height while the user is typing.
+  const [resultExpanded, setResultExpanded] = useState(false);
+  const lastOutputRef = useRef(output);
+  useEffect(() => {
+    // Open the result drawer the moment a fresh output lands (Run completed).
+    if (output && output !== lastOutputRef.current) {
+      setResultExpanded(true);
+    }
+    lastOutputRef.current = output;
+  }, [output]);
 
   const clampLeftWidth = useCallback((raw: number, containerWidth: number) => {
     const max = Math.max(MIN_LEFT_PX, containerWidth * MAX_LEFT_RATIO);
@@ -172,27 +184,24 @@ export function ProblemSolver({
       </header>
 
       {/*
-        md+ : horizontal split — left pane stacks problem above editor (with the
-        Run button on top of the editor), right pane shows execution results.
-        < md : the body itself becomes the scroll container so the three panes
-        can stack with relaxed min-heights without being clipped, and a
-        floating Run button is rendered below for one-tap reach.
+        md+ : horizontal split — left = problem, right = editor (top, main area)
+        + collapsible result drawer (bottom). The drawer auto-expands on Run
+        completion, leaves the editor full-height when collapsed.
+        < md : body scrolls; problem → editor → result stacked, plus a fixed
+        Run button bottom-right.
       */}
       <div
         ref={splitRef}
         className="flex min-h-0 flex-1 flex-col overflow-y-auto md:grid md:overflow-hidden"
         style={splitStyle}
       >
-        {/* LEFT pane: problem (top) + editor with Run toolbar (bottom) */}
+        {/* LEFT pane: problem statement only */}
         <div
-          className="flex min-h-0 flex-col overflow-visible border-b md:overflow-hidden md:border-b-0"
+          className="flex min-h-[140px] flex-[1] flex-col overflow-visible border-b md:min-h-0 md:overflow-hidden md:border-b-0"
           style={{ borderColor: "var(--line-1)", minWidth: 0 }}
         >
           {/* Problem statement */}
-          <div
-            className="flex min-h-[140px] flex-[1.1] flex-col overflow-visible border-b md:min-h-[180px] md:flex-1 md:overflow-hidden"
-            style={{ borderColor: "var(--line-1)" }}
-          >
+          <div className="flex min-h-0 flex-1 flex-col overflow-visible md:overflow-hidden">
             <div
               className="flex flex-shrink-0 items-center gap-0.5 border-b px-3 py-1.5"
               style={{ borderColor: "var(--line-1)", background: "var(--bg-0)" }}
@@ -333,82 +342,14 @@ export function ProblemSolver({
               </div>
             </div>
           </div>
-
-          {/* Editor */}
-          <div
-            className="flex min-h-[220px] flex-[1.4] flex-col overflow-hidden md:min-h-[260px] md:flex-1"
-            style={{ background: "var(--bg-code)" }}
-          >
-            <div
-              className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 border-b px-2.5 py-1.5"
-              style={{ background: "var(--bg-0)", borderColor: "var(--line-1)" }}
-            >
-              <div
-                className="flex items-center gap-2 text-[12px]"
-                style={{ color: "var(--text-3)" }}
-              >
-                <span
-                  className="rounded-[6px] px-2 py-0.5 font-mono text-[11px]"
-                  style={{ background: "var(--bg-2)", border: "1px solid var(--line-1)" }}
-                >
-                  TypeScript
-                </span>
-                <span className="font-mono">main.ts</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={reset}
-                  className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1 text-[12px] transition hover:bg-[var(--bg-2)]"
-                  style={{ color: "var(--text-2)" }}
-                >
-                  <RotateCcw className="size-3" aria-hidden="true" /> リセット
-                </button>
-                <button
-                  type="button"
-                  disabled={running}
-                  onClick={run}
-                  aria-label="コードを実行"
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-[8px] px-3.5 py-1.5 font-semibold text-[12.5px] transition",
-                    running ? "cursor-not-allowed opacity-60" : "hover:opacity-90",
-                  )}
-                  style={{ background: "var(--accent-solid)", color: "var(--accent-ink)" }}
-                >
-                  <Play className="size-3.5" aria-hidden="true" />
-                  {running ? "実行中…" : "実行"}
-                </button>
-              </div>
-            </div>
-            <div className="relative flex-1" style={{ background: "var(--bg-code)", minHeight: 0 }}>
-              <MonacoEditor
-                height="100%"
-                language="typescript"
-                theme="vs-dark"
-                value={code}
-                onChange={(v) => setCode(v ?? "")}
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: 13.5,
-                  lineHeight: 22,
-                  scrollBeyondLastLine: false,
-                  smoothScrolling: true,
-                  padding: { top: 12, bottom: 12 },
-                  tabSize: 2,
-                  fontFamily: "var(--font-mono-family)",
-                  fontLigatures: true,
-                }}
-              />
-            </div>
-          </div>
         </div>
 
-        {/* Resizer (md+ only) */}
+        {/* Resizer (md+ only): adjusts left = problem / right = editor+result widths */}
         {/* biome-ignore lint/a11y/useSemanticElements: ARIA separator role is required for split-pane resize handles; <hr> cannot host interactive behavior */}
         <div
           role="separator"
           aria-orientation="vertical"
-          aria-label="左ペインと結果ペインの横幅を調整"
+          aria-label="問題ペインとエディタペインの横幅を調整"
           aria-valuemin={MIN_LEFT_PX}
           aria-valuenow={leftWidth ?? undefined}
           tabIndex={0}
@@ -427,32 +368,133 @@ export function ProblemSolver({
           />
         </div>
 
-        {/* RIGHT pane: results */}
+        {/* RIGHT pane: editor (main) + collapsible result drawer (bottom) */}
         <div
-          className="flex min-h-[140px] flex-[0.9] flex-col overflow-visible md:min-h-[180px] md:flex-1 md:overflow-hidden"
-          style={{ background: "var(--bg-0)", minWidth: 0 }}
+          className="flex min-h-[260px] flex-[1.4] flex-col overflow-hidden md:min-h-0 md:flex-1"
+          style={{ background: "var(--bg-code)", minWidth: 0 }}
         >
+          {/* Editor toolbar */}
           <div
-            className="flex flex-shrink-0 items-center justify-between gap-2 border-b px-3 py-1.5"
-            style={{ borderColor: "var(--line-1)" }}
+            className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 border-b px-2.5 py-1.5"
+            style={{ background: "var(--bg-0)", borderColor: "var(--line-1)" }}
           >
-            <span className="text-[12px]" style={{ color: "var(--text-3)" }}>
-              実行結果
-            </span>
-            {running ? (
+            <div
+              className="flex items-center gap-2 text-[12px]"
+              style={{ color: "var(--text-3)" }}
+            >
               <span
-                className="cm-pulse inline-flex items-center gap-1.5 font-mono text-[11px]"
+                className="rounded-[6px] px-2 py-0.5 font-mono text-[11px]"
+                style={{ background: "var(--bg-2)", border: "1px solid var(--line-1)" }}
+              >
+                TypeScript
+              </span>
+              <span className="font-mono">main.ts</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={reset}
+                className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1 text-[12px] transition hover:bg-[var(--bg-2)]"
+                style={{ color: "var(--text-2)" }}
+              >
+                <RotateCcw className="size-3" aria-hidden="true" /> リセット
+              </button>
+              <button
+                type="button"
+                disabled={running}
+                onClick={run}
+                aria-label="コードを実行"
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-[8px] px-3.5 py-1.5 font-semibold text-[12.5px] transition",
+                  running ? "cursor-not-allowed opacity-60" : "hover:opacity-90",
+                )}
+                style={{ background: "var(--accent-solid)", color: "var(--accent-ink)" }}
+              >
+                <Play className="size-3.5" aria-hidden="true" />
+                {running ? "実行中…" : "実行"}
+              </button>
+            </div>
+          </div>
+
+          {/* Monaco editor — main area, takes all remaining vertical space */}
+          <div className="relative flex-1" style={{ background: "var(--bg-code)", minHeight: 0 }}>
+            <MonacoEditor
+              height="100%"
+              language="typescript"
+              theme="vs-dark"
+              value={code}
+              onChange={(v) => setCode(v ?? "")}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 13.5,
+                lineHeight: 22,
+                scrollBeyondLastLine: false,
+                smoothScrolling: true,
+                padding: { top: 12, bottom: 12 },
+                tabSize: 2,
+                fontFamily: "var(--font-mono-family)",
+                fontLigatures: true,
+              }}
+            />
+          </div>
+
+          {/* Collapsible result drawer */}
+          <div
+            className={cn(
+              "flex flex-shrink-0 flex-col border-t",
+              resultExpanded ? "h-[240px]" : "h-9",
+            )}
+            style={{ borderColor: "var(--line-1)", background: "var(--bg-0)" }}
+          >
+            <button
+              type="button"
+              onClick={() => setResultExpanded((prev) => !prev)}
+              className="flex flex-shrink-0 cursor-pointer items-center justify-between gap-2 border-b px-3 py-1.5 text-left transition-colors hover:bg-[var(--bg-2)]"
+              style={{ borderColor: resultExpanded ? "var(--line-1)" : "transparent" }}
+              aria-expanded={resultExpanded}
+              aria-controls="result-drawer-body"
+            >
+              <span
+                className="inline-flex items-center gap-2 text-[12px]"
                 style={{ color: "var(--text-3)" }}
               >
-                ● 実行中…
+                <ChevronDown
+                  className={cn(
+                    "size-3.5 transition-transform",
+                    resultExpanded ? "" : "-rotate-90",
+                  )}
+                  aria-hidden="true"
+                />
+                実行結果
+                {running ? (
+                  <span
+                    className="cm-pulse inline-flex items-center gap-1 font-mono text-[11px]"
+                    style={{ color: "var(--text-3)" }}
+                  >
+                    ● 実行中…
+                  </span>
+                ) : output ? (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-[5px] px-1.5 py-0.5 font-mono text-[11px]"
+                    style={{
+                      background: passed ? "var(--ok-soft)" : "var(--err-soft)",
+                      color: passed ? "var(--ok)" : "var(--err)",
+                    }}
+                  >
+                    {passed ? "Accepted" : "Wrong Answer"}
+                  </span>
+                ) : null}
               </span>
+            </button>
+            {resultExpanded ? (
+              <div
+                id="result-drawer-body"
+                className="flex-1 overflow-auto p-4 font-mono text-[12px]"
+                style={{ color: "var(--text-1)" }}
+              >
+                <ResultBody output={output} expected={expectedOutput} passed={passed} />
+              </div>
             ) : null}
-          </div>
-          <div
-            className="flex-1 overflow-visible p-4 font-mono text-[12px] md:overflow-auto"
-            style={{ color: "var(--text-1)" }}
-          >
-            <ResultBody output={output} expected={expectedOutput} passed={passed} />
           </div>
         </div>
       </div>
