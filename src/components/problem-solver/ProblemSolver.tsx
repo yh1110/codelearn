@@ -378,10 +378,7 @@ export function ProblemSolver({
             className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 border-b px-2.5 py-1.5"
             style={{ background: "var(--bg-0)", borderColor: "var(--line-1)" }}
           >
-            <div
-              className="flex items-center gap-2 text-[12px]"
-              style={{ color: "var(--text-3)" }}
-            >
+            <div className="flex items-center gap-2 text-[12px]" style={{ color: "var(--text-3)" }}>
               <span
                 className="rounded-[6px] px-2 py-0.5 font-mono text-[11px]"
                 style={{ background: "var(--bg-2)", border: "1px solid var(--line-1)" }}
