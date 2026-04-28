@@ -1,6 +1,7 @@
-import { ArrowLeft, BookText } from "lucide-react";
+import { BookText } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackLink } from "@/components/navigation/BackLink";
 import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 import { problemUrl, profileUrl } from "@/lib/routes";
@@ -33,18 +34,23 @@ export default async function CollectionPage({ params }: PageProps<"/[handle]/[c
 
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "960px" }}>
-      <Link
-        href={profileUrl(handle)}
-        className="mb-4 inline-flex items-center gap-1 text-[13px]"
-        style={{ color: "var(--text-3)" }}
-      >
-        <ArrowLeft className="size-3.5" aria-hidden="true" /> {handle}
-      </Link>
+      <BackLink fallbackHref={profileUrl(handle)} className="mb-4" />
 
       <header className="mb-7">
         <h1 className="m-0 font-bold text-[26px] tracking-tight">{collection.title}</h1>
-        <div className="mt-1.5 text-[13px]" style={{ color: "var(--text-3)" }}>
-          {author.handle} · 問題 {collection.problems.length}
+        <div
+          className="mt-1.5 inline-flex items-center gap-1.5 text-[13px]"
+          style={{ color: "var(--text-3)" }}
+        >
+          <Link
+            href={profileUrl(author.handle)}
+            className="transition hover:underline"
+            style={{ color: "var(--text-2)" }}
+          >
+            {author.handle}
+          </Link>
+          <span aria-hidden="true">/</span>
+          <span>問題数 {collection.problems.length}</span>
         </div>
         <p
           className="mt-3 max-w-prose whitespace-pre-wrap text-[14px]"

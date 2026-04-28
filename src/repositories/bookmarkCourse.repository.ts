@@ -1,10 +1,10 @@
 import "server-only";
 
-import type { BookmarkCourse, Course } from "@prisma/client";
+import type { BookmarkCourse, Course, Lesson } from "@prisma/client";
 import { BaseRepository } from "./base.repository";
 
 export type CourseBookmarkWithCourse = BookmarkCourse & {
-  course: Course;
+  course: Course & { lessons: Pick<Lesson, "id">[] };
 };
 
 export class BookmarkCourseRepository extends BaseRepository {
@@ -12,7 +12,17 @@ export class BookmarkCourseRepository extends BaseRepository {
     return this.client.bookmarkCourse.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
-      include: { course: true },
+      include: {
+        course: {
+          include: {
+            lessons: {
+              where: { isPublished: true },
+              select: { id: true },
+              orderBy: { order: "asc" },
+            },
+          },
+        },
+      },
     });
   }
 

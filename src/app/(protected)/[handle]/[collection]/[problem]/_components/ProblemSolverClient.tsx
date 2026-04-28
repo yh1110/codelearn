@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowLeft, ChevronRight } from "lucide-react";
-import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { completeProblemAction } from "@/actions/progress";
+import { BackLink } from "@/components/navigation/BackLink";
 import { ProblemSolver } from "@/components/problem-solver/ProblemSolver";
 import { type CollectionLinkable, collectionUrl } from "@/lib/routes";
 
@@ -38,13 +38,7 @@ export function ProblemSolverClient({ collection, problem, initiallyCompleted }:
       }}
       headerLeft={
         <>
-          <Link
-            href={collectionUrl(collection)}
-            className="inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[12px]"
-            style={{ color: "var(--text-2)" }}
-          >
-            <ArrowLeft className="size-3.5" aria-hidden="true" /> コレクション
-          </Link>
+          <BackLink fallbackHref={collectionUrl(collection)} className="text-[12px]" />
           <div className="flex items-center gap-1.5 text-[12px]" style={{ color: "var(--text-3)" }}>
             <span>{collection.title}</span>
             <ChevronRight className="size-3" aria-hidden="true" />

@@ -21,16 +21,9 @@ export function MyCollectionsSection({ author, collections, isOwner }: MyCollect
   return (
     <section>
       <div className="mb-4 flex items-baseline justify-between">
-        <div>
-          <h2 className="m-0 font-semibold text-[18px] tracking-tight">
-            {isOwner ? "作成したコレクション" : "公開しているコレクション"}
-          </h2>
-          <span className="text-xs" style={{ color: "var(--text-3)" }}>
-            {isOwner
-              ? "あなたが作者として公開 / 管理しているコレクション"
-              : `${author.handle} が公開しているコレクション`}
-          </span>
-        </div>
+        <h2 className="m-0 font-semibold text-[18px] tracking-tight">
+          {isOwner ? "作成したコレクション" : "公開しているコレクション"}
+        </h2>
         {isOwner ? (
           <Link href="/dashboard" className="text-[13px]" style={{ color: "var(--accent-solid)" }}>
             管理する →

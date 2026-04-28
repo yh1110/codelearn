@@ -1,10 +1,20 @@
 import "server-only";
 
-import type { BookmarkCollection, Collection } from "@prisma/client";
+import type { BookmarkCollection, Collection, Problem } from "@prisma/client";
 import { BaseRepository } from "./base.repository";
 
+export type CollectionBookmarkAuthor = {
+  id: string;
+  name: string | null;
+  handle: string;
+  avatarUrl: string | null;
+};
+
 export type CollectionBookmarkWithCollection = BookmarkCollection & {
-  collection: Collection & { author: { handle: string } };
+  collection: Collection & {
+    author: CollectionBookmarkAuthor;
+    problems: Pick<Problem, "id">[];
+  };
 };
 
 export class BookmarkCollectionRepository extends BaseRepository {
@@ -14,7 +24,16 @@ export class BookmarkCollectionRepository extends BaseRepository {
       orderBy: { createdAt: "desc" },
       include: {
         collection: {
-          include: { author: { select: { handle: true } } },
+          include: {
+            author: {
+              select: { id: true, name: true, handle: true, avatarUrl: true },
+            },
+            problems: {
+              where: { isPublished: true },
+              select: { id: true },
+              orderBy: { order: "asc" },
+            },
+          },
         },
       },
     });

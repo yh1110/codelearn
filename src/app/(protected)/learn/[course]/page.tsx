@@ -1,6 +1,5 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackLink } from "@/components/navigation/BackLink";
 import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 import { isCourseBookmarked } from "@/services/bookmarkService";
@@ -37,13 +36,7 @@ export default async function CoursePage({ params }: PageProps<"/learn/[course]"
 
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "1280px" }}>
-      <Link
-        href="/learn"
-        className="mb-4 inline-flex items-center gap-1 text-[13px]"
-        style={{ color: "var(--text-3)" }}
-      >
-        <ArrowLeft className="size-3.5" aria-hidden="true" /> 公式コース一覧
-      </Link>
+      <BackLink fallbackHref="/learn" className="mb-4" />
 
       <CourseHero course={course} done={done} total={total} pct={pct} bookmarked={bookmarked} />
 
