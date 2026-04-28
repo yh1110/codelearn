@@ -52,9 +52,7 @@ export function LessonSolver({
       }}
       headerLeft={
         <>
-          <BackLink fallbackHref={learnUrl(course)} className="text-[12px]">
-            コース
-          </BackLink>
+          <BackLink fallbackHref={learnUrl(course)} className="text-[12px]" />
           <div className="flex items-center gap-1.5 text-[12px]" style={{ color: "var(--text-3)" }}>
             <span>{courseTitle}</span>
             <ChevronRight className="size-3" aria-hidden="true" />

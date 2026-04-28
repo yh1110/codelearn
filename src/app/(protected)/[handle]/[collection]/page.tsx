@@ -34,9 +34,7 @@ export default async function CollectionPage({ params }: PageProps<"/[handle]/[c
 
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "960px" }}>
-      <BackLink fallbackHref={profileUrl(handle)} className="mb-4">
-        {handle}
-      </BackLink>
+      <BackLink fallbackHref={profileUrl(handle)} className="mb-4" />
 
       <header className="mb-7">
         <h1 className="m-0 font-bold text-[26px] tracking-tight">{collection.title}</h1>

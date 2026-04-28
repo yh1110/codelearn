@@ -6,14 +6,19 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  /** Visible label after the arrow icon. */
-  children: ReactNode;
+  /**
+   * Visible label after the arrow icon. Defaults to "もどる" so every back
+   * button across the app reads consistently — page-specific labels (e.g.
+   * a parent page's title) tend to confuse users who associate the button
+   * with what is on the previous screen, not where it is in the URL tree.
+   */
+  children?: ReactNode;
   /** Pushed instead of router.back() when the user has no history (e.g. opened in a new tab). */
   fallbackHref?: string;
   className?: string;
 };
 
-export function BackLink({ children, fallbackHref = "/", className }: Props) {
+export function BackLink({ children = "もどる", fallbackHref = "/", className }: Props) {
   const router = useRouter();
 
   const onClick = () => {

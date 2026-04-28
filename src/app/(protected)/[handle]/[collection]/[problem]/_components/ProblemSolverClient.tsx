@@ -38,9 +38,7 @@ export function ProblemSolverClient({ collection, problem, initiallyCompleted }:
       }}
       headerLeft={
         <>
-          <BackLink fallbackHref={collectionUrl(collection)} className="text-[12px]">
-            コレクション
-          </BackLink>
+          <BackLink fallbackHref={collectionUrl(collection)} className="text-[12px]" />
           <div className="flex items-center gap-1.5 text-[12px]" style={{ color: "var(--text-3)" }}>
             <span>{collection.title}</span>
             <ChevronRight className="size-3" aria-hidden="true" />

@@ -36,9 +36,7 @@ export default async function CoursePage({ params }: PageProps<"/learn/[course]"
 
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "1280px" }}>
-      <BackLink fallbackHref="/learn" className="mb-4">
-        公式コース一覧
-      </BackLink>
+      <BackLink fallbackHref="/learn" className="mb-4" />
 
       <CourseHero course={course} done={done} total={total} pct={pct} bookmarked={bookmarked} />
 

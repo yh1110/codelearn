@@ -12,7 +12,7 @@ export default async function ProfileEditPage() {
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "720px" }}>
       <div className="mb-6">
-        <BackLink fallbackHref={profileUrl(profile.handle)}>プロフィールに戻る</BackLink>
+        <BackLink fallbackHref={profileUrl(profile.handle)} />
       </div>
 
       <header className="mb-7">
