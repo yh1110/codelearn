@@ -149,7 +149,7 @@ export function ProblemSolver({
 
   return (
     <div
-      className="flex h-screen flex-col overflow-hidden"
+      className="flex h-dvh flex-col overflow-hidden"
       style={{ background: "var(--bg-0)", color: "var(--text-1)" }}
     >
       {/* Problem top bar */}
@@ -351,6 +351,14 @@ export function ProblemSolver({
           aria-orientation="vertical"
           aria-label="問題ペインとエディタペインの横幅を調整"
           aria-valuemin={MIN_LEFT_PX}
+          aria-valuemax={
+            splitRef.current
+              ? Math.max(
+                  MIN_LEFT_PX,
+                  splitRef.current.getBoundingClientRect().width * MAX_LEFT_RATIO,
+                )
+              : undefined
+          }
           aria-valuenow={leftWidth ?? undefined}
           tabIndex={0}
           onMouseDown={onResizerMouseDown}

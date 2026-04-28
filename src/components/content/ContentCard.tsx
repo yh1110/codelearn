@@ -47,6 +47,10 @@ export function ContentCard({
       className={cn(
         "group relative flex h-full flex-col overflow-hidden rounded-[14px] transition",
         "hover:-translate-y-0.5 hover:border-[color:var(--line-3)]",
+        // The clickable area is the inner Link's stretched ::before, so keyboard focus
+        // lives on the Link. Mirror that focus on the article so the ring outlines the
+        // whole card rather than just the title text bounding box.
+        "focus-within:ring-2 focus-within:ring-[var(--accent-solid)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--bg-0)]",
       )}
       style={{ background: "var(--bg-1)", border: "1px solid var(--line-1)" }}
     >
@@ -64,7 +68,7 @@ export function ContentCard({
             className={cn(
               "block transition group-hover:opacity-90",
               "before:absolute before:inset-0 before:z-0 before:content-['']",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-solid)] focus-visible:rounded-[14px]",
+              "focus-visible:outline-none",
             )}
           >
             {title}
