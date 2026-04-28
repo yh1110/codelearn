@@ -18,7 +18,7 @@ type Props = {
   className?: string;
 };
 
-export function BackLink({ children = "もどる", fallbackHref = "/", className }: Props) {
+export function BackLink({ children = "戻る", fallbackHref = "/", className }: Props) {
   const router = useRouter();
 
   const onClick = () => {
