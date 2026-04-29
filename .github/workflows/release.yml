@@ -1,0 +1,38 @@
+name: Release to Production
+
+# Tag-based releases. Pushing a `v*.*.*` semver tag (e.g. `v0.1.0`)
+# triggers a Vercel production deployment. Pushes to `main` no longer
+# deploy on their own — see vercel.json `git.deploymentEnabled.main = false`.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel env (production)
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+
+      - name: Build (Prebuilt)
+        run: vercel build --prod --token=$VERCEL_TOKEN
+
+      - name: Deploy to Production
+        run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
