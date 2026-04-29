@@ -1,3 +1,5 @@
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Noto_Sans_JP } from "next/font/google";
 import { SwrProvider } from "@/components/providers/SwrProvider";
@@ -37,6 +39,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="bg-background text-foreground flex min-h-full flex-col">
         <SwrProvider>{children}</SwrProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
