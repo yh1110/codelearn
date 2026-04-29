@@ -24,21 +24,32 @@ model Course {
   @@index([isPublished])
 }
 
+// Determines how the runtime executes a Lesson / Problem authoring payload.
+// WORKER   — esbuild-wasm + Web Worker (stdout-comparison style, default).
+// SANDPACK — CodeSandbox Sandpack iframe + bundler (DOM/React style).
+enum LessonExecutor {
+  WORKER
+  SANDPACK
+}
+
 model Lesson {
-  id             String           @id @default(cuid())
-  courseId       String
-  course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  slug           String
-  title          String
-  contentMd      String
-  starterCode    String
-  expectedOutput String?
-  order          Int
-  isPublished    Boolean          @default(false) @map("is_published")
-  progress       LessonProgress[]
-  bookmarks      BookmarkLesson[]
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt    @map("updated_at")
+  id               String           @id @default(cuid())
+  courseId         String
+  course           Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  slug             String
+  title            String
+  contentMd        String
+  starterCode      String
+  expectedOutput   String?
+  order            Int
+  isPublished      Boolean          @default(false) @map("is_published")
+  executor         LessonExecutor   @default(WORKER)
+  sandpackTemplate String?          @map("sandpack_template")
+  starterFiles     Json?            @map("starter_files")
+  progress         LessonProgress[]
+  bookmarks        BookmarkLesson[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt    @map("updated_at")
 
   @@unique([courseId, slug])
   @@index([courseId, isPublished])
@@ -127,20 +138,23 @@ model Collection {
 
 // UGC counterpart of Lesson.
 model Problem {
-  id             String            @id @default(cuid())
-  collectionId   String            @map("collection_id")
-  collection     Collection        @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  slug           String
-  title          String
-  contentMd      String            @map("content_md")
-  starterCode    String            @map("starter_code")
-  expectedOutput String?           @map("expected_output")
-  order          Int               @default(0)
-  isPublished    Boolean           @default(false) @map("is_published")
-  progress       ProblemProgress[]
-  bookmarks      BookmarkProblem[]
-  createdAt      DateTime          @default(now()) @map("created_at")
-  updatedAt      DateTime          @updatedAt      @map("updated_at")
+  id               String            @id @default(cuid())
+  collectionId     String            @map("collection_id")
+  collection       Collection        @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  slug             String
+  title            String
+  contentMd        String            @map("content_md")
+  starterCode      String            @map("starter_code")
+  expectedOutput   String?           @map("expected_output")
+  order            Int               @default(0)
+  isPublished      Boolean           @default(false) @map("is_published")
+  executor         LessonExecutor    @default(WORKER)
+  sandpackTemplate String?           @map("sandpack_template")
+  starterFiles     Json?             @map("starter_files")
+  progress         ProblemProgress[]
+  bookmarks        BookmarkProblem[]
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt      @map("updated_at")
 
   @@unique([collectionId, slug])
   @@index([collectionId, isPublished])

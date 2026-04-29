@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { Problem } from "@prisma/client";
+import type { LessonExecutor, Prisma, Problem } from "@prisma/client";
 import { ForbiddenError, handleUnknownError, NotFoundError, ValidationError } from "@/lib/errors";
 import { logError, logInfo, logWarn } from "@/lib/logging";
 import {
@@ -57,6 +57,9 @@ export type CreateProblemParams = {
   starterCode: string;
   expectedOutput: string | null;
   order: number;
+  executor: LessonExecutor;
+  sandpackTemplate: string | null;
+  starterFiles: Prisma.InputJsonValue | null;
 };
 
 export async function createProblem(
@@ -64,9 +67,20 @@ export async function createProblem(
   repository: ProblemRepository = problemRepository,
   collectionRepo: CollectionRepository = collectionRepository,
 ): Promise<Problem> {
-  const { collectionId, authorId, slug, title, contentMd, starterCode, expectedOutput, order } =
-    params;
-  logInfo("problemService.createProblem.start", { collectionId, authorId, slug });
+  const {
+    collectionId,
+    authorId,
+    slug,
+    title,
+    contentMd,
+    starterCode,
+    expectedOutput,
+    order,
+    executor,
+    sandpackTemplate,
+    starterFiles,
+  } = params;
+  logInfo("problemService.createProblem.start", { collectionId, authorId, slug, executor });
   try {
     await ensureAuthorOwnsCollection(collectionId, authorId, collectionRepo);
     const problem = await repository.create({
@@ -77,6 +91,9 @@ export async function createProblem(
       starterCode,
       expectedOutput,
       order,
+      executor,
+      sandpackTemplate,
+      starterFiles,
     });
     logInfo("problemService.createProblem.success", { id: problem.id, collectionId });
     return problem;
@@ -104,6 +121,9 @@ export type UpdateProblemParams = {
   starterCode: string;
   expectedOutput: string | null;
   order: number;
+  executor: LessonExecutor;
+  sandpackTemplate: string | null;
+  starterFiles: Prisma.InputJsonValue | null;
 };
 
 export async function updateProblem(
@@ -111,8 +131,20 @@ export async function updateProblem(
   repository: ProblemRepository = problemRepository,
   collectionRepo: CollectionRepository = collectionRepository,
 ): Promise<Problem> {
-  const { id, authorId, slug, title, contentMd, starterCode, expectedOutput, order } = params;
-  logInfo("problemService.updateProblem.start", { id, authorId });
+  const {
+    id,
+    authorId,
+    slug,
+    title,
+    contentMd,
+    starterCode,
+    expectedOutput,
+    order,
+    executor,
+    sandpackTemplate,
+    starterFiles,
+  } = params;
+  logInfo("problemService.updateProblem.start", { id, authorId, executor });
   try {
     await ensureAuthorOwnsProblem(id, authorId, repository, collectionRepo);
     const problem = await repository.update(id, {
@@ -122,6 +154,9 @@ export async function updateProblem(
       starterCode,
       expectedOutput,
       order,
+      executor,
+      sandpackTemplate,
+      starterFiles,
     });
     logInfo("problemService.updateProblem.success", { id, authorId });
     return problem;
