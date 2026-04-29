@@ -1,6 +1,7 @@
 import "server-only";
 
-import type { Lesson } from "@prisma/client";
+import type { Lesson, LessonExecutor } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { BaseRepository } from "./base.repository";
 
 export type CreateLessonInput = {
@@ -12,6 +13,9 @@ export type CreateLessonInput = {
   expectedOutput: string | null;
   order: number;
   isPublished?: boolean;
+  executor?: LessonExecutor;
+  sandpackTemplate?: string | null;
+  starterFiles?: Prisma.InputJsonValue | null;
 };
 
 export type UpdateLessonInput = {
@@ -21,6 +25,9 @@ export type UpdateLessonInput = {
   starterCode?: string;
   expectedOutput?: string | null;
   order?: number;
+  executor?: LessonExecutor;
+  sandpackTemplate?: string | null;
+  starterFiles?: Prisma.InputJsonValue | null;
 };
 
 export class LessonRepository extends BaseRepository {
@@ -53,14 +60,21 @@ export class LessonRepository extends BaseRepository {
         expectedOutput: input.expectedOutput,
         order: input.order,
         isPublished: input.isPublished ?? false,
+        executor: input.executor ?? "WORKER",
+        sandpackTemplate: input.sandpackTemplate ?? null,
+        starterFiles: toPrismaJson(input.starterFiles),
       },
     });
   }
 
   async update(id: string, input: UpdateLessonInput): Promise<Lesson> {
+    const { starterFiles, ...rest } = input;
     return this.client.lesson.update({
       where: { id },
-      data: input,
+      data: {
+        ...rest,
+        ...(starterFiles === undefined ? {} : { starterFiles: toPrismaJson(starterFiles) }),
+      },
     });
   }
 
@@ -74,4 +88,13 @@ export class LessonRepository extends BaseRepository {
       data: { isPublished },
     });
   }
+}
+
+function toPrismaJson(
+  value: Prisma.InputJsonValue | null | undefined,
+): Prisma.InputJsonValue | typeof Prisma.DbNull {
+  if (value === null || value === undefined) {
+    return Prisma.DbNull;
+  }
+  return value;
 }
