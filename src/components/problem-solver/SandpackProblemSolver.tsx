@@ -218,15 +218,18 @@ export function SandpackProblemSolver({
               recompileDelay: 500,
             }}
           >
-            <SandpackJudgeBar
+            <SandpackJudgeControls
               completed={completed}
               requiredTokens={requiredTokens}
-              onPass={async (code) => {
+              onPass={async () => {
                 if (completed) return;
                 setCompleted(true);
                 if (!onSubmit) return;
                 try {
-                  await onSubmit({ passed: true, output: "", code });
+                  // The Sandpack runner has no single "submitted code" payload;
+                  // the textual judge ran on the file map, and the WORKER-style
+                  // `code` field is unused by the current onSubmit consumers.
+                  await onSubmit({ passed: true, output: "", code: "" });
                 } catch (err) {
                   setCompleted(false);
                   console.error("[SandpackProblemSolver] onSubmit threw:", err);
@@ -285,14 +288,14 @@ function judgeFiles(
   return { passed: missingTokens.length === 0, missingTokens };
 }
 
-function SandpackJudgeBar({
+function SandpackJudgeControls({
   completed,
   requiredTokens,
   onPass,
 }: {
   completed: boolean;
   requiredTokens: string[];
-  onPass: (code: string) => Promise<void>;
+  onPass: () => Promise<void>;
 }) {
   const { sandpack } = useSandpack();
   const [outcome, setOutcome] = useState<JudgeOutcome | null>(null);
@@ -305,41 +308,65 @@ function SandpackJudgeBar({
     if (!result.passed) return;
     setSubmitting(true);
     try {
-      await onPass(JSON.stringify(sandpack.files));
+      await onPass();
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div
-      className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 border-b px-2.5 py-1.5"
-      style={{ background: "var(--bg-0)", borderColor: "var(--line-1)" }}
-    >
-      <div className="flex items-center gap-2 text-[12px]" style={{ color: "var(--text-3)" }}>
-        <span
-          className="rounded-[6px] px-2 py-0.5 font-mono text-[11px]"
-          style={{ background: "var(--bg-2)", border: "1px solid var(--line-1)" }}
-        >
-          Sandpack
-        </span>
-        {outcome && !outcome.passed ? (
+    <>
+      <div
+        className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 border-b px-2.5 py-1.5"
+        style={{ background: "var(--bg-0)", borderColor: "var(--line-1)" }}
+      >
+        <div className="flex items-center gap-2 text-[12px]" style={{ color: "var(--text-3)" }}>
           <span
-            className="inline-flex items-center gap-1 rounded-[5px] px-1.5 py-0.5 font-mono text-[11px]"
-            style={{ background: "var(--err-soft)", color: "var(--err)" }}
+            className="rounded-[6px] px-2 py-0.5 font-mono text-[11px]"
+            style={{ background: "var(--bg-2)", border: "1px solid var(--line-1)" }}
           >
-            <X className="size-3" aria-hidden="true" /> 未達: {outcome.missingTokens.join(", ")}
+            Sandpack
           </span>
-        ) : null}
-        {(outcome?.passed || completed) && requiredTokens.length > 0 ? (
-          <span
-            className="inline-flex items-center gap-1 rounded-[5px] px-1.5 py-0.5 font-mono text-[11px]"
-            style={{ background: "var(--ok-soft)", color: "var(--ok)" }}
+          {/* role="status" + aria-live announces judge feedback to screen readers */}
+          <span role="status" aria-live="polite" className="flex items-center gap-2">
+            {outcome && !outcome.passed ? (
+              <span
+                className="inline-flex items-center gap-1 rounded-[5px] px-1.5 py-0.5 font-mono text-[11px]"
+                style={{ background: "var(--err-soft)", color: "var(--err)" }}
+              >
+                <X className="size-3" aria-hidden="true" /> 未達: {outcome.missingTokens.join(", ")}
+              </span>
+            ) : null}
+            {(outcome?.passed || completed) && requiredTokens.length > 0 ? (
+              <span
+                className="inline-flex items-center gap-1 rounded-[5px] px-1.5 py-0.5 font-mono text-[11px]"
+                style={{ background: "var(--ok-soft)", color: "var(--ok)" }}
+              >
+                <Check className="size-3" aria-hidden="true" /> 判定 OK
+              </span>
+            ) : null}
+          </span>
+        </div>
+        {canJudge ? (
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={handleJudge}
+            aria-label="判定する"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-[8px] px-3.5 py-1.5 font-semibold text-[12.5px] transition",
+              submitting ? "cursor-not-allowed opacity-60" : "hover:opacity-90",
+            )}
+            style={{ background: "var(--accent-solid)", color: "var(--accent-ink)" }}
           >
-            <Check className="size-3" aria-hidden="true" /> 判定 OK
-          </span>
+            <Play className="size-3.5" aria-hidden="true" />
+            {submitting ? "判定中…" : "判定"}
+          </button>
         ) : null}
       </div>
+      {/* Mobile-only floating judge button — mirrors the WorkerProblemSolver
+          floating "実行" button so phones never lose access to the primary
+          action regardless of scroll position. */}
       {canJudge ? (
         <button
           type="button"
@@ -347,15 +374,15 @@ function SandpackJudgeBar({
           onClick={handleJudge}
           aria-label="判定する"
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-[8px] px-3.5 py-1.5 font-semibold text-[12.5px] transition",
+            "fixed right-4 bottom-16 z-30 inline-flex items-center gap-1.5 rounded-full px-5 py-3 font-semibold text-[13px] shadow-lg transition md:hidden",
             submitting ? "cursor-not-allowed opacity-60" : "hover:opacity-90",
           )}
           style={{ background: "var(--accent-solid)", color: "var(--accent-ink)" }}
         >
-          <Play className="size-3.5" aria-hidden="true" />
+          <Play className="size-4" aria-hidden="true" />
           {submitting ? "判定中…" : "判定"}
         </button>
       ) : null}
-    </div>
+    </>
   );
 }
