@@ -2,6 +2,7 @@ import type { Problem } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
+import { coerceSandpackFields } from "@/lib/sandpack";
 import { getCollectionByHandleAndSlug } from "@/services/collectionService";
 import { isProblemCompleted } from "@/services/progressService";
 import { ProblemSolverClient } from "./_components/ProblemSolverClient";
@@ -26,6 +27,7 @@ export default async function ProblemPage({
   if (!problem) notFound();
 
   const completed = await isProblemCompleted(session.userId, problem.id);
+  const sandpack = coerceSandpackFields(problem);
 
   return (
     <ProblemSolverClient
@@ -41,6 +43,9 @@ export default async function ProblemPage({
         contentMd: problem.contentMd,
         starterCode: problem.starterCode,
         expectedOutput: problem.expectedOutput,
+        executor: problem.executor,
+        sandpackTemplate: sandpack.sandpackTemplate,
+        starterFiles: sandpack.starterFiles,
       }}
       initiallyCompleted={completed}
     />

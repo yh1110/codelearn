@@ -7,6 +7,7 @@ import { BookmarkButton } from "@/components/bookmarks/BookmarkButton";
 import { BackLink } from "@/components/navigation/BackLink";
 import { ProblemSolver } from "@/components/problem-solver/ProblemSolver";
 import { type CourseLinkable, learnUrl, lessonUrl } from "@/lib/routes";
+import type { Executor, SandpackStarterFiles, SandpackTemplate } from "@/types/problem";
 
 type Lesson = {
   id: string;
@@ -15,6 +16,9 @@ type Lesson = {
   contentMd: string;
   starterCode: string;
   expectedOutput: string | null;
+  executor: Executor;
+  sandpackTemplate: SandpackTemplate | null;
+  starterFiles: SandpackStarterFiles | null;
 };
 
 type Props = {
@@ -42,6 +46,9 @@ export function LessonSolver({
       contentMd={lesson.contentMd}
       starterCode={lesson.starterCode}
       expectedOutput={lesson.expectedOutput}
+      executor={lesson.executor}
+      sandpackTemplate={lesson.sandpackTemplate}
+      starterFiles={lesson.starterFiles}
       initialStatus={initiallyCompleted ? "COMPLETED" : "NOT_STARTED"}
       onSubmit={async ({ passed }) => {
         if (!passed) return;
