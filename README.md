@@ -367,3 +367,7 @@ console.log / console.error を override
 - Prisma 7 docs: https://www.prisma.io/docs
 - Supabase docs: https://supabase.com/docs
 - shadcn/ui: https://ui.shadcn.com
+
+
+## Ricense
+- Pui-coreの著作物です。
