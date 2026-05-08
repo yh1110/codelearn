@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireAuth } from "@/lib/auth";
+import { getOptionalAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 import { isLessonBookmarked } from "@/services/bookmarkService";
 import { getCourseBySlug } from "@/services/courseService";
@@ -9,7 +9,7 @@ import { LessonSolver } from "./_components/LessonSolver";
 export const dynamic = "force-dynamic";
 
 export default async function LessonPage({ params }: PageProps<"/learn/[course]/[lesson]">) {
-  const session = await requireAuth();
+  const session = await getOptionalAuth();
   const { course: courseSlug, lesson: lessonSlug } = await params;
 
   let course: Awaited<ReturnType<typeof getCourseBySlug>>;
@@ -28,8 +28,10 @@ export default async function LessonPage({ params }: PageProps<"/learn/[course]/
   const next = idx < course.lessons.length - 1 ? course.lessons[idx + 1] : null;
 
   const [completed, bookmarked] = await Promise.all([
-    isLessonCompleted(session.userId, lesson.id),
-    isLessonBookmarked({ userId: session.userId, lessonId: lesson.id }),
+    session ? isLessonCompleted(session.userId, lesson.id) : Promise.resolve(false),
+    session
+      ? isLessonBookmarked({ userId: session.userId, lessonId: lesson.id })
+      : Promise.resolve(false),
   ]);
 
   return (

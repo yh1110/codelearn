@@ -1,5 +1,4 @@
 import { MIN_QUERY_LENGTH } from "@/config/search";
-import { requireAuth } from "@/lib/auth";
 import { search } from "@/services/searchService";
 import { EmptyState } from "./_components/EmptyState";
 import { SearchSectionCommunity } from "./_components/SearchSectionCommunity";
@@ -13,7 +12,6 @@ function firstParam(value: string | string[] | undefined): string {
 }
 
 export default async function SearchPage({ searchParams }: PageProps<"/search">) {
-  await requireAuth();
   const sp = await searchParams;
   const rawQuery = firstParam(sp?.q);
   const { query, tooShort, courses, lessons, collections, problems } = await search(rawQuery);

@@ -1,6 +1,6 @@
 import type { Problem } from "@prisma/client";
 import { notFound } from "next/navigation";
-import { requireAuth } from "@/lib/auth";
+import { getOptionalAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 import { getCollectionByHandleAndSlug } from "@/services/collectionService";
 import { isProblemCompleted } from "@/services/progressService";
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function ProblemPage({
   params,
 }: PageProps<"/[handle]/[collection]/[problem]">) {
-  const session = await requireAuth();
+  const session = await getOptionalAuth();
   const { handle, collection: collectionSlug, problem: problemSlug } = await params;
 
   let collection: Awaited<ReturnType<typeof getCollectionByHandleAndSlug>>;
@@ -25,7 +25,7 @@ export default async function ProblemPage({
   const problem = collection.problems.find((p: Problem) => p.slug === problemSlug);
   if (!problem) notFound();
 
-  const completed = await isProblemCompleted(session.userId, problem.id);
+  const completed = session ? await isProblemCompleted(session.userId, problem.id) : false;
 
   return (
     <ProblemSolverClient

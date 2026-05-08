@@ -1,7 +1,7 @@
 import { Star } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { requireAuth } from "@/lib/auth";
+import { notFound, redirect } from "next/navigation";
+import { getOptionalAuth } from "@/lib/auth";
 import { getUserBookmarks } from "@/services/bookmarkService";
 import { getProfileByHandle } from "@/services/profileService";
 import {
@@ -20,7 +20,12 @@ export default async function BookmarksPage({
   params,
   searchParams,
 }: PageProps<"/[handle]/bookmarks">) {
-  const session = await requireAuth();
+  const session = await getOptionalAuth();
+  if (!session) {
+    const { handle } = await params;
+    redirect(`/login?from=/${handle}/bookmarks`);
+  }
+
   const { handle } = await params;
   const sp = await searchParams;
   const activeTab = parseBookmarkTab(sp?.tab);
@@ -28,15 +33,9 @@ export default async function BookmarksPage({
   const viewedProfile = await getProfileByHandle(handle);
   if (!viewedProfile) notFound();
 
-  // Bookmarks are private until a public/private toggle ships. Reject any
-  // viewer that is not the owner with a 404 (rather than 403) so the existence
-  // of the list does not leak — Layer A guard from the issue #72 spec.
   const isOwner = session.profile.id === viewedProfile.id;
   if (!isOwner) notFound();
 
-  // The bookmark service queries WHERE userId = viewedProfile.id, so even if
-  // a future change loosened the isOwner gate above, the data fetch itself
-  // would still be scoped to one user — Layer C defence in depth.
   const [bookmarks, completedLessonIds, completedProblemIds] = await Promise.all([
     getUserBookmarks(viewedProfile.id),
     getCompletedLessonIdsByUser(viewedProfile.id),

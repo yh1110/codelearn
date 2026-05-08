@@ -1,4 +1,4 @@
-import { CourseCard } from "@/app/(protected)/_components/CourseCard";
+import { CourseCard } from "@/app/(public)/_components/CourseCard";
 import type { CourseBookmarkWithCourse } from "@/repositories";
 
 type BookmarkCourseListProps = {

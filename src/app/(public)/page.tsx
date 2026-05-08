@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth";
+import { getOptionalAuth } from "@/lib/auth";
 import { getPublishedCollectionsByNewest } from "@/services/collectionService";
 import { getCompletedProblemIdsByUser } from "@/services/progressService";
 import { BrowseFilterPanel } from "./_components/BrowseFilterPanel";
@@ -15,10 +15,10 @@ const EXPLORE_SORT_OPTIONS: ReadonlyArray<SortOption> = [
 ];
 
 export default async function HomePage() {
-  const session = await requireAuth();
+  const session = await getOptionalAuth();
   const [collections, completed] = await Promise.all([
     getPublishedCollectionsByNewest(),
-    getCompletedProblemIdsByUser(session.userId),
+    session ? getCompletedProblemIdsByUser(session.userId) : Promise.resolve([]),
   ]);
   const completedIds = new Set(completed);
 

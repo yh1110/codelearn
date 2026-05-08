@@ -1,4 +1,4 @@
-import { CollectionCard } from "@/app/(protected)/_components/CollectionCard";
+import { CollectionCard } from "@/app/(public)/_components/CollectionCard";
 import type { CollectionBookmarkWithCollection } from "@/repositories";
 
 type BookmarkCollectionListProps = {

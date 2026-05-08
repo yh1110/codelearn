@@ -6,8 +6,15 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const AUTH_PATHS = ["/login", "/auth/"] as const;
 
+/** Paths that require authentication — proxy redirects to /login when unauthed. */
+const PRIVATE_PATHS = ["/dashboard", "/notifications", "/settings"] as const;
+
 function isAuthPath(path: string): boolean {
   return AUTH_PATHS.some((p) => (p.endsWith("/") ? path.startsWith(p) : path === p));
+}
+
+function isPrivatePath(path: string): boolean {
+  return PRIVATE_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 }
 
 /**
@@ -70,11 +77,11 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const path = request.nextUrl.pathname;
   const authPath = isAuthPath(path);
 
-  if (!user && !authPath) {
+  if (!user && !authPath && isPrivatePath(path)) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.search = "";
-    if (path !== "/") loginUrl.searchParams.set("from", path);
+    loginUrl.searchParams.set("from", path);
     return carryRefreshedCookies(response, NextResponse.redirect(loginUrl));
   }
 

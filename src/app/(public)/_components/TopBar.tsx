@@ -1,16 +1,20 @@
 "use client";
 
-import { Bell, BookOpen, Compass, Plus, Search } from "lucide-react";
+import { Bell, BookOpen, Compass, LogIn, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { bookmarksUrl, profileUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
-type Props = {
+type AuthedUser = {
   displayName: string;
   handle: string;
   avatarInitial: string;
   unreadCount: number;
+};
+
+type Props = {
+  user: AuthedUser | null;
 };
 
 type NavGroup = "learn" | "explore" | "create" | null;
@@ -22,16 +26,11 @@ function resolveNavGroup(pathname: string): NavGroup {
   return null;
 }
 
-export function TopBar({ displayName, handle, avatarInitial, unreadCount }: Props) {
+export function TopBar({ user }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const group = resolveNavGroup(pathname);
   const initialQuery = pathname === "/search" ? (searchParams.get("q") ?? "") : "";
-  const hasUnread = unreadCount > 0;
-  const badgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
-  const bellAriaLabel = hasUnread ? `通知 (${unreadCount} 件の未読)` : "通知";
-  const myProfileHref = profileUrl(handle);
-  const myBookmarksHref = bookmarksUrl(handle);
 
   return (
     <header
@@ -65,8 +64,6 @@ export function TopBar({ displayName, handle, avatarInitial, unreadCount }: Prop
           className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 size-3.5"
           style={{ color: "var(--text-3)" }}
         />
-        {/* `key` forces a remount whenever the URL query changes so `defaultValue`
-            re-syncs (e.g. navigating back/forward between search pages). */}
         <input
           key={initialQuery}
           type="search"
@@ -104,47 +101,76 @@ export function TopBar({ displayName, handle, avatarInitial, unreadCount }: Prop
             作る
           </NavTab>
         </nav>
-        <Link
-          href={myBookmarksHref}
-          aria-label="お気に入り"
-          aria-current={pathname === myBookmarksHref ? "page" : undefined}
-          className="hidden items-center gap-1.5 rounded-[10px] px-3 py-2 text-[13px] transition hover:bg-[var(--bg-2)] sm:inline-flex"
-          style={{ color: "var(--text-2)" }}
-        >
-          ブックマーク
-        </Link>
-        <Link
-          href="/notifications"
-          aria-label={bellAriaLabel}
-          aria-current={pathname === "/notifications" ? "page" : undefined}
-          className="relative grid size-9 place-items-center rounded-[10px] transition hover:bg-[var(--bg-2)]"
-          style={{ color: "var(--text-2)" }}
-        >
-          <Bell className="size-[18px]" />
-          {hasUnread ? (
-            <span
-              aria-hidden="true"
-              className="absolute top-0.5 right-0.5 inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full px-1 font-semibold text-[10px] leading-none"
-              style={{
-                background: "var(--accent-solid)",
-                color: "var(--bg-0)",
-                border: "2px solid var(--bg-0)",
-              }}
+
+        {user ? (
+          <>
+            <Link
+              href={bookmarksUrl(user.handle)}
+              aria-label="お気に入り"
+              aria-current={pathname === bookmarksUrl(user.handle) ? "page" : undefined}
+              className="hidden items-center gap-1.5 rounded-[10px] px-3 py-2 text-[13px] transition hover:bg-[var(--bg-2)] sm:inline-flex"
+              style={{ color: "var(--text-2)" }}
             >
-              {badgeLabel}
-            </span>
-          ) : null}
-        </Link>
-        <Link
-          href={myProfileHref}
-          className="cm-avatar"
-          aria-label={`${displayName} のプロフィール`}
-          title={displayName}
-        >
-          {avatarInitial}
-        </Link>
+              ブックマーク
+            </Link>
+            <NotificationBell unreadCount={user.unreadCount} pathname={pathname} />
+            <Link
+              href={profileUrl(user.handle)}
+              className="cm-avatar"
+              aria-label={`${user.displayName} のプロフィール`}
+              title={user.displayName}
+            >
+              {user.avatarInitial}
+            </Link>
+          </>
+        ) : (
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-2 font-medium text-[13px] transition hover:bg-[var(--bg-2)]"
+            style={{ color: "var(--text-2)" }}
+          >
+            <LogIn className="size-3.5" aria-hidden="true" />
+            ログイン
+          </Link>
+        )}
       </div>
     </header>
+  );
+}
+
+function NotificationBell({
+  unreadCount,
+  pathname,
+}: {
+  unreadCount: number;
+  pathname: string;
+}) {
+  const hasUnread = unreadCount > 0;
+  const badgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
+  const bellAriaLabel = hasUnread ? `通知 (${unreadCount} 件の未読)` : "通知";
+  return (
+    <Link
+      href="/notifications"
+      aria-label={bellAriaLabel}
+      aria-current={pathname === "/notifications" ? "page" : undefined}
+      className="relative grid size-9 place-items-center rounded-[10px] transition hover:bg-[var(--bg-2)]"
+      style={{ color: "var(--text-2)" }}
+    >
+      <Bell className="size-[18px]" />
+      {hasUnread ? (
+        <span
+          aria-hidden="true"
+          className="absolute top-0.5 right-0.5 inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full px-1 font-semibold text-[10px] leading-none"
+          style={{
+            background: "var(--accent-solid)",
+            color: "var(--bg-0)",
+            border: "2px solid var(--bg-0)",
+          }}
+        >
+          {badgeLabel}
+        </span>
+      ) : null}
+    </Link>
   );
 }
 

@@ -62,6 +62,19 @@ function defaultHandleFor(authUserId: string): string {
   return `user_${authUserId.replace(/-/g, "").slice(0, 12)}`;
 }
 
+/**
+ * Like requireAuth() but returns null instead of throwing when the user is not
+ * signed in. Use for pages that are public but show personalised data when
+ * logged in (progress, bookmarks, isOwner).
+ */
+export async function getOptionalAuth(): Promise<Session | null> {
+  try {
+    return await requireAuth();
+  } catch {
+    return null;
+  }
+}
+
 export async function requireRole(role: Role): Promise<Session> {
   const session = await requireAuth();
   // TODO: Drop this branch once Profile gains an explicit role column. Until

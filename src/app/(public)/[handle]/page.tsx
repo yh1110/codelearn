@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireAuth } from "@/lib/auth";
+import { getOptionalAuth } from "@/lib/auth";
 import { bookmarksUrl } from "@/lib/routes";
 import { getUserBookmarks } from "@/services/bookmarkService";
 import { getMyCollections } from "@/services/collectionService";
@@ -18,18 +18,16 @@ import { StatsGrid } from "./_components/StatsGrid";
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage({ params }: PageProps<"/[handle]">) {
-  const session = await requireAuth();
+  const session = await getOptionalAuth();
   const { handle } = await params;
 
   const viewedProfile = await getProfileByHandle(handle);
   if (!viewedProfile) notFound();
 
-  const isOwner = session.profile.id === viewedProfile.id;
+  const isOwner = session ? session.profile.id === viewedProfile.id : false;
   const displayName = viewedProfile.name ?? viewedProfile.handle;
   const initial = (displayName.trim()[0] ?? "?").toUpperCase();
 
-  // Stats are scoped to viewedProfile.id for both owner and visitor; bookmarks
-  // are owner-only because the bookmark namespace is private (Layer A guard).
   const [collections, allCourses, completedLessons, completedProblems, bookmarks] =
     await Promise.all([
       getMyCollections(viewedProfile.id),

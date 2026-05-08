@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { BackLink } from "@/components/navigation/BackLink";
-import { requireAuth } from "@/lib/auth";
+import { getOptionalAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 import { isCourseBookmarked } from "@/services/bookmarkService";
 import { getCourseBySlug } from "@/services/courseService";
@@ -11,7 +11,7 @@ import { LessonList } from "./_components/LessonList";
 export const dynamic = "force-dynamic";
 
 export default async function CoursePage({ params }: PageProps<"/learn/[course]">) {
-  const session = await requireAuth();
+  const session = await getOptionalAuth();
   const { course: courseSlug } = await params;
 
   let course: Awaited<ReturnType<typeof getCourseBySlug>>;
@@ -23,11 +23,12 @@ export default async function CoursePage({ params }: PageProps<"/learn/[course]"
   }
 
   const [completed, bookmarked] = await Promise.all([
-    getCompletedLessonIdsByUser(
-      session.userId,
-      course.lessons.map((l) => l.id),
-    ),
-    isCourseBookmarked({ userId: session.userId, courseId: course.id }),
+    session
+      ? getCompletedLessonIdsByUser(session.userId, course.lessons.map((l) => l.id))
+      : Promise.resolve([]),
+    session
+      ? isCourseBookmarked({ userId: session.userId, courseId: course.id })
+      : Promise.resolve(false),
   ]);
   const completedIds = new Set(completed);
   const done = course.lessons.filter((l) => completedIds.has(l.id)).length;

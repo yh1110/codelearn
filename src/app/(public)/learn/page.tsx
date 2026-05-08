@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth";
+import { getOptionalAuth } from "@/lib/auth";
 import { getPublishedCourses } from "@/services/courseService";
 import { getCompletedLessonIdsByUser } from "@/services/progressService";
 import { CourseCard } from "../_components/CourseCard";
@@ -6,10 +6,10 @@ import { CourseCard } from "../_components/CourseCard";
 export const dynamic = "force-dynamic";
 
 export default async function LearnPage() {
-  const session = await requireAuth();
+  const session = await getOptionalAuth();
   const [courses, completedLessons] = await Promise.all([
     getPublishedCourses(),
-    getCompletedLessonIdsByUser(session.userId),
+    session ? getCompletedLessonIdsByUser(session.userId) : Promise.resolve([]),
   ]);
   const completedIds = new Set(completedLessons);
 
