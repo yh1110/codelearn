@@ -21,8 +21,8 @@ type NavGroup = "learn" | "explore" | "create" | null;
 
 function resolveNavGroup(pathname: string): NavGroup {
   if (pathname.startsWith("/dashboard")) return "create";
-  if (pathname.startsWith("/learn")) return "learn";
-  if (pathname === "/") return "explore";
+  if (pathname.startsWith("/learn") || pathname === "/") return "learn";
+  if (pathname === "/explore") return "explore";
   return null;
 }
 
