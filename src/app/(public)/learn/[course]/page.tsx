@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { BackLink } from "@/components/navigation/BackLink";
 import { getOptionalAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
@@ -14,7 +14,6 @@ export default async function CoursePage({ params }: PageProps<"/learn/[course]"
   const session = await getOptionalAuth();
   const { course: courseSlug } = await params;
 
-  if (!session) redirect(`/login?from=/learn/${courseSlug}`);
 
   let course: Awaited<ReturnType<typeof getCourseBySlug>>;
   try {
