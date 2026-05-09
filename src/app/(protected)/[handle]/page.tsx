@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getOptionalAuth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { bookmarksUrl } from "@/lib/routes";
 import { getUserBookmarks } from "@/services/bookmarkService";
 import { getMyCollections } from "@/services/collectionService";
@@ -18,13 +18,13 @@ import { StatsGrid } from "./_components/StatsGrid";
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage({ params }: PageProps<"/[handle]">) {
-  const session = await getOptionalAuth();
+  const session = await requireAuth();
   const { handle } = await params;
 
   const viewedProfile = await getProfileByHandle(handle);
   if (!viewedProfile) notFound();
 
-  const isOwner = session ? session.profile.id === viewedProfile.id : false;
+  const isOwner = session.profile.id === viewedProfile.id;
   const displayName = viewedProfile.name ?? viewedProfile.handle;
   const initial = (displayName.trim()[0] ?? "?").toUpperCase();
 

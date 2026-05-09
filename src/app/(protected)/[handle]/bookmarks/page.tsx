@@ -1,7 +1,7 @@
 import { Star } from "lucide-react";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-import { getOptionalAuth } from "@/lib/auth";
+import { notFound } from "next/navigation";
+import { requireAuth } from "@/lib/auth";
 import { getUserBookmarks } from "@/services/bookmarkService";
 import { getProfileByHandle } from "@/services/profileService";
 import {
@@ -20,8 +20,8 @@ export default async function BookmarksPage({
   params,
   searchParams,
 }: PageProps<"/[handle]/bookmarks">) {
-  const [session, { handle }] = await Promise.all([getOptionalAuth(), params]);
-  if (!session) redirect(`/login?from=/${handle}/bookmarks`);
+  const session = await requireAuth();
+  const { handle } = await params;
   const sp = await searchParams;
   const activeTab = parseBookmarkTab(sp?.tab);
 
