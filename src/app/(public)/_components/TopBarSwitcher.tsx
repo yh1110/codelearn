@@ -2,14 +2,7 @@
 
 import { useSelectedLayoutSegments } from "next/navigation";
 import { RESERVED_HANDLES } from "@/lib/reservedNames";
-import { TopBar } from "./TopBar";
-
-type AuthedUser = {
-  displayName: string;
-  handle: string;
-  avatarInitial: string;
-  unreadCount: number;
-};
+import { type AuthedUser, TopBar } from "./TopBar";
 
 type Props = {
   user: AuthedUser | null;

@@ -1,5 +1,4 @@
 import { getOptionalAuth } from "@/lib/auth";
-import { getUnreadCount } from "@/services/notificationService";
 import { TopBarSwitcher } from "./_components/TopBarSwitcher";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -9,8 +8,7 @@ export default async function PublicLayout({ children }: { children: React.React
   if (session) {
     const displayName = session.profile.name ?? session.profile.handle;
     const avatarInitial = (displayName.trim()[0] ?? "?").toUpperCase();
-    const unreadCount = await getUnreadCount(session.userId);
-    user = { displayName, handle: session.profile.handle, avatarInitial, unreadCount };
+    user = { displayName, handle: session.profile.handle, avatarInitial };
   }
 
   return (

@@ -3,13 +3,14 @@
 import { Bell, BookOpen, Compass, LogIn, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { bookmarksUrl, profileUrl } from "@/lib/routes";
 
-type AuthedUser = {
+export type AuthedUser = {
   displayName: string;
   handle: string;
   avatarInitial: string;
-  unreadCount: number;
 };
 
 type Props = {
@@ -112,7 +113,7 @@ export function TopBar({ user }: Props) {
             >
               ブックマーク
             </Link>
-            <NotificationBell unreadCount={user.unreadCount} pathname={pathname} />
+            <NotificationBell pathname={pathname} />
             <Link
               href={profileUrl(user.handle)}
               className="cm-avatar"
@@ -137,7 +138,13 @@ export function TopBar({ user }: Props) {
   );
 }
 
-function NotificationBell({ unreadCount, pathname }: { unreadCount: number; pathname: string }) {
+function NotificationBell({ pathname }: { pathname: string }) {
+  const { data } = useSWR<{ count: number }>(
+    "/api/notifications/unread",
+    fetcher,
+    { refreshInterval: 60_000, fallbackData: { count: 0 } },
+  );
+  const unreadCount = data?.count ?? 0;
   const hasUnread = unreadCount > 0;
   const badgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const bellAriaLabel = hasUnread ? `通知 (${unreadCount} 件の未読)` : "通知";
