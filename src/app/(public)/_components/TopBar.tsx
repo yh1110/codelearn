@@ -138,13 +138,7 @@ export function TopBar({ user }: Props) {
   );
 }
 
-function NotificationBell({
-  unreadCount,
-  pathname,
-}: {
-  unreadCount: number;
-  pathname: string;
-}) {
+function NotificationBell({ unreadCount, pathname }: { unreadCount: number; pathname: string }) {
   const hasUnread = unreadCount > 0;
   const badgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const bellAriaLabel = hasUnread ? `通知 (${unreadCount} 件の未読)` : "通知";

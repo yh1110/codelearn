@@ -14,7 +14,6 @@ export default async function CoursePage({ params }: PageProps<"/learn/[course]"
   const session = await getOptionalAuth();
   const { course: courseSlug } = await params;
 
-
   let course: Awaited<ReturnType<typeof getCourseBySlug>>;
   try {
     course = await getCourseBySlug(courseSlug);
@@ -25,7 +24,10 @@ export default async function CoursePage({ params }: PageProps<"/learn/[course]"
 
   const [completed, bookmarked] = await Promise.all([
     session
-      ? getCompletedLessonIdsByUser(session.userId, course.lessons.map((l) => l.id))
+      ? getCompletedLessonIdsByUser(
+          session.userId,
+          course.lessons.map((l) => l.id),
+        )
       : Promise.resolve([]),
     session
       ? isCourseBookmarked({ userId: session.userId, courseId: course.id })
