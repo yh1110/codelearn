@@ -70,8 +70,9 @@ function defaultHandleFor(authUserId: string): string {
 export async function getOptionalAuth(): Promise<Session | null> {
   try {
     return await requireAuth();
-  } catch {
-    return null;
+  } catch (error) {
+    if (error instanceof UnauthorizedError) return null;
+    throw error;
   }
 }
 

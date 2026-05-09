@@ -4,7 +4,6 @@ import { Bell, BookOpen, Compass, LogIn, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { bookmarksUrl, profileUrl } from "@/lib/routes";
-import { cn } from "@/lib/utils";
 
 type AuthedUser = {
   displayName: string;
@@ -21,8 +20,8 @@ type NavGroup = "learn" | "explore" | "create" | null;
 
 function resolveNavGroup(pathname: string): NavGroup {
   if (pathname.startsWith("/dashboard")) return "create";
-  if (pathname.startsWith("/learn") || pathname === "/") return "learn";
-  if (pathname === "/explore") return "explore";
+  if (pathname.startsWith("/learn")) return "learn";
+  if (pathname === "/") return "explore";
   return null;
 }
 
@@ -183,9 +182,7 @@ function NavTab({
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-[6px] px-3.5 py-1.5 font-medium text-[13px] transition",
-      )}
+      className="inline-flex items-center gap-1.5 rounded-[6px] px-3.5 py-1.5 font-medium text-[13px] transition"
       style={{
         color: active ? "var(--text-1)" : "var(--text-3)",
         background: active ? "var(--bg-3)" : "transparent",

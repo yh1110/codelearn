@@ -20,13 +20,8 @@ export default async function BookmarksPage({
   params,
   searchParams,
 }: PageProps<"/[handle]/bookmarks">) {
-  const session = await getOptionalAuth();
-  if (!session) {
-    const { handle } = await params;
-    redirect(`/login?from=/${handle}/bookmarks`);
-  }
-
-  const { handle } = await params;
+  const [session, { handle }] = await Promise.all([getOptionalAuth(), params]);
+  if (!session) redirect(`/login?from=/${handle}/bookmarks`);
   const sp = await searchParams;
   const activeTab = parseBookmarkTab(sp?.tab);
 

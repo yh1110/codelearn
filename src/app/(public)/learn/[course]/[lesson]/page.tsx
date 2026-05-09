@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getOptionalAuth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 import { isLessonBookmarked } from "@/services/bookmarkService";
 import { getCourseBySlug } from "@/services/courseService";
@@ -9,10 +9,13 @@ import { LessonSolver } from "./_components/LessonSolver";
 export const dynamic = "force-dynamic";
 
 export default async function LessonPage({ params }: PageProps<"/learn/[course]/[lesson]">) {
-  const session = await getOptionalAuth();
   const { course: courseSlug, lesson: lessonSlug } = await params;
-
-  if (!session) redirect(`/login?from=/learn/${courseSlug}/${lessonSlug}`);
+  let session: Awaited<ReturnType<typeof requireAuth>>;
+  try {
+    session = await requireAuth();
+  } catch {
+    redirect(`/login?from=/learn/${courseSlug}/${lessonSlug}`);
+  }
 
   let course: Awaited<ReturnType<typeof getCourseBySlug>>;
   try {
@@ -30,10 +33,8 @@ export default async function LessonPage({ params }: PageProps<"/learn/[course]/
   const next = idx < course.lessons.length - 1 ? course.lessons[idx + 1] : null;
 
   const [completed, bookmarked] = await Promise.all([
-    session ? isLessonCompleted(session.userId, lesson.id) : Promise.resolve(false),
-    session
-      ? isLessonBookmarked({ userId: session.userId, lessonId: lesson.id })
-      : Promise.resolve(false),
+    isLessonCompleted(session.userId, lesson.id),
+    isLessonBookmarked({ userId: session.userId, lessonId: lesson.id }),
   ]);
 
   return (

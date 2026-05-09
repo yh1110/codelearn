@@ -91,22 +91,25 @@ src/
 ```
 src/
 ├── app/
-│   ├── (protected)/                              # 要 Supabase Auth ルートグループ
-│   │   ├── page.tsx                              # / : UGC explore (Collection 一覧)
+│   ├── (public)/                                 # 認証任意ルートグループ (getOptionalAuth)
+│   │   ├── page.tsx                              # / : 公式コース一覧（未認証でも閲覧可）
 │   │   ├── learn/                                # 公式 (Course / Lesson)
 │   │   │   ├── page.tsx                          #   /learn 公式コース一覧
-│   │   │   └── [course]/[lesson]/page.tsx        #   /learn/{course}/{lesson}
+│   │   │   ├── [course]/page.tsx                 #   /learn/{course} レッスン一覧（未認証可）
+│   │   │   └── [course]/[lesson]/page.tsx        #   /learn/{course}/{lesson}（要ログイン）
 │   │   ├── search/page.tsx
-│   │   ├── notifications/page.tsx
-│   │   ├── settings/profile/page.tsx             # プロフィール編集 (旧 /me/edit を移行)
-│   │   ├── dashboard/                            # UGC クリエイターダッシュボード
-│   │   │   ├── page.tsx                          #   自分の Collection 一覧 (author 認可)
-│   │   │   └── collections/{new,[collectionId]}/ #   Collection / Problem 作成・編集
-│   │   ├── [handle]/                             # ★ /{handle} : プロフィール (自他統一、isOwner で UI 分岐)
+│   │   ├── [handle]/                             # ★ /{handle} : プロフィール (isOwner で UI 分岐)
 │   │   │   ├── page.tsx
-│   │   │   ├── bookmarks/page.tsx                #   /{handle}/bookmarks (旧 /bookmarks を移行)
+│   │   │   ├── bookmarks/page.tsx                #   /{handle}/bookmarks（要ログイン・オーナーのみ）
+│   │   │   ├── [collection]/page.tsx             #   /{handle}/{collection} (UGC)
 │   │   │   └── [collection]/[problem]/page.tsx   #   /{handle}/{collection}/{problem} (UGC)
-│   │   └── _components/                          # (protected) 共有 UI (TopBar 等)
+│   │   └── _components/                          # (public) 共有 UI (TopBar 等)
+│   ├── (protected)/                              # 要 Supabase Auth ルートグループ (requireAuth)
+│   │   ├── notifications/page.tsx
+│   │   ├── settings/profile/page.tsx             # プロフィール編集
+│   │   └── dashboard/                            # UGC クリエイターダッシュボード
+│   │       ├── page.tsx                          #   自分の Collection 一覧 (author 認可)
+│   │       └── collections/{new,[collectionId]}/ #   Collection / Problem 作成・編集
 │   ├── auth/{callback,signout}/route.ts
 │   ├── login/page.tsx
 │   ├── api/                                      # GET 専用 (mutation は Server Action)

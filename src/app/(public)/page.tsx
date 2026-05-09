@@ -1,10 +1,17 @@
+import { getOptionalAuth } from "@/lib/auth";
 import { getPublishedCourses } from "@/services/courseService";
+import { getCompletedLessonIdsByUser } from "@/services/progressService";
 import { CourseCard } from "./_components/CourseCard";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const courses = await getPublishedCourses();
+  const session = await getOptionalAuth();
+  const [courses, completedLessons] = await Promise.all([
+    getPublishedCourses(),
+    session ? getCompletedLessonIdsByUser(session.userId) : Promise.resolve([]),
+  ]);
+  const completedIds = new Set(completedLessons);
 
   return (
     <div className="cm-route-enter mx-auto w-full px-6 pt-8 pb-20" style={{ maxWidth: "1280px" }}>
@@ -40,7 +47,7 @@ export default async function HomePage() {
         >
           {courses.map((c, idx) => (
             <li key={c.id}>
-              <CourseCard course={c} index={idx} completedIds={new Set()} />
+              <CourseCard course={c} index={idx} completedIds={completedIds} />
             </li>
           ))}
         </ul>
