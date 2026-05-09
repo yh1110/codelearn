@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { requireAuth } from "@/lib/auth";
+import { getOptionalAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 import { isLessonBookmarked } from "@/services/bookmarkService";
 import { getCourseBySlug } from "@/services/courseService";
@@ -10,12 +10,8 @@ export const dynamic = "force-dynamic";
 
 export default async function LessonPage({ params }: PageProps<"/learn/[course]/[lesson]">) {
   const { course: courseSlug, lesson: lessonSlug } = await params;
-  let session: Awaited<ReturnType<typeof requireAuth>>;
-  try {
-    session = await requireAuth();
-  } catch {
-    redirect(`/login?from=/learn/${courseSlug}/${lessonSlug}`);
-  }
+  const session = await getOptionalAuth();
+  if (!session) redirect(`/login?from=/learn/${courseSlug}/${lessonSlug}`);
 
   let course: Awaited<ReturnType<typeof getCourseBySlug>>;
   try {

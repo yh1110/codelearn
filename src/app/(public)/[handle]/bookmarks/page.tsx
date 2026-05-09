@@ -29,6 +29,7 @@ export default async function BookmarksPage({
   if (!viewedProfile) notFound();
 
   const isOwner = session.profile.id === viewedProfile.id;
+  // 404 not 403 to prevent existence leakage — Layer A guard
   if (!isOwner) notFound();
 
   const [bookmarks, completedLessonIds, completedProblemIds] = await Promise.all([
