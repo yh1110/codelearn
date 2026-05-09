@@ -1,6 +1,6 @@
 import type { Problem } from "@prisma/client";
-import { notFound, redirect } from "next/navigation";
-import { getOptionalAuth } from "@/lib/auth";
+import { notFound } from "next/navigation";
+import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 import { getCollectionByHandleAndSlug } from "@/services/collectionService";
 import { isProblemCompleted } from "@/services/progressService";
@@ -11,9 +11,8 @@ export const dynamic = "force-dynamic";
 export default async function ProblemPage({
   params,
 }: PageProps<"/[handle]/[collection]/[problem]">) {
-  const [session, { handle, collection: collectionSlug, problem: problemSlug }] =
-    await Promise.all([getOptionalAuth(), params]);
-  if (!session) redirect(`/login?from=/${handle}/${collectionSlug}/${problemSlug}`);
+  const session = await requireAuth();
+  const { handle, collection: collectionSlug, problem: problemSlug } = await params;
 
   let collection: Awaited<ReturnType<typeof getCollectionByHandleAndSlug>>;
   try {

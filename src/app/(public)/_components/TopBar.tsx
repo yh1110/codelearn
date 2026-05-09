@@ -139,11 +139,10 @@ export function TopBar({ user }: Props) {
 }
 
 function NotificationBell({ pathname }: { pathname: string }) {
-  const { data } = useSWR<{ count: number }>(
-    "/api/notifications/unread",
-    fetcher,
-    { refreshInterval: 60_000, fallbackData: { count: 0 } },
-  );
+  const { data } = useSWR<{ count: number }>("/api/notifications/unread", fetcher, {
+    refreshInterval: 60_000,
+    fallbackData: { count: 0 },
+  });
   const unreadCount = data?.count ?? 0;
   const hasUnread = unreadCount > 0;
   const badgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);

@@ -2,7 +2,7 @@ import { BookText } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackLink } from "@/components/navigation/BackLink";
-import { getOptionalAuth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 import { problemUrl, profileUrl } from "@/lib/routes";
 import { getCollectionByHandleAndSlug } from "@/services/collectionService";
@@ -11,7 +11,7 @@ import { getCompletedProblemIdsByUser } from "@/services/progressService";
 export const dynamic = "force-dynamic";
 
 export default async function CollectionPage({ params }: PageProps<"/[handle]/[collection]">) {
-  const session = await getOptionalAuth();
+  const session = await requireAuth();
   const { handle, collection: collectionSlug } = await params;
 
   let collection: Awaited<ReturnType<typeof getCollectionByHandleAndSlug>>;
@@ -23,12 +23,10 @@ export default async function CollectionPage({ params }: PageProps<"/[handle]/[c
   }
 
   const completed = new Set(
-    session
-      ? await getCompletedProblemIdsByUser(
-          session.userId,
-          collection.problems.map((p) => p.id),
-        )
-      : [],
+    await getCompletedProblemIdsByUser(
+      session.userId,
+      collection.problems.map((p) => p.id),
+    ),
   );
 
   const author = collection.author;
