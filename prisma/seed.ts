@@ -1,3 +1,5 @@
+import type { LessonExecutor } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 type LessonSeed = {
@@ -7,6 +9,9 @@ type LessonSeed = {
   contentMd: string;
   starterCode: string;
   expectedOutput: string | null;
+  executor?: LessonExecutor;
+  sandpackTemplate?: string | null;
+  starterFiles?: Prisma.InputJsonValue | null;
 };
 
 type CourseSeed = {
@@ -790,6 +795,7 @@ console.log(describe(42));
         slug: "generics-basics",
         title: "ジェネリクスの基礎",
         order: 5,
+
         contentMd: `# ジェネリクスの基礎
 
 ジェネリクスは **型をパラメータ化** する仕組みです。関数や型に \`<T>\` を付けて、呼び出し時に型を決めます。
@@ -823,6 +829,44 @@ console.log(identity<number>(123));
       },
     ],
   },
+  {
+    slug: "react-fundamentals",
+    title: "React 基礎",
+    description: "ブラウザの Sandpack iframe 上で実 DOM を触りながら、React の基本を学びます。",
+    order: 2,
+    lessons: [
+      {
+        slug: "counter",
+        title: "Counter コンポーネント",
+        order: 1,
+        contentMd: `# Counter コンポーネント
+
+\`<App />\` の中に、ボタンを押すと数字が 1 ずつ増えるカウンターを実装してください。
+
+## やること
+
+- \`useState\` でカウント値を管理する
+- ボタンに \`onClick\` ハンドラを付け、クリックで count を +1 する
+- 現在のカウント値を画面に表示する
+
+右ペインのプレビューで動作確認しつつ、判定キーワード (\`useState\` と \`onClick\`) がコードに含まれていれば「クリア」になります。
+
+> 注意: このレッスンは Sandpack 上で動作します。WORKER 系レッスンとは別のランタイムです。
+`,
+        // WORKER fields kept empty — the SANDPACK pane reads sandpackTemplate /
+        // starterFiles instead. expectedOutput doubles as the comma-separated
+        // list of required tokens for the simple textual judge.
+        starterCode: "",
+        expectedOutput: "useState,onClick",
+        executor: "SANDPACK",
+        sandpackTemplate: "react-ts",
+        starterFiles: {
+          "/App.tsx":
+            'export default function App() {\n  // TODO: useState で count を管理し、ボタンの onClick で +1 するようにしてください\n  return (\n    <div style={{ padding: 24, fontFamily: "system-ui" }}>\n      <h1>Counter</h1>\n      <p>count: 0</p>\n      <button type="button">+1</button>\n    </div>\n  );\n}\n',
+        },
+      },
+    ],
+  },
 ];
 
 async function main() {
@@ -849,6 +893,9 @@ async function main() {
             starterCode: l.starterCode,
             expectedOutput: l.expectedOutput,
             isPublished: true,
+            executor: l.executor ?? "WORKER",
+            sandpackTemplate: l.sandpackTemplate ?? null,
+            starterFiles: l.starterFiles ?? Prisma.DbNull,
           })),
         },
       },

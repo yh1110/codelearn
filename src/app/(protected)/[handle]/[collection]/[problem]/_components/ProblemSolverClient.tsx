@@ -5,6 +5,7 @@ import { completeProblemAction } from "@/actions/progress";
 import { BackLink } from "@/components/navigation/BackLink";
 import { ProblemSolver } from "@/components/problem-solver/ProblemSolver";
 import { type CollectionLinkable, collectionUrl } from "@/lib/routes";
+import type { Executor, SandpackStarterFiles, SandpackTemplate } from "@/types/problem";
 
 type Problem = {
   id: string;
@@ -13,6 +14,9 @@ type Problem = {
   contentMd: string;
   starterCode: string;
   expectedOutput: string | null;
+  executor: Executor;
+  sandpackTemplate: SandpackTemplate | null;
+  starterFiles: SandpackStarterFiles | null;
 };
 
 type Props = {
@@ -28,6 +32,9 @@ export function ProblemSolverClient({ collection, problem, initiallyCompleted }:
       contentMd={problem.contentMd}
       starterCode={problem.starterCode}
       expectedOutput={problem.expectedOutput}
+      executor={problem.executor}
+      sandpackTemplate={problem.sandpackTemplate}
+      starterFiles={problem.starterFiles}
       initialStatus={initiallyCompleted ? "COMPLETED" : "NOT_STARTED"}
       onSubmit={async ({ passed }) => {
         if (!passed) return;

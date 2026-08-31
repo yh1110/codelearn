@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { getMyCollectionById } from "@/services/collectionService";
 import { getMyProblemById } from "@/services/problemService";
-import { ProblemForm } from "../new/_components/ProblemForm";
+import { ProblemForm, starterFilesToJsonString } from "../new/_components/ProblemForm";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +55,9 @@ export default async function EditProblemPage({
           starterCode: problem.starterCode,
           expectedOutput: problem.expectedOutput ?? "",
           order: String(problem.order),
+          executor: problem.executor,
+          sandpackTemplate: problem.sandpackTemplate ?? "react-ts",
+          starterFilesJson: starterFilesToJsonString(problem.starterFiles),
         }}
       />
     </div>

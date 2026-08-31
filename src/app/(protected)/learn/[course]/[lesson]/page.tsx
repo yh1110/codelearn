@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
+import { coerceSandpackFields } from "@/lib/sandpack";
 import { isLessonBookmarked } from "@/services/bookmarkService";
 import { getCourseBySlug } from "@/services/courseService";
 import { isLessonCompleted } from "@/services/progressService";
@@ -32,6 +33,8 @@ export default async function LessonPage({ params }: PageProps<"/learn/[course]/
     isLessonBookmarked({ userId: session.userId, lessonId: lesson.id }),
   ]);
 
+  const sandpack = coerceSandpackFields(lesson);
+
   return (
     <LessonSolver
       course={course}
@@ -43,6 +46,9 @@ export default async function LessonPage({ params }: PageProps<"/learn/[course]/
         contentMd: lesson.contentMd,
         starterCode: lesson.starterCode,
         expectedOutput: lesson.expectedOutput,
+        executor: lesson.executor,
+        sandpackTemplate: sandpack.sandpackTemplate,
+        starterFiles: sandpack.starterFiles,
       }}
       prevSlug={prev?.slug ?? null}
       nextSlug={next?.slug ?? null}

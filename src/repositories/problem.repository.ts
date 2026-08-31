@@ -1,6 +1,7 @@
 import "server-only";
 
-import type { Problem } from "@prisma/client";
+import type { LessonExecutor, Problem } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { BaseRepository } from "./base.repository";
 
 export type CreateProblemInput = {
@@ -12,6 +13,9 @@ export type CreateProblemInput = {
   expectedOutput: string | null;
   order: number;
   isPublished?: boolean;
+  executor?: LessonExecutor;
+  sandpackTemplate?: string | null;
+  starterFiles?: Prisma.InputJsonValue | null;
 };
 
 export type UpdateProblemInput = {
@@ -21,6 +25,9 @@ export type UpdateProblemInput = {
   starterCode?: string;
   expectedOutput?: string | null;
   order?: number;
+  executor?: LessonExecutor;
+  sandpackTemplate?: string | null;
+  starterFiles?: Prisma.InputJsonValue | null;
 };
 
 export class ProblemRepository extends BaseRepository {
@@ -53,14 +60,21 @@ export class ProblemRepository extends BaseRepository {
         expectedOutput: input.expectedOutput,
         order: input.order,
         isPublished: input.isPublished ?? false,
+        executor: input.executor ?? "WORKER",
+        sandpackTemplate: input.sandpackTemplate ?? null,
+        starterFiles: toPrismaJson(input.starterFiles),
       },
     });
   }
 
   async update(id: string, input: UpdateProblemInput): Promise<Problem> {
+    const { starterFiles, ...rest } = input;
     return this.client.problem.update({
       where: { id },
-      data: input,
+      data: {
+        ...rest,
+        ...(starterFiles === undefined ? {} : { starterFiles: toPrismaJson(starterFiles) }),
+      },
     });
   }
 
@@ -74,4 +88,16 @@ export class ProblemRepository extends BaseRepository {
       data: { isPublished },
     });
   }
+}
+
+// `null` clears the JSON column, `undefined` leaves it untouched, but the
+// Prisma JSON types treat `null` specially via `Prisma.DbNull`. This helper
+// normalizes the trio so callers can pass plain JSON objects.
+function toPrismaJson(
+  value: Prisma.InputJsonValue | null | undefined,
+): Prisma.InputJsonValue | typeof Prisma.DbNull {
+  if (value === null || value === undefined) {
+    return Prisma.DbNull;
+  }
+  return value;
 }
